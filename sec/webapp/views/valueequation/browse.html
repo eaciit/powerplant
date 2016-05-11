@@ -1,0 +1,123 @@
+<style>
+.k-window-titlebar{
+	background-color: #0B72A5;
+}
+</style>
+<script>
+ValueEquation.isBrowsing = ko.observable(false);
+ValueEquation.SelectedScenarioName = ko.observable("");
+ValueEquation.SelectedDescription = ko.observable("");
+</script>
+<div id="BrowsingContent" data-bind="with:ValueEquation">
+      <div id="AvailableData"></div>
+      <div>&nbsp;</div>
+      <div class="align-right">
+          <button type="button" class="btn btn-primary btn-sm" data-bind="click:Cancel">
+            Cancel
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" data-bind="click:Open">
+            Open
+          </button>
+      </div>
+</div>
+<script>
+ValueEquation.Open = function(){
+	ValueEquation.ScenarioName(ValueEquation.SelectedScenarioName());
+	ValueEquation.Description(ValueEquation.SelectedDescription());
+	var BrowsingContent = $("#BrowsingContent").data("kendoWindow");
+	BrowsingContent.close();
+}
+ValueEquation.Cancel = function(){
+	var BrowsingContent = $("#BrowsingContent").data("kendoWindow");
+	BrowsingContent.close();
+}
+ValueEquation.Save = function(){
+	var parm = {
+		ScenarioName:ValueEquation.ScenarioName(),
+		Description:ValueEquation.Description(),
+	}
+	if(parm.ScenarioName==""){
+		alert("Scenario Name should not be empty");
+		return false;
+	}
+	var url = "/valueequation/save"
+	$.ajax({
+	  url: url,
+	  type: 'post',
+	  dataType: 'json',
+	  data : parm,
+	  success : function(res) {
+	      if(res.success){
+	        alert("Data Saved");
+          	ValueEquation.ScenarioName("");
+			ValueEquation.Description("");
+	      }else{
+	          alert(res.message);
+	      }
+	  },
+	});
+}
+ValueEquation.Browse = function(){
+	var BrowsingContent = $("#BrowsingContent").data("kendoWindow");
+	BrowsingContent.open()
+	var url = "/valueequation/getdata"
+	$.ajax({
+	  url: url,
+	  type: 'post',
+	  dataType: 'json',
+	  data : null,
+	  success : function(res) {
+	      if(res.success){
+	          ValueEquation.RenderGrid(res.data);
+
+	      }else{
+	          alert(res.message);
+	      }
+	  },
+	});
+};
+ValueEquation.selectRow = function(e){
+    var selectedRows = this.select();
+    var dataItem = null;
+    for (var i = 0; i < selectedRows.length; i++) {
+      dataItem = this.dataItem(selectedRows[i]);
+    }
+    
+    var BrowsingContent = $("#BrowsingContent").data("kendoWindow");
+	// BrowsingContent.close();
+
+  	ValueEquation.SelectedScenarioName(dataItem.ScenarioName);
+	ValueEquation.SelectedDescription(dataItem.Description);
+    // selectedDataItems contains all selected data items
+}
+ValueEquation.RenderGrid = function(Sources){
+	$("#AvailableData").html("");
+	$("#AvailableData").kendoGrid({
+		dataSource: {
+		  data: Sources,
+		  pageSize: 10
+		},
+		pageable:true,
+		sortable:true,
+		filterable:true,
+		scrollable:true,
+		selectable: "row",
+		change: ValueEquation.selectRow,
+        columns:[
+			{width: 100, field: "ScenarioName", title: "Scenario" },
+			{field: "Description", title: "Description" },
+			// {width: 100, field: "Input_Time", title: "Saves" , format: '{0:n0}', attributes:{ class:"text-right" }},
+
+
+		]
+
+	});
+}
+$("#BrowsingContent").kendoWindow({
+	visible:false,
+	title: "Browsing panel",
+	width:600,
+	modal:true
+});
+$("#BrowsingContent").data("kendoWindow").center();
+</script>

@@ -1,0 +1,170 @@
+<style>
+#DataAssetWork > thead > tr > th, .table-bordered > thead > tr > td{
+	    vertical-align: middle;
+}
+.white-color{
+	    color:white;
+}
+#DataAssetContainer{
+	overflow-x:scroll;overflow-y:hidden;
+}
+#DataAssetWork{
+	width:1550px;
+}
+</style>
+<script>
+	var HVEAssetWork = {
+		Processing:ko.observable(false),
+		CapacityPayment:ko.observable(0),
+		EnergyPayment:ko.observable(0),
+		StartupPayment:ko.observable(0),
+		Penalty:ko.observable(0),
+		Incentive:ko.observable(0),
+		TotalRevenue:ko.observable(0),
+		DataAssetWork:ko.observableArray([]),
+		BreakdownBy:ko.observable(""),
+		ExpandData:ko.observable(false),
+
+		MinCapacityPayment:ko.observable(0),
+		MaxCapacityPayment:ko.observable(0),
+		MinEnergyPayment :ko.observable(0),
+		MaxEnergyPayment :ko.observable(0),
+		MinIncentive :ko.observable(0),
+		MaxIncentive :ko.observable(0),
+		MinPenaltyAmount :ko.observable(0),
+		MaxPenaltyAmount :ko.observable(0),
+		MinStartupPayment :ko.observable(0),
+		MaxStartupPayment :ko.observable(0),
+		MinTotRev :ko.observable(0),
+		MaxTotRev :ko.observable(0),
+	}
+</script>
+
+<div data-bind="visible:HVEAssetWork.Processing()" class="align-center">
+	{{template "processing.html"}}
+</div>
+<div data-bind="with:HVEAssetWork,visible:!HVEAssetWork.Processing()" id="DataAssetContainer">
+	<table class="table table-striped table-bordered" id="DataAssetWork">
+	  <thead>
+	  	<tr>
+	  		<th rowspan="2" class="align-center" data-bind="text:BreakdownBy"></th>
+			<th class="align-center label-primary white-color" rowspan="2">Value Equation</th>
+			<th class="align-center label-warning white-color" colspan="2">Potential Revenue</th>
+			<th class="align-center label-success white-color" colspan="2">Actual Revenue</th>
+			<th class="align-center label-default white-color" colspan="4">Forgone Revenue</th>
+			<th class="align-center label-info white-color" colspan="4">Maintenance Cost</th>
+			<th class="align-center label-danger white-color" rowspan="2">Production Cost</th>
+	  	</tr>
+	    <tr>
+	      <th class="align-center">Nameplate output (MWh)</th>
+	      <th class="align-center">Potential Revenue</th>
+	      <th class="align-center">Actual output (MWh)</th>
+	      <th class="align-center">Actual Revenue</th>
+	      <th class="align-center">Forced Outages (hours)</th>
+	      <th class="align-center">Foregone Revenue - Forced Outages (SAR)</th>
+	      <th class="align-center">Unforced Outages (hours)</th>
+	      <th class="align-center">Foregone Revenue - Unforced outages (SAR)</th>
+	      <th class="align-center">Labour cost (SAR)</th>
+	      <!-- <th class="align-center">Spare parts cost (SAR)</th> -->
+	      <th class="align-center">Material cost (SAR)</th>
+	      <!-- <th class="align-center">Contractor cost (SAR)</th> -->
+	      <th class="align-center">External Service cost (SAR)</th>
+	      <th class="align-center">Total (SAR)</th>	
+	    </tr>
+	  </thead>
+	  <tbody data-bind="foreach:DataAssetWork">
+	    <tr>
+	    	<th data-bind="text:_id"></td>
+			<td width="100" data-bind="text:kendo.toString(ValueEquationCost,'N2')" class="align-right"></td>
+			<td width="100" data-bind="text:kendo.toString(MaxPowerGeneration,'N2')" class="align-right"></td>
+			<td width="100" data-bind="text:kendo.toString(PotentialRevenue,'N2')" class="align-right"></td>
+			<td width="100" data-bind="text:kendo.toString(NetGeneration,'N2')" class="align-right"></td>
+			<td width="100" data-bind="text:kendo.toString(Revenue,'N2')" class="align-right"></td>
+
+			<td width="100" data-bind="text:kendo.toString(ForcedOutages,'N2')" class="align-right"></td>
+			<td width="100" data-bind="text:kendo.toString(ForcedOutagesLoss,'N2')" class="align-right"></td>
+			<td width="100" data-bind="text:kendo.toString(UnforcedOutages,'N2')" class="align-right"></td>
+			<td width="100" data-bind="text:kendo.toString(UnforcedOutagesLoss,'N2')" class="align-right"></td>
+
+			<td width="100" data-bind="text:kendo.toString(TotalLabourCost,'N2')" class="align-right"></td>
+			<td width="100" data-bind="text:kendo.toString(TotalMaterialCost,'N2')" class="align-right"></td>
+			<td width="100" data-bind="text:kendo.toString(TotalServicesCost,'N2')" class="align-right"></td>
+			<td width="100" data-bind="text:kendo.toString(MaintenanceCost,'N2')" class="align-right"></td>
+			<td width="100" data-bind="text:kendo.toString(OperatingCost,'N2')" class="align-right"></td>
+	    </tr>
+	  </tbody>
+	</table>
+</div>
+
+<div class="col-md-6 align-left">
+	<button type="button" class="btn btn-warning btn-sm" data-bind="click:HVEAssetWork.ExportToExcel">
+		<span class="fa fa-file-excel-o"></span> 
+		Export to XLS
+	</button>
+</div>
+</div>
+
+<script>
+HVEAssetWork.setColor = function(Value,Count){
+	if(Value == Count){
+		return "color:green;"	
+	}else if(Value==(Count*3)){
+		return "color:red;"	
+	}else{
+		return "color:#F79E44;"	
+	}
+	
+}
+HVEAssetWork.GetData = function(){
+	HVEAssetWork.Processing(true);
+	var parm = ValueEquation.GetFilter();
+	var url = "/historicalvalueequation/getassetwork";
+	ajaxPost(url,parm,function(res){
+		if(!res.IsError){
+	      	HVEAssetWork.Processing(false);
+	      	if(res.Data!== null && res.Data.length > 0){
+
+				var DataAssetWork = res.Data;
+				if(HVESummary.scope()=="Plant"){
+					for(var i in DataAssetWork){
+						DataAssetWork[i].Index = parseFloat(DataAssetWork[i]._id.substr(2));
+					}
+					var GTArr = Enumerable.From(DataAssetWork).Where(function(x){return x._id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+					var STArr = Enumerable.From(DataAssetWork).Where(function(x){return x._id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+					var arr = [];
+					for(var i in GTArr){
+					arr.push(GTArr[i]);
+					}
+					for(var i in STArr){
+					arr.push(STArr[i]);
+					}
+					var UnmappedArr = Enumerable.From(DataAssetWork).Where(function(x){return x._id =="Unmapped Data"}).OrderBy(function(x){return x.Index}).ToArray();
+					for(var i in UnmappedArr){
+					arr.push(UnmappedArr[i]);
+					}
+					DataAssetWork = arr;
+				}
+				if (ValueEquation.scope()!=='Unit'){
+					HVESummary.BreakdownBy('Plant');
+				}else{
+					HVESummary.BreakdownBy('Unit');
+				}
+
+				HVEAssetWork.DataAssetWork(DataAssetWork);
+				HVEAssetWork.BreakdownBy(HVESummary.BreakdownBy());
+
+	      	}
+		
+	      }else{
+	          alert(res.message);
+	      }
+	});
+}
+</script>
+
+<script type="text/javascript">
+
+	HVEAssetWork.ExportToExcel = function(){
+		tableToExcel('DataAssetContainer', '');
+	}
+</script>

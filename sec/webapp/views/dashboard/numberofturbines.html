@@ -1,0 +1,60 @@
+<div class="box-info">
+    <h4 class="box-title">Number Of Turbines  <span data-bind="text:' - '+Dashboard.selectedPlant.Name()"></h4>
+</div>
+<div id="NumberOfTurbinesChart"></div>
+<script type="text/javascript">
+Dashboard.GetNumberOfTurbines  = function(){
+  var parm = Dashboard.GetFilter();
+  var url = "/dashboard/getnumberofturbines";
+  Dashboard.Processing(true);
+
+  ajaxPost(url, parm, function(res){
+    if(res.Data.Status == "OK"){
+      Dashboard.ProcessComplete();
+      Dashboard.GenNumberOfTurbines(res.Data.Data);
+    }else{
+      alert(res.Data.message);
+    }
+  });
+}
+Dashboard.GenNumberOfTurbines = function(dataSource){
+  $.each(dataSource, function(index, value){
+    dataSource[index].count = value.count;
+    $.each(value._id, function(index1, value1){
+      dataSource[index]._id = value1;
+    });
+  });
+
+  $("#NumberOfTurbinesChart").html("");
+  $("#NumberOfTurbinesChart").kendoChart({
+    chartArea: {
+        background: "",
+        height: 250,
+        width:$("#HalfChart").width()
+    },
+    dataSource: {
+        data: dataSource
+    },
+    legend: {
+      visible: false
+    },
+    seriesDefaults: {
+        labels: {
+            visible: true,
+            background: "transparent",
+            template: "#= category #: \n #= kendo.toString(percentage,'P2')#"
+        }
+    },
+    series: [{
+        type: "pie",
+        field: "count",
+        categoryField: "_id",
+    }],
+    tooltip: {
+           visible: true,
+           template: "<b>#= category #</b> <br/>#= kendo.toString(percentage ,'P2') # | Total :  #= kendo.toString(dataItem.count ,'N0') # "
+       },
+    seriesColors:["#7CC8C0","#f2b54b","#73B576"],
+  });
+}
+</script>

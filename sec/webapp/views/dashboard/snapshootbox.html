@@ -1,0 +1,48 @@
+<div class="col-md-12">
+    <div class="row Snapshotbox" data-bind="with:Snapshotbox">
+        <div class="col-md-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="box-info">
+                        <h4 class="box-title" onclick="Dashboard.ViewChart.Revenue(!Dashboard.ViewChart.Revenue())" data-bind="attr:{class:Dashboard.ViewChart.Revenue() ? 'box-title activeSnapshot' : 'box-title'}"><span class="fa fa-money"></span>&nbsp; Revenue</h4>
+                        <div class="row align-right snapshotbox-content" data-bind="text:'$ '+kendo.toString(Revenue(),'N0')"></div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="box-info">
+                        <h4 class="box-title" onclick="Dashboard.ViewChart.OperatingCost(!Dashboard.ViewChart.OperatingCost())" data-bind="attr:{class:Dashboard.ViewChart.OperatingCost() ? 'box-title activeSnapshot' : 'box-title'}"><span class="fa fa-gears"></span>&nbsp; Operational Cost</h4>
+                        <div class="row align-right snapshotbox-content" data-bind="text:'$ '+kendo.toString(OperationalCost(),'N0')"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="box-info">
+                        <h4 class="box-title" onclick="Dashboard.ViewChart.CapitalConsumed(!Dashboard.ViewChart.CapitalConsumed())" data-bind="attr:{class:Dashboard.ViewChart.CapitalConsumed() ? 'box-title activeSnapshot' : 'box-title'}">
+                            <span class="fa fa-tags"></span>&nbsp;
+                            Capital Consumed</h4>
+                        <div class="row align-right snapshotbox-content" data-bind="text:'$ '+kendo.toString(CapitalConsumed(),'N0')"></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="box-info">
+                        <h4 class="box-title" onclick="Dashboard.ViewChart.ActiveAsset(!Dashboard.ViewChart.ActiveAsset())" data-bind="attr:{class:Dashboard.ViewChart.ActiveAsset() ? 'box-title activeSnapshot' : 'box-title'}">
+                            <span class="fa fa-file-archive-o"></span>&nbsp;
+                            Active Asset</h4>
+                        <div class="row align-right snapshotbox-content" data-bind="text:kendo.toString(ActiveAsset(),'N0')"></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="box-info">
+                        <h4 class="box-title" onclick="Dashboard.ViewChart.PowerGenerated(!Dashboard.ViewChart.PowerGenerated())" data-bind="attr:{class:Dashboard.ViewChart.PowerGenerated() ? 'box-title activeSnapshot' : 'box-title'}">
+                            <span class="fa fa-unlink"></span>&nbsp;
+                            Power Generated</h4>
+                        <div class="row align-right snapshotbox-content" data-bind="text:kendo.toString(PowerGenerated(),'N0')"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

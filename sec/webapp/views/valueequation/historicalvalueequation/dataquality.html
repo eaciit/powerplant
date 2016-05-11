@@ -1,0 +1,219 @@
+<style>
+#DataQuality > thead > tr > th, .table-bordered > thead > tr > td{
+	    vertical-align: middle;
+}
+.white-color{
+	    color:white;
+}
+</style>
+<script>
+
+	var HVEDataQuality = {
+		Processing:ko.observable(false),
+		CapacityPayment:ko.observable(0),
+		EnergyPayment:ko.observable(0),
+		StartupPayment:ko.observable(0),
+		Penalty:ko.observable(0),
+		Incentive:ko.observable(0),
+		TotalRevenue:ko.observable(0),
+		DataQuality:ko.observableArray([]),
+		BreakdownBy:ko.observable(""),
+		ExpandData:ko.observable(false),
+
+		MinCapacityPayment:ko.observable(0),
+		MaxCapacityPayment:ko.observable(0),
+		MinEnergyPayment :ko.observable(0),
+		MaxEnergyPayment :ko.observable(0),
+		MinIncentive :ko.observable(0),
+		MaxIncentive :ko.observable(0),
+		MinPenaltyAmount :ko.observable(0),
+		MaxPenaltyAmount :ko.observable(0),
+		MinStartupPayment :ko.observable(0),
+		MaxStartupPayment :ko.observable(0),
+		MinTotRev :ko.observable(0),
+		MaxTotRev :ko.observable(0),
+		tip:"td[title]",
+		selectedScope:ko.observable()
+	}
+</script>
+
+<div data-bind="visible:HVEDataQuality.Processing()" class="align-center">
+	{{template "processing.html"}}
+</div>
+<div data-bind="with:HVEDataQuality,visible:!HVEDataQuality.Processing()">
+	<table class="table table-striped table-bordered" id="DataQuality">
+	  <thead>
+	  	<tr>
+	  		<th rowspan="2" class="align-center" data-bind="text:BreakdownBy"></th>
+			<th class="align-center label-primary white-color" colspan="5">Revenue</th>
+			<th class="align-center label-warning white-color" colspan="2">Maintenance</th>
+			<th class="align-center label-success white-color" colspan="4">Production</th>
+	  	</tr>
+	    <tr>
+	      <th class="align-center">Capacity Payment</th>
+	      <th class="align-center">Energy Payment</th>
+	      <th class="align-center">Startup Payment</th>
+	      <th class="align-center">Penalty</th>
+	      <th class="align-center">Incentive</th>
+
+	      <th class="align-center">Cost</th>
+	      <th class="align-center">Duration</th>
+
+	      <th class="align-center">Primary Fuel 1st</th>
+	      <th class="align-center">Primary Fuel 2nd</th>
+	      <th class="align-center">Backup Fuel</th>
+	      <th class="align-center">Fuel Transport</th>
+	    </tr>
+	  </thead>
+	  <tbody data-bind="foreach:DataQuality,kendoTooltip: { filter: tip},visible:(selectedScope()=='Kingdom'||(selectedScope()=='Plant'&&ValueEquation.selected().length!==1))">
+	    <tr>
+	    	<th data-bind="text:_id"></td>
+			<td width="100" data-bind="attr:{style:HVEDataQuality.setColor(CapacityPayment_Data,Count)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(EnergyPayment_Data,Count)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(StartupPayment_Data,Count)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(Penalty_Data,Count)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(Incentive_Data,Count)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+
+			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(MaintenanceCost_Data,Count)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(MaintenanceDuration_Data,Count)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+
+			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(PrimaryFuel1st_Data,Count)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(PrimaryFuel2nd_Data,Count)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(BackupFuel_Data,Count)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(FuelTransport_Data,Count)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+	    </tr>
+	  </tbody>
+	<tbody data-bind="foreach:DataQuality,kendoTooltip: { filter: tip},visible:(selectedScope()=='Unit'||(selectedScope()=='Plant'&&ValueEquation.selected().length==1))">
+	    <tr>
+	    	<th data-bind="text:_id"></td>
+			<td width="100" data-bind="attr:{style:HVEDataQuality.setColor(CapacityPayment_Data,Count),title:$parent.GetTitle(CapacityPaymentDocuments)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(EnergyPayment_Data,Count),title:$parent.GetTitle(EnergyPaymentDocuments)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(StartupPayment_Data,Count),title:$parent.GetTitle(StartupPaymentDocuments)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(Penalty_Data,Count),title:$parent.GetTitle(PenaltyDocuments)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(Incentive_Data,Count),title:$parent.GetTitle(IncentiveDocuments)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+
+			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(MaintenanceCost_Data,Count),title:$parent.GetTitle(MaintenanceCostDocuments)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(MaintenanceDuration_Data,Count),title:$parent.GetTitle(MaintenanceDurationDocuments)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+
+			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(PrimaryFuel1st_Data,Count),title:$parent.GetTitle(PrimaryFuel1stDocuments)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(PrimaryFuel2nd_Data,Count),title:$parent.GetTitle(PrimaryFuel2ndDocuments)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(BackupFuel_Data,Count),title:$parent.GetTitle(BackupFuelDocuments)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(FuelTransport_Data,Count)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
+	    </tr>
+	  </tbody>
+	</table>
+	<div class="row">
+		<label class="col-md-1 filter-label">Key</label>
+		<label class="col-md-11">&nbsp;</label>
+		<label class="col-md-12"><span class="fa fa-dot-circle-o" style="color:green;"></span>&nbsp;&nbsp;Complete Data</label>
+		<label class="col-md-12"><span class="fa fa-dot-circle-o" style="color:#F79E44;"></span>&nbsp;&nbsp;Marginal Data</label>
+		<label class="col-md-12"><span class="fa fa-dot-circle-o" style="color:red;"></span>&nbsp;&nbsp;No Data</label>
+	</div>
+</div>
+
+<script>
+HVEDataQuality.GetTitle = function(data){
+	var result = "";
+	for(var i in data){
+		result += "<div class='align-left'>"+data[i].DocName+" : "+(data[i].Availability? 'Available' : 'Not Available')+ "</div>";
+	}
+	return result == "" ? "No Data" : result;
+}
+HVEDataQuality.setColor = function(Value,Count){
+	if(Value == Count){
+		return "color:green;"	
+	}else if(Value==(Count*3)){
+		return "color:red;"	
+	}else{
+		return "color:#F79E44;"	
+	}
+	
+}
+HVEDataQuality.GetData = function(){
+	HVEDataQuality.Processing(true);
+	var parm = ValueEquation.GetFilter();
+	var url = "/historicalvalueequation/getdataquality"
+	var selectedScope = HVESummary.scope();
+	HVEDataQuality.selectedScope(selectedScope);
+	ajaxPost(url,parm,function(res){
+	    if(!res.IsError){
+	      	HVEDataQuality.Processing(false);
+	      	if(res.Data!== null && res.Data.length > 0){
+				var DataQuality = res.Data;
+				if(HVESummary.scope()=="Plant"){
+					if(ValueEquation.selected().length==1){
+						for(var i in DataQuality){
+							DataQuality[i]._id = DataQuality[i].Unit;
+							DataQuality[i].Count = 1;
+							DataQuality[i].Index = parseFloat(DataQuality[i]._id.substr(2));
+						}
+					}else{
+						for(var i in DataQuality){
+							DataQuality[i].Index = parseFloat(DataQuality[i]._id.substr(2));
+							DataQuality[i].CapacityPaymentDocuments = [];
+							DataQuality[i].EnergyPaymentDocuments = [];
+							DataQuality[i].StartupPaymentDocuments = [];
+							DataQuality[i].PenaltyDocuments = [];
+							DataQuality[i].IncentiveDocuments = [];
+							DataQuality[i].MaintenanceCostDocuments = [];
+							DataQuality[i].MaintenanceDurationDocuments = [];
+							DataQuality[i].PrimaryFuel1stDocuments = [];
+							DataQuality[i].PrimaryFuel2ndDocuments = [];
+							DataQuality[i].BackupFuelDocuments = [];
+						}
+					}
+					var GTArr = Enumerable.From(DataQuality).Where(function(x){return x._id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+					var STArr = Enumerable.From(DataQuality).Where(function(x){return x._id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+					var arr = [];
+					for(var i in GTArr){
+					arr.push(GTArr[i]);
+					}
+					for(var i in STArr){
+					arr.push(STArr[i]);
+					}
+					DataQuality = arr;
+				}
+				if (ValueEquation.scope()!=='Unit'){
+					HVESummary.BreakdownBy('Plant');
+					// if(ValueEquation.selected().length!==1){
+						for(var i in DataQuality){
+							DataQuality[i].CapacityPaymentDocuments = [];
+							DataQuality[i].EnergyPaymentDocuments = [];
+							DataQuality[i].StartupPaymentDocuments = [];
+							DataQuality[i].PenaltyDocuments = [];
+							DataQuality[i].IncentiveDocuments = [];
+							DataQuality[i].MaintenanceCostDocuments = [];
+							DataQuality[i].MaintenanceDurationDocuments = [];
+							DataQuality[i].PrimaryFuel1stDocuments = [];
+							DataQuality[i].PrimaryFuel2ndDocuments = [];
+							DataQuality[i].BackupFuelDocuments = [];
+						}
+					// }
+				}else{
+					HVESummary.BreakdownBy('Unit');
+					for(var i in DataQuality){
+						DataQuality[i]._id = DataQuality[i].Unit;
+						DataQuality[i].Count = 1;
+					}
+				}
+				HVEDataQuality.DataQuality(DataQuality);
+				HVEDataQuality.BreakdownBy(HVESummary.BreakdownBy());
+
+	      	}
+		
+	      }else{
+	          alert(res.message);
+	      }
+	});
+}
+</script>
+
+<script type="text/javascript">
+
+	HVEDataQuality.ExportToExcel = function(){
+		tableToExcel('GridRevExpand', '');
+	}
+	ko.bindingHandlers.kendoTooltip.options = {
+	   width:160
+	};
+</script>

@@ -1,0 +1,136 @@
+<style>
+#DataPerformance > thead > tr > th, .table-bordered > thead > tr > td{
+	    vertical-align: middle;
+}
+.white-color{
+	    color:white;
+}
+</style>
+<script>
+	var HVEPerformance = {
+		Processing:ko.observable(false),
+		CapacityPayment:ko.observable(0),
+		EnergyPayment:ko.observable(0),
+		StartupPayment:ko.observable(0),
+		Penalty:ko.observable(0),
+		Incentive:ko.observable(0),
+		TotalRevenue:ko.observable(0),
+		DataPerformance:ko.observableArray([]),
+		BreakdownBy:ko.observable(""),
+		ExpandData:ko.observable(false),
+
+		MinCapacityPayment:ko.observable(0),
+		MaxCapacityPayment:ko.observable(0),
+		MinEnergyPayment :ko.observable(0),
+		MaxEnergyPayment :ko.observable(0),
+		MinIncentive :ko.observable(0),
+		MaxIncentive :ko.observable(0),
+		MinPenaltyAmount :ko.observable(0),
+		MaxPenaltyAmount :ko.observable(0),
+		MinStartupPayment :ko.observable(0),
+		MaxStartupPayment :ko.observable(0),
+		MinTotRev :ko.observable(0),
+		MaxTotRev :ko.observable(0),
+	}
+</script>
+
+<div data-bind="visible:HVEPerformance.Processing()" class="align-center">
+	{{template "processing.html"}}
+</div>
+<div id="GridPerformance" data-bind="with:HVEPerformance,visible:!HVEPerformance.Processing()">
+	<table class="table table-striped table-bordered" id="DataPerformance" style="width:500px">
+	  <thead>
+	    <tr>
+	      <th class="align-center" data-bind="text:BreakdownBy"></th>
+	      <th class="align-center">Net Generation</th>
+	      <th class="align-center">Availability</th>
+	    </tr>
+	  </thead>
+	  <tbody data-bind="foreach:DataPerformance">
+	    <tr>
+	    	<th data-bind="text:_id"></td>
+			<td width="150" data-bind="text:kendo.toString(NetGeneration,'N2')" class="align-right"></td>
+			<td width="150" data-bind="text:kendo.toString(PrctWAF/100,'P2'), attr:{style:HVEPerformance.Below75Percent(PrctWAF)}" class="align-right"></td>
+		</td>
+	    </tr>
+	  </tbody>
+	</table>
+</div>
+<div class="row">
+	<div class="col-md-6 align-left">
+		<button type="button" class="btn btn-warning btn-sm" data-bind="click:HVEPerformance.ExportToExcel">
+	  		<span class="fa fa-file-excel-o"></span> 
+	    	Export to XLS
+	 	</button>
+	</div>
+</div>
+<script>
+HVEPerformance.setColor = function(Value,Count){
+	if(Value == Count){
+		return "color:green;"	
+	}else if(Value==(Count*3)){
+		return "color:red;"	
+	}else{
+		return "color:#F79E44;"	
+	}
+	
+}
+HVEPerformance.GetData = function(){
+	HVEPerformance.Processing(true);
+	var parm = ValueEquation.GetFilter();
+	var url = "/historicalvalueequation/getperformance";
+	ajaxPost(url,parm,function(res){
+	    if(!res.IsError){
+	      	HVEPerformance.Processing(false);
+	      	if(res.Data!== null && res.Data.length > 0){
+
+				var DataPerformance = res.Data;
+				if(HVESummary.scope()=="Plant"){
+					for(var i in DataPerformance){
+						DataPerformance[i].Index = parseFloat(DataPerformance[i]._id.substr(2));
+					}
+					var GTArr = Enumerable.From(DataPerformance).Where(function(x){return x._id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+					var STArr = Enumerable.From(DataPerformance).Where(function(x){return x._id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+					var arr = [];
+					for(var i in GTArr){
+					arr.push(GTArr[i]);
+					}
+					for(var i in STArr){
+					arr.push(STArr[i]);
+					}
+					var UnmappedArr = Enumerable.From(DataPerformance).Where(function(x){return x._id =="Unmapped Data"}).OrderBy(function(x){return x.Index}).ToArray();
+					for(var i in UnmappedArr){
+					arr.push(UnmappedArr[i]);
+					}
+					DataPerformance = arr;
+				}
+				if (ValueEquation.scope()!=='Unit'){
+					HVESummary.BreakdownBy('Plant');
+				}else{
+					HVESummary.BreakdownBy('Unit');
+				}
+
+				HVEPerformance.DataPerformance(DataPerformance);
+				HVEPerformance.BreakdownBy(HVESummary.BreakdownBy());
+
+	      	}
+		
+	      }else{
+	          alert(res.message);
+	      }
+	});
+}
+</script>
+
+<script type="text/javascript">
+
+	HVEPerformance.ExportToExcel = function(){
+		tableToExcel('GridPerformance', '');
+	}
+
+	HVEPerformance.Below75Percent = function(val){
+		if(val < 75){
+			return "background:gray;color:white;"
+		}
+	}
+</script>

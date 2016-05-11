@@ -1,0 +1,125 @@
+<div class="box-info">
+   <!-- <h4 class="box-title">Power Vs Fuel Consumptions  <span data-bind="text:' - '+Dashboard.selectedPlant.Name()"></h4> -->
+   <h4 class="box-title">Power Generated <span data-bind="text:Dashboard.startMonthly().getFullYear()"></span> <span data-bind="text:' - '+Dashboard.selectedPlant.Name()"></h4>
+</div>
+<div id="PowerVsFuelConsumtionChart"></div>
+<script type="text/javascript">
+Dashboard.GetPowerVsFuelConsumtion  = function(){
+   var parm = Dashboard.GetFilter();
+  var url = "/dashboard/getpowervsfuelconsumtion";
+  Dashboard.Processing(true);
+  parm.Period = Dashboard.startMonthly().getFullYear();
+
+  ajaxPost(url, parm, function(res){
+    if(res.Data.Status == "OK"){
+      Dashboard.ProcessComplete();
+      Dashboard.GenPowerVsFuelConsumtion(res.Data);
+    }else{
+      alert(res.Data.message);
+    }
+  });
+}
+
+Dashboard.GenPowerVsFuelConsumtion = function(dataSource){
+  console.log(dataSource);
+   var MaxFuelConsumtion = 0;
+   var MaxPower = 0;
+   var MinFuelConsumtion = 0;
+   var MinPower = 0;
+
+   for(var i in dataSource){
+      dataSource[i].FuelConsumtion = dataSource[i].FuelConsumtion / 1000000;
+      dataSource[i].Power = dataSource[i].Power;
+      if(MaxFuelConsumtion < dataSource[i].FuelConsumtion){
+         MaxFuelConsumtion = dataSource[i].FuelConsumtion;
+      }
+      if(MaxPower < dataSource[i].Power){
+         MaxPower = dataSource[i].Power;
+      }
+   }
+   MaxFuelConsumtion+=5000;
+   MaxPower+=10000;
+   $("#PowerVsFuelConsumtionChart").html("");
+   $("#PowerVsFuelConsumtionChart").kendoChart({
+      chartArea: {
+         background: "",
+         height: 250,
+         width:$("#HalfChart").width()
+      },
+      dataSource: {
+         data: dataSource,
+      },
+      legend: {
+          visible: true,
+          position:'bottom'
+      },
+      seriesDefaults: {
+          type: "column"
+      },
+      seriesColors:ecisColors,
+      series: [
+         // {field: "FuelConsumtion",name: "Fuel Consumtion (per Million Cubic M)",axis:'FuelConsumtionAxis'},
+         // {field: "Power",name: "Power Generated (MW)",axis:'PowerAxis'},
+         {field: "Power",name: "Power Generated (MWHr)"},
+      ],
+       valueAxis: {
+          line: {
+              visible: true
+          },
+          minorGridLines: {
+              visible: false
+          },
+          labels: {
+              format: "N0",
+            font: "10px Arial,Helvetica,sans-serif",
+              // skip: 2,
+              // step: 2
+          }
+      },
+      // valueAxis: [
+  //           {
+  //               name:'FuelConsumtionAxis',
+  //               title:{text:'Fuel Consumtion'},
+  //               labels: {
+  //                   format:"{0:N0}",
+  //                   visible:true,
+  //                   font: "10px Arial,Helvetica,sans-serif",
+  //               },
+  //               line: {
+  //                   visible: true
+  //               },
+  //               min: MinFuelConsumtion,
+  //               max: MaxFuelConsumtion
+  //           },
+  //           {
+  //               name:'PowerAxis',
+  //               title:{text:'Power Generated'},
+  //               labels: {
+  //                   format:"{0:N0}",
+  //                   visible:true,
+  //                   font: "10px Arial,Helvetica,sans-serif",
+  //               },
+  //               line: {
+  //                   visible: true
+  //               },
+  //               min: MinPower,
+  //               max: MaxPower
+  //           },
+  //       ],
+      categoryAxis: {
+         field:'_id',
+         majorGridLines: {
+           visible: false
+         },
+         labels: {
+                font: "10px Arial,Helvetica,sans-serif",
+            },
+         // axisCrossingValues: [0, 12]
+      },
+      tooltip: {
+          visible: true,
+          template: "<b>#= series.name # :</b><br/> #= kendo.toString(value,'N2') #"
+      }
+  });
+}
+</script>

@@ -1,0 +1,225 @@
+<style type="text/css">
+	.input_file{
+		padding-top: 5px;
+	}
+	.sectionTitle{
+		background: #007DBA;
+	    padding: 8px 15px;
+	    color: white;
+	    letter-spacing: 1px;
+	}
+</style>
+<script type="text/javascript">
+	model.PageId("{{.PageId}}");
+	model.PageTitle("{{.PageTitle}}");
+	model.BreadCrumbs.push(new BreadCrumb("{{.PageId}}", "{{.PageTitle}}", "#", "active", ""));
+	var DataUpload = {
+		Processing:ko.observable(false),
+		DataType:ko.observable("PlantData"),
+		DataTypeList:ko.observableArray([
+			{Id:"PlantData",Title:"Plant Data"},
+			{Id:"UnitData",Title:"Unit Data"},
+		]),
+		PeriodType:ko.observable(""),
+		PeriodTypeList:ko.observableArray([
+			{Id:"DAILY",Title:"Daily"},
+			{Id:"WEEKLY",Title:"Weekly"},
+			{Id:"MONTHLY",Title:"Monthly"}
+		]),
+		// Period:ko.observable(""),
+		// PeriodList:ko.observableArray([]),
+	}
+	// DataUpload.PeriodType.subscribe(function(newVal){
+	// 	var PeriodList = [];
+	// 	// Set 
+	// 	switch(newVal){
+	// 		case "DAILY":
+	// 		break;
+	// 		case "WEEKLY":
+	// 		for(var i = 1;i<=53;i++){
+	// 			PeriodList.push({Id:"WEEK"+i,Title:"Week "+i});
+	// 		}
+	// 		break;
+	// 		case "MONTHLY":
+	// 		break;
+	// 		default:break;
+	// 	}
+	// 	DataUpload.PeriodList(PeriodList);
+	// 	if(PeriodList.length == 0 ){
+	// 		DataUpload.Period("");
+	// 	}else{
+	// 		DataUpload.Period(PeriodList[0].Id);
+	// 	}
+	// })
+</script>
+<div class="panel panel-default" data-bind="with:DataUpload">
+  <div class="panel-heading">
+      Data Placement
+  </div>
+  <div class="panel-body collapse in" id="contentFilter">
+  	<div class="row">
+  		<div class="col-sm-3">
+  			<div class="row">
+              <label class="col-md-4 filter-label">Data Type</label>
+              <div class="col-md-8">
+                  <input type="text" data-bind="kendoDropDownList:{value:DataType,data:DataTypeList,dataValueField:'Id',dataTextField:'Title',placeholder:'All'}"/>
+              </div>
+          	</div>
+  		</div>
+  		<div class="col-sm-3">
+  			<div class="row">
+              <label class="col-md-4 filter-label">Period Type</label>
+              <div class="col-md-8">
+                  <input type="text" data-bind="kendoDropDownList:{value:PeriodType,data:PeriodTypeList,dataValueField:'Id',dataTextField:'Title',placeholder:'All'}"/>
+              </div>
+          	</div>
+  		</div>
+  		<div class="col-sm-3">
+  			<div class="row">
+              <label class="col-md-3 filter-label">File</label>
+              <div class="col-md-9">
+                  <input type="file" class="input_file">
+              </div>
+          	</div>
+  		</div>
+  		<!-- <div class="col-sm-4">
+  			<div class="row">
+              <label class="col-md-4 filter-label">Period</label>
+              <div class="col-md-8">
+                  <input type="text" data-bind="kendoDropDownList:{value:Period,data:PeriodList,dataValueField:'Id',dataTextField:'Title',placeholder:'All'}"/>
+              </div>
+          	</div>
+  		</div> -->
+  		<div class="col-sm-3 align-center">
+            <button type="button" class="btn btn-primary btn-sm" data-bind="click:Refresh">
+              <span class="fa fa-refresh"></span>
+              Refresh
+            </button>
+            <button type="button" class="btn btn-warning btn-sm" data-bind="click:Upload">
+              <span class="fa fa-upload"></span>
+              Upload
+            </button>
+            <button type="button" class="btn btn-info btn-sm" data-bind="click:Upload">
+              <span class="fa fa-tasks"></span>
+              Re-Process
+            </button>
+  		</div>
+  	</div>
+  	<!-- <div class="row">
+  		<div class="col-sm-6">
+  		&nbsp;
+  		</div>
+  		<div class="col-sm-6">
+            <button type="button" class="btn btn-primary btn-sm" data-bind="click:Refresh">
+              <span class="fa fa-refresh"></span>
+              Refresh
+            </button>
+            <button type="button" class="btn btn-warning btn-sm" data-bind="click:Upload">
+              <span class="fa fa-upload"></span>
+              Upload
+            </button>
+  		</div>
+  	</div> -->
+  	<div class="row">
+  		<div class="col-sm-12">&nbsp;</div>
+	</div>
+  	<div class="row">
+  		<div class="col-sm-4">
+  			<div class="row">
+  				<div class="col-sm-12"><div class="sectionTitle">Weekly Target Files</div></div>
+  				<div class="col-sm-12"><div id="FileList"></div></div>
+  			</div>
+  		</div>
+  		<div class="col-sm-8">
+  			<div class="row">
+  				<div class="col-sm-12"><div class="sectionTitle">Available File</div></div>
+  				<div class="col-sm-12"><div id="ProcessingList"></div></div>
+  			</div>
+  		</div>
+  	</div>
+  </div>
+</div>
+<script type="text/javascript">
+	DataUpload.Refresh = function(){
+		DataUpload.GetData();
+	}
+	DataUpload.Upload = function(){
+		console.log("Upload..")
+	}
+	DataUpload.GetData = function(){
+		var dataFileSource = [];
+		var dataProcessSource = [];
+		for(var i = 0;i<100;i++){
+			dataFileSource.push({
+				DataType:"Plant Data",
+				FileName:"File "+(i+1),
+				PeriodType:"Weekly",
+			})
+
+			dataProcessSource.push({
+				Status:"-",
+				DataType:"Plant Data",
+				FileName:"File "+(i+1),
+				PeriodType:"Weekly",
+				Message:"-"
+			})
+		}
+
+
+		DataUpload.RenderFileList(dataFileSource);
+		DataUpload.RenderProcessingList(dataProcessSource);
+	}
+	DataUpload.RenderFileList = function(dataSource){
+		$("#FileList").html("");
+		$("#FileList").kendoGrid({
+			dataSource: {
+                data: dataSource,
+                pageSize: 5
+            },
+		    columns: [
+		        { field: "DataType", title:"Data Type",width:100 },
+		        { field: "PeriodType", title:"Period Type" ,width:100},
+		        { field: "FileName", title:"File Name" },
+		    ],
+		    resizable: true,
+            sortable: true,
+            selectable: "multiple cell",
+		    allowCopy: true,
+            pageable: {
+                refresh: true,
+                pageSizes: true,
+                buttonCount: 5
+            },
+		})
+	}
+
+	DataUpload.RenderProcessingList = function(dataSource){
+		$("#ProcessingList").html("");
+		$("#ProcessingList").kendoGrid({
+			dataSource: {
+                data: dataSource,
+                pageSize: 5
+            },
+		    columns: [
+		    	{ field: "Status", title:"Status",width:100,attributes:{style:"text-align:center"} },
+		        { field: "DataType", title:"Data Type",width:100 },
+		        { field: "PeriodType", title:"Period Type" ,width:100},
+		        { field: "FileName", title:"File Name" },
+		        { field: "Message", title:"Message" ,width:200},
+		    ],
+		    resizable: true,
+            sortable: true,
+            selectable: "multiple cell",
+		    allowCopy: true,
+            pageable: {
+                refresh: true,
+                pageSizes: true,
+                buttonCount: 5
+            },
+		})
+	}
+	$(document).ready(function(){
+		DataUpload.PeriodType("WEEKLY");
+		DataUpload.Refresh();
+	})
+</script>

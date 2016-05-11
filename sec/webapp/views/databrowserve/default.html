@@ -1,0 +1,174 @@
+<style type="text/css">
+.k-chart-tooltip-inverse {
+   text-align: left !important;
+}
+ .k-chart-tooltip{
+   text-align: left !important;
+}
+</style>
+
+<script>
+    var Hypothesis = {
+    Processing:ko.observable(true),
+    ProcessingMatch:ko.observable(true),
+    Plant:ko.observableArray([]),
+    Period:ko.observable('2014'),
+    PeriodDate:ko.observable('2014'),
+    PlantList:ko.observableArray([]),
+    EQType:ko.observableArray([]),
+    OrderType:ko.observableArray([]),
+    Top:ko.observable(10),
+    EQTypeList:ko.observableArray([]),
+    OrderTypeList:ko.observableArray([]),
+    FailureCodeList :ko.observableArray([]),
+    FailureCode :ko.observableArray([]),
+  }
+
+  var DBFie = {{ .DBFields }};
+  var SelectedFie = {{ .SelectedFields }};
+
+  Hypothesis.SetPeriod = function(){
+   Hypothesis.Period($(this.element).val());
+  }
+
+  Hypothesis.Reset = function(){
+    Hypothesis.Period('2014');
+    Hypothesis.PeriodDate('2014');
+    Hypothesis.EQType([]);
+    Hypothesis.Plant([]);
+    Hypothesis.OrderType([]);
+    Hypothesis.FailureCode([]);
+    Hypothesis.Top(10);
+  }
+
+  Hypothesis.Initiate = function(){
+    Hypothesis.Processing(true);
+    var url = "/hypothesis/initiate"
+    $.ajax({
+        url: url,
+        type: 'post',
+        dataType: 'json',
+        data : null,
+        success : function(res) {
+            if(!res.IsError){
+                Hypothesis.PlantList(res.Data.PlantList);
+                $('#txtPeriod').val(Hypothesis.Period());
+
+                for(var x in res.Data.EQTypeList){
+                res.Data.EQTypeList[x].EquipmentTypeDesc = res.Data.EQTypeList[x].EquipmentType+" - "+res.Data.EQTypeList[x].EquipmentTypeDesc;
+              }
+              Hypothesis.EQTypeList(res.Data.EQTypeList);
+              Hypothesis.OrderTypeList(res.Data.OrderTypeList);
+
+              Hypothesis.FailureCodeList(res.Data.FailureCode);
+              Hypothesis.FailureCode([]);
+              Hypothesis.Refresh();
+
+            }else{
+                alert(res.message);
+            }
+        },
+     });
+  }
+
+  Hypothesis.Refresh = function(){
+    GenerateDataBrowser();
+
+  }
+
+  Hypothesis.GetFilter  = function(){
+    var parm = {
+
+      EQType:Hypothesis.EQType() ,
+      Plant:Hypothesis.Plant(),
+      Period:Hypothesis.Period(),
+      OrderType:Hypothesis.OrderType(),
+      Top: Hypothesis.Top(),
+      FailureCode : Hypothesis.FailureCode(),
+    };
+    return parm;
+  }
+
+</script>
+
+<div class="row" id="HypothesisPage" data-bind="with:Hypothesis">
+  <div class="col-md-3" id="HypothesisFilter">
+     <div class="row" id="FilterTitle">
+      <div class="col-md-12">
+        <div class="box-info">
+            <h4 class="box-title"><span class="fa fa-filter"></span>&nbsp; Input Filters</h4>
+        </div>
+      </div>
+     </div>
+     <div class="row">
+          <label class="col-md-5 filter-label">Period</label>
+          <div class="col-md-7">
+              <input id="txtPeriod" type="text" data-bind="kendoDatePicker: {change:SetPeriod, value: PeriodDate, start: 'decade', depth: 'decade', format: 'yyyy'}" />
+          </div>
+      </div>
+
+      <div class="row">
+          <label class="col-md-5 filter-label">Equipment Type</label>
+          <div class="col-md-7">
+               <input type="text" data-bind="kendoMultiSelect:{value:EQType,data:EQTypeList,dataValueField:'EquipmentType',dataTextField:'EquipmentTypeDesc',placeholder:'All',filter: 'contains'}"/>
+          </div>
+      </div>
+      <div class="row">
+          <label class="col-md-5 filter-label">Plants</label>
+          <div class="col-md-7">
+              <input type="text" data-bind="kendoMultiSelect:{value:Plant,data:PlantList,dataValueField:'Plant',dataTextField:'Plant',placeholder:'All'}"/>
+          </div>
+      </div>
+<!--
+      <div class="row">
+          <label class="col-md-5 filter-label">Failure Code</label>
+          <div class="col-md-7">
+               <input type="text" data-bind="kendoMultiSelect:{value:FailureCode,data:FailureCodeList,dataValueField:'Id',dataTextField:'Text',placeholder:'Require to Choose..',filter: 'contains'}"/>
+          </div>
+      </div> -->
+      <div class="row">
+          <div class="col-md-12 align-right">
+              <button type="button" class="btn btn-primary btn-sm" data-bind="click:Refresh">
+                <span class="fa fa-refresh"></span>
+                Refresh
+              </button>
+              <button type="button" class="btn btn-warning btn-sm"  data-bind="click:Reset">
+                <span class="fa fa-share-square"></span>
+                Reset
+              </button>
+          </div>
+      </div>
+  </div>
+  <div class="col-md-9">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="box-info">
+              <h4 class="box-title"><span class="fa fa-area-chart"></span>&nbsp; Data Browser</h4>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12"  style="height:1px;"><div id="hypothesis-chart">&nbsp;</div></div>
+      </div>
+      <div class="row">
+        <!-- Content -->
+        <div class="col-md-12">
+          <div id="HypothesisContent">
+            <div class="row" id="Content">
+              <div class="col-md-12">&nbsp;</div>
+              <div class="col-md-12">{{template "databrowser.html"}}</div>
+            </div>
+          </div>
+        </div>
+        <!-- End Of Content -->
+      </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function(){
+  Hypothesis.Initiate();
+  $("#HypothesisId").hide();
+})
+</script>
+

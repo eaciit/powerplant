@@ -1,0 +1,54 @@
+<div class="box-info">
+    <h4 class="box-title">Maintenance Cost  <span data-bind="text:' - '+Dashboard.selectedPlant.Name()"></h4>
+</div>
+<div id="MaintenanceCostChart"></div>
+<script type="text/javascript">
+Dashboard.GenMaintenanceCostChart = function(seriesList,dataSource){
+	$("#MaintenanceCostChart").html("");
+	$("#MaintenanceCostChart").kendoChart({
+		chartArea: { 
+      background: "",
+      height: 250,
+      width:$("#HalfChart").width()
+  	},
+		dataSource: {
+			data: dataSource,
+		},
+		legend: {
+		    visible: true,
+		    position:'bottom',
+		     labels:{
+				template: "#= series.modifiedname #"
+		    }
+		},
+		seriesDefaults: {
+				stack: true,
+		    type: "column"
+		},
+		seriesColors:ecisColors,
+		series: seriesList,
+		valueAxis: {
+	    line: {
+	        visible: true
+	    },
+	    minorGridLines: {
+	        visible: false
+	    },
+	    labels: {
+	        format: "N0",
+	        font: "10px Arial,Helvetica,sans-serif",
+	    	}
+		},
+		categoryAxis: {
+			field:'period',
+			majorGridLines: {
+			  visible: false
+			}
+		},
+		tooltip: {
+		    visible: true,
+		    template: "<b>#= series.modifiedname # :</b><br/> #= kendo.toString(value,'N2') #"
+		}
+  });
+}
+</script>

@@ -1,0 +1,119 @@
+<script>
+var HistoricalValueEquipment = {
+  Processing:ko.observable(false),
+  HistoricalValue:ko.observableArray([
+    {Name:"Revenue",Value:8000},
+    {Name:"Maintenance",Value:50000},
+    {Name:"Operating",Value:20000}
+  ]),
+  TotalRevenue:ko.observable(0),
+  TotalMaintenanceCost:ko.observable(0),
+  TotalOperatingCost:ko.observable(0),
+}
+HistoricalValueEquipment.HistoricalValueTotal = ko.computed(function(){
+  var Total = 0;
+  var arr = HistoricalValueEquipment.HistoricalValue();
+  for(var i in arr){
+    Total += arr[i].Value;
+  }
+  return Total;
+});
+</script>
+
+<div class="row" data-bind="with:HistoricalValueEquipment">
+
+  <div class="col-md-12">
+    <div class="row">
+      <ul class="nav nav-tabs" id="Tab">
+          <li  class="active"><a href="#Summary" data-toggle="tab">Summary</a></li>
+          <li><a href="#Maintenance" data-toggle="tab">Maintenance</a></li>
+         <li><a href="#Operating" data-toggle="tab">Production</a></li>
+         <li><a href="#Revenue" data-toggle="tab">Revenue</a></li>
+         <li><a href="#AssetWorkSummary" data-toggle="tab">Asset Work Summary</a></li>
+         <li><a href="#Performance" data-toggle="tab">Performance</a></li>
+         <li><a href="#DataQuality" data-toggle="tab">Data Quality</a></li>
+         <!-- <li><a href="#Availability" data-toggle="tab">Availability</a></li>
+         <li><a href="#Outages" data-toggle="tab">Outages</a></li> -->
+         
+      </ul>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="tab-content">
+          <div class="tab-pane" id="Maintenance">
+            {{template "maintenance.html"}}
+          </div>
+          <div class="tab-pane" id="Operating">
+            {{template "operating.html"}}
+          </div>
+          <div class="tab-pane" id="Revenue">
+            {{template "revenue.html"}}
+          </div>
+          <div class="tab-pane" id="Availability">
+            {{template "availability.html"}}
+          </div>
+          <div class="tab-pane" id="Outages">
+            {{template "outages.html"}}
+          </div>
+          <div class="tab-pane active" id="Summary">
+            {{template "summary.html"}}
+          </div>
+          <div class="tab-pane" id="DataQuality">
+            {{template "dataquality.html"}}
+          </div>
+          <div class="tab-pane" id="Performance">
+            {{template "performance.html"}}
+          </div>
+          <div class="tab-pane" id="AssetWorkSummary">
+            {{template "assetworksummary.html"}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- <div class="col-md-3">
+    <div class="row">
+      <div class="col-md-12">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th colspan="2">Historical Value</th>
+            </tr>
+          </thead>
+          <tbody data-bind="foreach:HistoricalValue">
+            <tr>
+              <td data-bind="text:Name"></td>
+              <td data-bind="text:kendo.toString(Value,'N0')" class="align-right"></td>
+            </tr>
+          </tbody>
+          <tfoot>
+
+            <tr>
+              <td colspan="2">&nbsp;</td>
+            </tr>
+            <tr>
+              <th>TOTAL</th>
+              <th data-bind="text:kendo.toString(HistoricalValueTotal(),'N0')" class="align-right"></th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div> -->
+</div>
+
+<script type="text/javascript">
+
+  var tableToExcel = (function() {
+  var uri = 'data:application/vnd.ms-excel;base64,'
+    , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--><meta http-equiv="content-type" content="text/plain; charset=UTF-8"/></head><body><table>{table}</table></body></html>'
+    , base64 = function(s) { return window.btoa(unescape(encodeURIComponent(s))) }
+    , format = function(s, c) { return s.replace(/{(\w+)}/g, function(m, p) { return c[p]; }) }
+  return function(table, name) {
+    if (!table.nodeType) table = document.getElementById(table)
+    var ctx = {worksheet: name || 'Worksheet', table: table.innerHTML}
+    window.location.href = uri + base64(format(template, ctx))
+  }
+})()
+
+</script>

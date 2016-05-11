@@ -1,0 +1,396 @@
+<style type="text/css">
+	.sar-currency:before{
+    content:"SAR ";
+    float:left;
+}
+</style>
+
+<script>
+	var HVESummary = {
+		Processing:ko.observable(false),
+		ShowVisualisation:ko.observable(false),
+		ExpandData:ko.observable(false),
+		DetailDataSource:ko.observableArray([]),
+		MaxRevenue:ko.observable(0),
+		MinRevenue:ko.observable(0),
+		MaxMaintenanceCost:ko.observable(0),
+		MinMaintenanceCost:ko.observable(0),
+		MaxOperatingCost:ko.observable(0),
+		MinOperatingCost:ko.observable(0),
+		MaxValueEquation:ko.observable(0),
+		MinValueEquation:ko.observable(0),
+		BreakdownBy:ko.observable(""),
+		scope:ko.observable("")
+	}
+</script>
+<div class="align-center" data-bind="visible:HVESummary.Processing()">
+    {{template "processing.html"}}
+  </div>
+<div data-bind="with:HistoricalValueEquipment,visible:!HVESummary.Processing()" >
+	<table class="table table-striped table-bordered">
+	  <thead>
+	    <!-- <tr>
+	      <th colspan="4">Unit : </th>
+	    </tr> -->
+	    <tr>
+	      <th class="align-center">Revenue</th>
+	      <th class="align-center">-</th>
+	      <th class="align-center">Maintenance Cost</th>
+	      <th class="align-center">-</th>
+	      <th class="align-center">Production Cost</th>
+	      <th class="align-center">=</th>
+	      <th class="align-center">Value Equation</th>
+	    </tr>
+	  </thead>
+	  <tbody>
+	    <tr>
+	      <td data-bind="text:kendo.toString(TotalRevenue(),'N0')" class="align-right sar-currency"></td>
+	      <td class="align-center">-</td>
+	      <td data-bind="text:kendo.toString(TotalMaintenanceCost(),'N0')" class="align-right sar-currency"></td>
+	      <td class="align-center">-</td>
+	      <td data-bind="text:kendo.toString(TotalOperatingCost(),'N0')" class="align-right sar-currency"></td>
+	      <td class="align-center">=</td>
+	      <td data-bind="text:kendo.toString(TotalRevenue()-TotalMaintenanceCost()-TotalOperatingCost(),'N0')" class="align-right sar-currency"></td>
+	    </tr>
+	  </tbody>
+	</table>
+</div>
+<div data-bind="with:HVESummary,visible:!HVESummary.Processing()">
+
+	  <div class="row" data-bind="visible:ExpandData()&&scope()!=='Unit'">
+		  	<div id="GridSummaryExpand" class="col-md-12">
+		  		<table class="table table-striped table-bordered">
+				  <thead>
+				    <tr>
+				      <th class="align-center" data-bind="text:BreakdownBy"></th>
+				      <th class="align-center">Revenue</th>
+				      <th class="align-center">-</th>
+				      <th class="align-center">Maintenance Cost</th>
+				      <th class="align-center">-</th>
+				      <th class="align-center">Production Cost</th>
+				      <th class="align-center">=</th>
+				      <th class="align-center">Value Equation</th>
+				    </tr>
+				  </thead>
+				  <tbody data-bind="foreach:DetailDataSource">
+				    <tr>
+				    	<th data-bind="text:_id"></td>
+						<td data-bind="text:kendo.toString(Revenue,'N0'),attr:{style:HVESummary.isMaxOrMinRevenue(Revenue)}" class="align-right sar-currency"></td>
+						<td class="align-center">-</td>
+						<td data-bind="text:kendo.toString(MaintenanceCost,'N0'),attr:{style:HVESummary.isMaxOrMinMaintenanceCost(MaintenanceCost)}" class="align-right sar-currency"></td>
+						<td class="align-center">-</td>
+						<td data-bind="text:kendo.toString(OperatingCost,'N0'),attr:{style:HVESummary.isMaxOrMinOperatingCost(OperatingCost)}" class="align-right sar-currency"></td>
+						<td class="align-center">=</td>
+						<td data-bind="text:kendo.toString(Revenue-MaintenanceCost-OperatingCost,'N0'),attr:{style:HVESummary.isMaxOrMinValueEquation(Revenue-MaintenanceCost-OperatingCost)}" class="align-right sar-currency"></td>
+				    </tr>
+				  </tbody>
+				</table>
+		  	</div>
+	  </div>
+  <div class="row">
+  	<div class="col-md-6 align-left" data-bind="visible:scope()!=='Unit'">
+  		<button type="button" class="btn btn-warning btn-sm" data-bind="click:ExpandTrigger,visible:!ExpandData()">
+	  	<span class="fa fa-plus"></span> 
+	    Expand
+	  </button>
+	  <button type="button" class="btn btn-warning btn-sm" data-bind="click:ExpandTrigger,visible:ExpandData()">
+	  	<span class="fa fa-minus"></span> 
+	    Collapse
+	  </button>
+	  <button type="button" class="btn btn-warning btn-sm" data-bind="click:ExportToExcel,visible:ExpandData()">
+	  	<span class="fa fa-file-excel-o"></span> 
+	    Export to XLS
+	  </button>
+  	</div>
+  	<div data-bind="attr:{class:scope()=='Unit'?'col-md-12 align-right':'col-md-6 align-right'}" >
+  		<button type="button" class="btn btn-warning btn-sm" data-bind="click:ShowVisualisationTrigger,visible:!ShowVisualisation()">
+	  	<span class="fa fa-bar-chart"></span>
+	    Show Visualisation
+	  </button>
+	  <button type="button" class="btn btn-warning btn-sm" data-bind="click:ShowVisualisationTrigger,visible:ShowVisualisation()">
+	  	<span class="fa fa-bar-chart"></span>
+	    Hide Visualisation
+	  </button>
+  	</div>
+  </div>
+  
+  <div class="row" data-bind="visible:ShowVisualisation()">
+  	<div class="col-md-12">
+  		<div id="SummaryVisualisation"></div>
+  	</div>
+  </div>
+</div>
+
+<script>
+	HVESummary.isMaxOrMinRevenue = function(val){
+		if(val==HVESummary.MaxRevenue()){
+			return "background:green;color:white;"
+		}else if(val==HVESummary.MinRevenue()){
+			return "background:red;color:white;"
+		}
+	}
+
+	HVESummary.isMaxOrMinMaintenanceCost = function(val){
+		if(val==HVESummary.MaxMaintenanceCost()){
+			return "background:red;color:white;"
+		}else if(val==HVESummary.MinMaintenanceCost()){
+			return "background:green;color:white;"
+		}
+	}
+
+	HVESummary.isMaxOrMinOperatingCost = function(val){
+		if(val==HVESummary.MaxOperatingCost()){
+			return "background:red;color:white;"
+		}else if(val==HVESummary.MinOperatingCost()){
+			return "background:green;color:white;"
+		}
+	}
+
+	HVESummary.isMaxOrMinValueEquation = function(val){
+		if(val==HVESummary.MaxValueEquation()){
+			return "background:green;color:white;"
+		}else if(val==HVESummary.MinValueEquation()){
+			return "background:red;color:white;"
+		}
+	}
+	HVESummary.GetData = function(){
+		HVESummary.Processing(true);
+		HVESummary.MaxRevenue(0);
+		HVESummary.MinRevenue(0);
+		HVESummary.MaxMaintenanceCost(0);
+		HVESummary.MinMaintenanceCost(0);
+		HVESummary.MaxOperatingCost(0);
+		HVESummary.MinOperatingCost(0);
+		HVESummary.MaxValueEquation(0);
+		HVESummary.MinValueEquation(0);
+		HVESummary.scope(ValueEquation.scope());
+		var url = "/historicalvalueequation/getsummarydata";
+		var parm = ValueEquation.GetFilter();
+		ajaxPost(url,parm, function(res) {
+			if(!res.IsError){
+				var dataSource = res.Data.DataDetail;
+				if(HVESummary.scope()=="Plant"){
+					for(var i in dataSource){
+						dataSource[i].Index = parseFloat(dataSource[i]._id.substr(2));
+					}
+					var GTArr = Enumerable.From(dataSource).Where(function(x){return x._id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+					var STArr = Enumerable.From(dataSource).Where(function(x){return x._id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+					var arr = [];
+					for(var i in GTArr){
+					arr.push(GTArr[i]);
+					}
+					for(var i in STArr){
+					arr.push(STArr[i]);
+					}
+					var UnmappedArr = Enumerable.From(dataSource).Where(function(x){return x._id =="Unmapped Data"}).OrderBy(function(x){return x.Index}).ToArray();
+					for(var i in UnmappedArr){
+					arr.push(UnmappedArr[i]);
+					}
+					dataSource = arr;
+				}
+				if (ValueEquation.scope()!=='Unit'){
+					HVESummary.BreakdownBy('Plant');
+				}else{
+					HVESummary.BreakdownBy('Unit');
+				}
+				
+				for(var i in dataSource){
+					if(i == 0){
+						HVESummary.MinRevenue(dataSource[i].Revenue)
+						HVESummary.MinMaintenanceCost(dataSource[i].MaintenanceCost)
+						HVESummary.MinOperatingCost(dataSource[i].OperatingCost)
+
+						HVESummary.MaxRevenue(dataSource[i].Revenue)
+						HVESummary.MaxMaintenanceCost(dataSource[i].MaintenanceCost)
+						HVESummary.MaxOperatingCost(dataSource[i].OperatingCost)
+
+						var VE = dataSource[i].Revenue-dataSource[i].MaintenanceCost-dataSource[i].OperatingCost;
+						HVESummary.MinValueEquation(VE)
+						HVESummary.MaxValueEquation(VE)
+					}
+
+					// Min Max Revenue
+					if(dataSource[i].Revenue<HVESummary.MinRevenue() ){
+						HVESummary.MinRevenue(dataSource[i].Revenue);
+					}else if(dataSource[i].Revenue>HVESummary.MaxRevenue()){
+						HVESummary.MaxRevenue(dataSource[i].Revenue);
+					}
+					// Min Max Maintenance Cost
+					if(dataSource[i].MaintenanceCost<HVESummary.MinMaintenanceCost() ){
+						HVESummary.MinMaintenanceCost(dataSource[i].MaintenanceCost);
+					}else if(dataSource[i].MaintenanceCost>HVESummary.MaxMaintenanceCost()){
+						HVESummary.MaxMaintenanceCost(dataSource[i].MaintenanceCost);
+					}
+					// Min Max Operating Cost Cost
+					if(dataSource[i].OperatingCost<HVESummary.MinOperatingCost()){
+						HVESummary.MinOperatingCost(dataSource[i].OperatingCost);
+					}else if(dataSource[i].OperatingCost>HVESummary.MaxOperatingCost()){
+						HVESummary.MaxOperatingCost(dataSource[i].OperatingCost);
+					}
+
+					dataSource[i].ValueEquation = dataSource[i].Revenue-dataSource[i].MaintenanceCost-dataSource[i].OperatingCost;
+					if(dataSource[i].ValueEquation<HVESummary.MinValueEquation() ){
+						HVESummary.MinValueEquation(dataSource[i].ValueEquation);
+					}else if(dataSource[i].ValueEquation>HVESummary.MaxValueEquation()){
+						HVESummary.MaxValueEquation(dataSource[i].ValueEquation);
+					}
+
+				}
+				HVESummary.Processing(false);
+				HVESummary.DetailDataSource(dataSource)
+				HVESummary.GenerateChart(res.Data.DataChart)
+			}else{
+				alert(res.message);
+			}
+		});
+	}
+	HVESummary.GenerateChart = function(dataSource){
+		var MinCost = 0;var MaxCost = 0;
+		var MinRevenue = 0;var MaxRevenue = 0;
+		// if(ValueEquation.scope()=="Unit"){
+		// 	for(var i in dataSource){
+		// 	dataSource[i].Index = parseFloat(dataSource[i]._id.substr(2));
+		// 	}
+		// 	var GTArr = Enumerable.From(dataSource).Where(function(x){return x._id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+		// 	var STArr = Enumerable.From(dataSource).Where(function(x){return x._id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+		// 	var arr = [];
+		// 	for(var i in GTArr){
+		// 	arr.push(GTArr[i]);
+		// 	}
+		// 	for(var i in STArr){
+		// 	arr.push(STArr[i]);
+		// 	}
+		// 	dataSource = arr;
+		// }
+
+		for(var i in dataSource){
+			dataSource[i].ValueEquation = dataSource[i].Revenue-dataSource[i].MaintenanceCost-dataSource[i].OperatingCost;
+			dataSource[i].Revenue = dataSource[i].Revenue/1000000;
+			dataSource[i].MaintenanceCost = dataSource[i].MaintenanceCost/1000000;
+			dataSource[i].OperatingCost = dataSource[i].OperatingCost/1000000;
+
+			if(dataSource[i].Revenue > MaxRevenue){
+				MaxRevenue = dataSource[i].Revenue
+			}
+			if(dataSource[i].Revenue < MinRevenue){
+				MinRevenue = dataSource[i].Revenue
+			}
+			dataSource[i].Cost = dataSource[i].MaintenanceCost+dataSource[i].OperatingCost;
+			if(dataSource[i].Cost > MaxCost){
+				MaxCost = dataSource[i].Cost
+			}
+			if(dataSource[i].Cost < MinCost){
+				MinCost = dataSource[i].Cost
+			}
+		}
+		// Create Value Equation Label
+
+		for(var i in dataSource){
+			dataSource[i].CostPrct = dataSource[i].Cost/MaxCost*100;
+			dataSource[i].RevenuePrct = dataSource[i].Revenue/MaxRevenue*100;
+			dataSource[i].LabelVE =  dataSource[i].CostPrct > dataSource[i].RevenuePrct ? dataSource[i].CostPrct/100*MaxRevenue  : dataSource[i].RevenuePrct/100*MaxRevenue;
+		}
+		
+		$("#SummaryVisualisation").kendoChart({
+		title:{
+			text:'in SAR Million',
+			font: "12px Arial,Helvetica,sans-serif",
+		},
+		chartArea: { 
+			background: "",
+			height: 350,
+			width:$("#chart-fullwidth").width()
+		},
+		dataSource: {
+	      data: dataSource
+	  	},
+		legend: {
+		      position: "bottom"
+		},
+		seriesDefaults: {
+		  type: "column",
+		  labels: {
+		      visible: false,
+		      // template:"#:kendo.toString(dataItem.ValueEquation/1000000,'N0')#"
+		  },
+		},
+		series: [
+            {field:"MaintenanceCost",name:"Maintenance Cost",stack:"Cost",axis:"Cost"},
+            {field:"OperatingCost",name:"Production Cost",stack:"Cost",axis:"Cost"},
+            {field:"Revenue",name:"Revenue",stack:"Revenue",axis:"Revenue"},
+            {field:"LabelVE",name:"Value Equation",stack:null,type:"line",axis:"Revenue",visibleInLegend: false,
+				labels: {
+				  visible: true,
+				  template:"#:kendo.toString(dataItem.ValueEquation/1000000,'N0')#"
+				},
+				opacity: 0,
+				markers: {
+			      visible: false,
+			    },
+                tooltip: {
+                    visible: true,
+                    template: "#= category # | #= series.name #: #:kendo.toString(dataItem.ValueEquation/1000000,'N0')#"//#= kendo.format('{0:N0}',value) #"
+                }
+        	},
+            // {field:"ValueEquation",name:"ValueEquation",type"line"},
+        ],
+		valueAxis: [
+            {
+                name:'Cost',
+                title:{text:'Maintenance + Production Cost'},
+                labels: {
+                    format:"{0:N0}",
+                    visible:true,
+                    font: "10px Arial,Helvetica,sans-serif",
+                },
+                line: {
+                    visible: true
+                },
+                min:  MinCost,
+                max: MaxCost+50
+            },
+            {
+                name:'Revenue',
+                title:{text:'Revenue'},
+                labels: {
+                    format:"{0:N0}",
+                    visible:true,
+                    font: "10px Arial,Helvetica,sans-serif",
+                },
+                line: {
+                    visible: true
+                },
+                min: MinRevenue,
+                max: MaxRevenue+100
+            },
+        ],
+		categoryAxis: {
+		  field: "_id",
+		  majorGridLines: {
+		      visible: false
+		  },
+		  labels: {
+		      rotation: 35,
+		      font: "10px Arial,Helvetica,sans-serif",
+		  },
+		  axisCrossingValues: [0,  dataSource.length]
+		},
+		tooltip: {
+			visible: true,
+			format: "{0:N2}",
+			template: "#= category # | #= series.name #: #= kendo.format('{0:N2}', value) #"
+		},
+		seriesColors:[ecisColors[0],ecisColors[8],ecisColors[5]],
+	});
+
+	}
+	HVESummary.ExpandTrigger = function(){
+		HVESummary.ExpandData(!HVESummary.ExpandData());
+	}
+	HVESummary.ShowVisualisationTrigger = function(){
+		HVESummary.ShowVisualisation(!HVESummary.ShowVisualisation());
+	}
+	HVESummary.ExportToExcel = function(){
+		tableToExcel('GridSummaryExpand', '')
+	}
+</script>

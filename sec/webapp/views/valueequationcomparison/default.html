@@ -1,0 +1,418 @@
+<style>
+.remove-filter{
+  height: 30px;
+}
+.remove-filter>button{
+  float: right;
+    margin-right: -24px;
+    margin-bottom: 5px;
+}
+.capacity-mw:before{
+  content:"MW ";
+  float:left;
+}
+.sar-kwh:before{
+  content:"SAR / kWh ";
+  float:left;
+}
+.sar-currency:before{
+    content:"SAR ";
+    float:left;
+}
+#Tab{
+margin-bottom: 10px;
+}
+.nav-tabs{
+padding-left: 15px;
+}
+#FilterListRow >td>div {
+  border-left: 1px solid #DDD;
+  width: 230px;
+  margin-left: 0px;
+  margin-right: 30px;
+}
+#FilterAdd{
+ border-left: 1px solid #DDD; 
+}
+#Aggregator{
+  color:white;
+  padding-top:8px;
+  padding-bottom:8px;
+  background: #106936;
+  font-weight: bold;
+  padding-left: 15px
+}
+#Result{
+  color: white;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  background: #106936;
+  padding-left: 15px;
+  font-weight: bold;
+}
+.agg-content > div{
+  padding: 5px 15px;
+  border-left: 1px solid #DDD;
+  border-bottom: 1px solid #DDD;
+}
+.he{
+  min-height: 45px;
+}
+</style>
+<script>
+model.PageId("{{.PageId}}");
+model.PageTitle("{{.PageTitle}}");
+model.BreadCrumbs.push(new BreadCrumb("{{.PageId}}", "{{.PageTitle}}", "#", "active", ""));
+
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+var ValueEquationComparison = {
+  Processing:ko.observable(false),
+  FilterList:ko.observableArray([]),
+  PlantList:ko.observableArray([]),
+  UnitList:ko.observableArray([]),
+  SelectedList:ko.observableArray(["Unit Group","Unit"]),
+  UnitGroupList:ko.observableArray(["ALL","GT","ST"]),
+}
+</script>
+<div class="panel panel-default" data-bind="with:ValueEquationComparison">
+  <div class="panel-heading he">
+  <div class="col-md-6 align-left">
+      Value Equation Comparison
+  </div>  
+  <div class="col-md-6 align-right">
+    <button type="button" class="btn btn-default btn-sm" data-bind="click:ValueEquationComparison.EPdf">
+      <span class="fa fa-printe"></span>
+      Print
+    </button>
+  </div>
+
+  </div>
+
+
+
+  <div class="panel-body">
+
+    <div class="row" data-bind="visible:Processing()">
+      <div class="col-md-12 align-center">
+        {{template "processing.html"}}
+      </div>
+    </div>
+    
+      <div class="row" id="EquationComparison">
+          <div class="col-md-2" style="padding-right: 0px;border-right:1px solid #CCC;">
+            <div id="EmptySectionAgg" class="align-center">
+              <button type="button" class="btn btn-default btn-sm" data-bind="click:ValueEquationComparison.Refresh">
+                <span class="fa fa-refresh"></span>
+                Refresh
+              </button>
+              <button type="button" class="btn btn-warning btn-sm" data-bind="click:ValueEquationComparison.ResetFilter">
+                <span class="fa fa-times-circle"></span>
+                Reset
+              </button>
+            </div>
+            <div id="Aggregator">Aggregator</div>
+            <div class="agg-content">
+              <div>Revenue</div>
+              <div>Maintenance Cost</div>
+              <div>Production Cost</div>
+              <div>Value Equation</div>
+              <div>Value Equation / Net Generation</div>
+            </div>
+          </div>
+          <div class="col-md-10" style="padding-left: 1px;">
+              <div id="FilterList">
+                <table id="FilterListTable">
+                  <tbody>
+                    <tr data-bind="foreach:FilterList" id="FilterListRow">
+                      <td>
+                          <div class="row">
+                            <label class="col-md-5 filter-label">From</label>
+                            <div class="col-md-7">
+                                <input class="startPeriod" type="text" data-bind="kendoDatePicker: {value:startPeriod, start: 'month', depth: 'month', format: 'dd MMM yyyy'}" />
+                                <label class="LstartPeriod hidden" data-bind="text:kendo.toString(kendo.parseDate(kendo.parseDate(ValueEquationComparison.FilterList()[$index()].startPeriod(), 'yyyy-MM-dd'), 'yyyy-MM-dd'), 'dd-MMM-yyyy')"></label>
+                            </div>
+                          </div>
+
+                          <div class="row">
+                            <label class="col-md-5 filter-label">To</label>
+                            <div class="col-md-7">
+                                <input class="endPeriod" type="text" data-bind="kendoDatePicker: {value:endPeriod, start: 'month', depth: 'month', format: 'dd MMM yyyy'}" />
+                                <label class="LendPeriod hidden" data-bind="text:kendo.toString(kendo.parseDate(kendo.parseDate(ValueEquationComparison.FilterList()[$index()].endPeriod(), 'yyyy-MM-dd'), 'yyyy-MM-dd'), 'dd-MMM-yyyy')"></label>
+                                
+                            </div>
+                          </div>
+
+
+                          <div class="row">
+                            <label class="col-md-5 filter-label">Plant</label>
+                            <div class="col-md-7">
+                                <input type="text" data-bind="kendoMultiSelect:{value:selectedPlant,data:ValueEquationComparison.PlantList,dataValueField:'Plant',dataTextField:'Plant',placeholder:'All'},attr:{onchange:'ValueEquationComparison.GetUnitList('+$index()+')'}" />
+                                <label class="LPlant hidden" data-bind="text:selectedPlant"></label>
+                            </div>
+                          </div>
+                          <!-- <div class="row">
+                            <label class="col-md-5 filter-label">Select</label>
+                            <div class="col-md-7">
+                                <input type="text" data-bind="kendoDropDownList:{value:selected,data:ValueEquationComparison.SelectedList,placeholder:'All'}"/>
+                            </div>
+                          </div> -->
+                          <!-- <div class="row" data-bind="visible:selected()=='Unit'">
+                            <label class="col-md-5 filter-label">Unit</label>
+                            <div class="col-md-7">
+                                <input type="text" data-bind="kendoMultiSelect:{value:selectedUnit,data:UnitList,dataValueField:'Id',dataTextField:'Id',placeholder:'All'}"/>
+                            </div>
+                          </div> -->
+                          <div class="row" data-bind="visible:selected()=='Unit Group'">
+                            <label class="col-md-5 filter-label">Unit Group</label>
+                            <div class="col-md-7">
+                              <input type="text" data-bind="kendoDropDownList:{value:selectedUnitGroup,data:ValueEquationComparison.UnitGroupList,placeholder:'All'}"/>
+                            </div>
+                          </div>
+                          <div class="remove-filter">
+                            <button type="button" class="btn btn-default btn-xs" data-bind="click:ValueEquationComparison.RemoveFilter,visible:$index()!==0">
+                              <span class="fa fa-remove"></span>
+                            </button>
+                          </div>
+                      </td>
+                      <td data-bind="visible:($index()+1)==ValueEquationComparison.FilterList().length" style="border-left:1px solid #DDD;">
+                        <div style="width: 100px;margin: 0px;border:0px;" class="align-center">
+                          <button type="button" class="btn btn-default btn-sm" data-bind="click:ValueEquationComparison.AddFilter">
+                            <span class="fa fa-plus"></span>
+                            Add New
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td data-bind="attr:{colspan:FilterList().length+1}"><div id="Result">Result</div></td>
+                    </tr>
+                    <tr data-bind="foreach:FilterList">
+                       <td>
+                        <div class="agg-content align-right" data-bind="attr:{style:$index()==(ValueEquationComparison.FilterList().length-1)?'border-right:1px solid #DDD':''}">
+                          <div data-bind="text:kendo.toString(Revenue(),'N0')" class="sar-currency"></div>
+                          <div data-bind="text:kendo.toString(MaintenanceCost(),'N0')" class="sar-currency"></div>
+                          <div data-bind="text:kendo.toString(OperatingCost(),'N0')" class="sar-currency"></div>
+                          <div data-bind="text:kendo.toString(ValueEquation(),'N0')" class="sar-currency"></div>
+                          <div data-bind="text:kendo.toString(ValueEquationperCapacity(),'N0')" class="sar-kwh"></div>
+                        </div>
+                       </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+            </div>
+            <!-- End Of Filter -->
+
+
+          </div>
+        </div>
+    </div> 
+</div>
+<script type="text/javascript">
+function Filter(){
+  var self = {
+    startPeriod:ko.observable(new Date(2014,0,1)),
+    endPeriod:ko.observable(new Date(2014,11,31)),
+    selectedPlant:ko.observableArray([]),
+    selectedUnit:ko.observableArray([]),
+    selectedUnitGroup:ko.observable("ALL"),
+    selectedPlant:ko.observableArray(["ALL"]),
+    selected:ko.observable("Unit Group"),
+    UnitList:ko.observableArray([]),
+    Revenue:ko.observable(0),
+    MaintenanceCost:ko.observable(0),
+    OperatingCost:ko.observable(0),
+    ValueEquation:ko.observable(0),
+    ValueEquationperCapacity:ko.observable(0),
+  };
+  var UnitList = ValueEquationComparison.UnitList();
+  self.UnitList(UnitList);
+  return self;
+}
+ValueEquationComparison.AddFilter = function(){
+  ValueEquationComparison.FilterList.push(Filter());
+  if($("#FilterListTable").width()>$("#FilterList").width()){
+      $("#FilterList").attr("style","overflow-x:scroll");
+  }else{
+    $("#FilterList").attr("style","");
+  }
+}
+ValueEquationComparison.ResetFilter = function(){
+  ValueEquationComparison.FilterList.removeAll();
+  ValueEquationComparison.AddFilter();
+}
+ValueEquationComparison.RemoveFilter = function(obj){
+  ValueEquationComparison.FilterList.remove(obj);
+  if($("#FilterListTable").width()>$("#FilterList").width()){
+      $("#FilterList").attr("style","overflow-x:scroll");
+  }else{
+    $("#FilterList").attr("style","");
+  }
+}
+ValueEquationComparison.GetUnitList = function(index){
+  var parm = {
+    selectedPlant:ValueEquationComparison.FilterList()[index].selectedPlant(),
+    Index:index
+  }
+  var url = "/valueequationcomparison/getunitlist";
+  ajaxPost(url,parm,function(res){
+    if(!res.IsError){
+        var ds = res.Data.UnitData;
+        for(var i in ds){
+          ds[i].Index = parseFloat(ds[i].Id.substr(2));
+        }
+        var GTArr = Enumerable.From(ds).Where(function(x){return x.Id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+        var STArr = Enumerable.From(ds).Where(function(x){return x.Id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+        var arr = [];
+        for(var i in GTArr){
+          arr.push(GTArr[i]);
+        }
+        for(var i in STArr){
+          arr.push(STArr[i]);
+        }
+        ValueEquationComparison.FilterList()[res.Data.Index].UnitList(arr);
+    }else{
+        alert(res.message);
+    }
+  });
+}
+ValueEquationComparison.GetData = function(){
+  var url = "/valueequationcomparison/getdata"
+  var FilterList = ValueEquationComparison.FilterList();
+  for(var i in FilterList){
+    var parm = ValueEquationComparison.GetFilter(FilterList[i]);
+    parm.Index = i;
+
+    ValueEquationComparison.FilterList()[i].Revenue(0);
+    ValueEquationComparison.FilterList()[i].MaintenanceCost(0);
+    ValueEquationComparison.FilterList()[i].OperatingCost(0);
+    ValueEquationComparison.FilterList()[i].ValueEquation(0);
+    ValueEquationComparison.FilterList()[i].ValueEquationperCapacity(0);
+    ajaxPost(url,parm,function(res){
+      if(!res.IsError){    
+          if(res.Data.DataValue!==null&&res.Data.DataValue.length > 0){
+            var Index = res.Data.Index;
+            var DataValue = res.Data.DataValue[0];
+            ValueEquationComparison.FilterList()[Index].Revenue(DataValue.Revenue);
+            ValueEquationComparison.FilterList()[Index].MaintenanceCost(DataValue.MaintenanceCost);
+            ValueEquationComparison.FilterList()[Index].OperatingCost(DataValue.OperatingCost);
+            ValueEquationComparison.FilterList()[Index].ValueEquation(DataValue.Revenue-DataValue.MaintenanceCost-DataValue.OperatingCost);
+            ValueEquationComparison.FilterList()[Index].ValueEquationperCapacity(DataValue.NetGeneration != 0 ? (DataValue.Revenue-DataValue.MaintenanceCost-DataValue.OperatingCost)/DataValue.NetGeneration:0);
+
+          }
+        }else{
+            alert(res.message);
+        }
+    });
+
+  }
+}
+ValueEquationComparison.GetFilter = function(filter){
+  var parm = {
+    startPeriod:toUTC(filter.startPeriod()),
+    endPeriod:toUTC(filter.endPeriod()),
+    selectedPlant:filter.selectedPlant(),
+  }
+  if(filter.selected()=="Unit Group"){
+    parm.selectedUnitGroup=filter.selectedUnitGroup();
+  }else{
+    parm.selectedUnit=filter.selectedUnit();
+  }
+  if(parm.selectedPlant[0] == "ALL"){
+    parm.selectedPlant = ko.observableArray([])
+  }
+  return parm;
+}
+ValueEquationComparison.Initiate = function(){
+  ValueEquationComparison.Processing(true);
+  var url = "/valueequation/initiate";
+  ajaxPost(url,{},function(res){
+    if(!res.IsError){
+        ValueEquationComparison.Processing(false);
+        ValueEquationComparison.PlantList(res.Data.PlantList);
+        var ds = res.Data.UnitList;
+        for(var i in ds){
+          ds[i].Index = parseFloat(ds[i].Id.substr(2));
+        }
+        var GTArr = Enumerable.From(ds).Where(function(x){return x.Id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+        var STArr = Enumerable.From(ds).Where(function(x){return x.Id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+        var arr = [];
+        for(var i in GTArr){
+          arr.push(GTArr[i]);
+        }
+        for(var i in STArr){
+          arr.push(STArr[i]);
+        }
+        ValueEquationComparison.UnitList(arr);
+        ValueEquationComparison.AddFilter();
+        $("#EmptySectionAgg").attr("style","height:"+$("#FilterListRow").height()+"px;line-height:"+$("#FilterListRow").height()+"px");
+    }else{
+        alert(res.Message);
+    }
+  });
+}
+ValueEquationComparison.Refresh = function(){
+  ValueEquationComparison.GetData();
+  // HVEMaintenance.GetData();
+  // GetTableOperating()
+  // HVERevenue.GetData();
+}
+
+ValueEquationComparison.EPdf = function(){
+  RemoveClass("LstartPeriod");
+  RemoveClass("LendPeriod");
+  RemoveClass("LPlant");
+  AddClass("startPeriod");
+  AddClass("endPeriod");
+  AddClass("Plant");
+
+  ExportPdf("#EquationComparison","Value Equation Comparison.pdf");
+
+  setTimeout(function () {
+    AddClass("LstartPeriod");
+    AddClass("LendPeriod");
+    AddClass("LPlant");
+    RemoveClass("startPeriod");
+    RemoveClass("endPeriod");
+    RemoveClass("Plant");
+  }, 1000);
+}
+
+function ExportPdf(selector, fname) {
+    // Convert the DOM element to a drawing using kendo.drawing.drawDOM
+    kendo.drawing.drawDOM($(selector))
+    .then(function (group) {
+        // Render the result as a PDF file
+        return kendo.drawing.exportPDF(group, {
+            paperSize: "auto",
+            margin: { left: "1cm", top: "1cm", right: "1cm", bottom: "1cm" }
+        });
+    })
+    .done(function (data) {
+        // Save the PDF file
+        kendo.saveAs({
+            dataURI: data,
+            fileName: fname,
+        });
+    });
+};
+
+function RemoveClass(clas){
+  $('#FilterListRow').find('.' + clas).removeClass("hidden");
+}
+
+function AddClass(clas){
+  $('#FilterListRow').find('.' + clas).addClass("hidden");
+}
+
+$(document).ready(function(){
+  ValueEquationComparison.Initiate();
+  // ValueEquation.Refresh();
+  $("#FilterListRow").change(function(){
+    $("#EmptySectionAgg").attr("style","height:"+$("#FilterListRow").height()+"px;line-height:"+$("#FilterListRow").height()+"px");
+  });
+  
+})
+</script>

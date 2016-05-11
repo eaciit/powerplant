@@ -1,0 +1,114 @@
+<div class="box-info">
+    <h4 class="box-title">Number Of Work Orders <span data-bind="text:' - '+Dashboard.selectedPlant.Name()"></span></h4>
+</div>
+<div id="NumberOfWorkOrderChart"></div>
+<script type="text/javascript">
+Dashboard.GetNumberOfWorkOrder  = function(){
+	var parm = Dashboard.GetFilter();
+  var url = "/dashboard/getnumberofworkorder";
+  Dashboard.Processing(true);
+  ajaxPost(url, parm, function(res){
+  	if(res.Data.Status == "OK"){
+      Dashboard.ProcessComplete();
+      Dashboard.GenNumberOfWorkOrder(res.Data.Data);
+   }else{
+      alert(res.Data.message);
+   }
+ });
+}
+Dashboard.GenNumberOfWorkOrder = function(dataSource){
+	var PeriodList = Enumerable.From(dataSource).Distinct(function(x){return x._id.period}).OrderBy(function(b){return b._id.period}).ToArray();
+	var WOList = Enumerable.From(dataSource).Distinct(function(x){return x._id.workorder}).ToArray();
+	var Sources = [];
+	var SeriesList = [];
+	var SeriesListCost = [];
+	for(var s in WOList){
+		SeriesList.push({field:'series'+s,modifiedname: ChangeWOName( WOList[s]._id.workorder), name: WOList[s]._id.workorder});
+		SeriesListCost.push({field:'costseries'+s,modifiedname: ChangeWOName( WOList[s]._id.workorder), name: WOList[s]._id.workorder});
+	}
+	for(var i in PeriodList){
+		var obj = {period:PeriodList[i]._id.period};
+		var PeriodSources = Enumerable.From(dataSource).Where(function(x){return x._id.period==obj.period}).ToArray();
+		for(var j in SeriesList){
+			var data = Enumerable.From(PeriodSources).Where(function(x){return x._id.workorder==SeriesList[j].name}).FirstOrDefault();
+			if(data!==undefined){
+				obj[SeriesList[j].field] = data.count;
+				obj["cost"+SeriesList[j].field] = data.cost;
+			}else{
+				obj[SeriesList[j].field] = 0;
+				obj["cost"+SeriesList[j].field] = 0;
+			}
+		}
+		Sources.push(obj)
+	}
+
+	Dashboard.GenMaintenanceCostChart(SeriesListCost,Sources);
+	$("#NumberOfWorkOrderChart").html("");
+	$("#NumberOfWorkOrderChart").kendoChart({
+		chartArea: {
+      background: "",
+      height: 250,
+      width:$("#HalfChart").width()
+  	},
+		dataSource: {
+			data: Sources,
+		},
+		legend: {
+		    visible: true,
+		    position:'bottom',
+		    labels:{
+				template: "#= series.modifiedname #"
+		    }
+		},
+		seriesDefaults: {
+				stack: true,
+		    type: "column"
+		},
+		seriesColors:ecisColors,
+		series: SeriesList,
+		 valueAxis: {
+
+	    line: {
+	        visible: true
+	    },
+	    minorGridLines: {
+	        visible: false
+	    },
+	    labels: {
+	        format: "N0",
+	        font: "10px Arial,Helvetica,sans-serif",
+	    }
+		},
+		categoryAxis: {
+			field:'period',
+			majorGridLines: {
+			  visible: false
+			}
+		},
+		tooltip: {
+		    visible: true,
+		    template: "<b>#= series.modifiedname # :</b><br/> #= kendo.toString(value,'N2') #"
+		}
+  });
+}
+
+ChangeWOName = function(WOName)
+{
+
+	retVal = '';
+	if(WOName == 'WOOM')
+		retVal = 'Outage Maintenance';
+	else if(WOName == 'WOEC')
+		retVal = 'Engineering Change Order';
+	else if(WOName == 'WOEM')
+		retVal = 'Emergency Maintenance';
+	else if(WOName == 'WOPM')
+		retVal = 'Preventive Maintenance';
+	else if(WOName == 'WOCM')
+		retVal = 'Corrective Maintenance';
+	else if(WOName == 'WORM')
+		retVal = 'Refurbishment Maintenance';
+	return retVal;
+
+}
+</script>

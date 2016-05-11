@@ -1,0 +1,293 @@
+<script>
+	var HVERevenue = {
+		Processing:ko.observable(false),
+		CapacityPayment:ko.observable(0),
+		EnergyPayment:ko.observable(0),
+		StartupPayment:ko.observable(0),
+		Penalty:ko.observable(0),
+		Incentive:ko.observable(0),
+		TotalRevenue:ko.observable(0),
+		ChartDataRevEx:ko.observableArray([]),
+		BreakdownBy:ko.observable(""),
+		ExpandData:ko.observable(false),
+
+		MinCapacityPayment:ko.observable(0),
+		MaxCapacityPayment:ko.observable(0),
+		MinEnergyPayment :ko.observable(0),
+		MaxEnergyPayment :ko.observable(0),
+		MinIncentive :ko.observable(0),
+		MaxIncentive :ko.observable(0),
+		MinPenaltyAmount :ko.observable(0),
+		MaxPenaltyAmount :ko.observable(0),
+		MinStartupPayment :ko.observable(0),
+		MaxStartupPayment :ko.observable(0),
+		MinTotRev :ko.observable(0),
+		MaxTotRev :ko.observable(0),
+	}
+</script>
+
+<div data-bind="visible:HVERevenue.Processing()" class="align-center">
+	{{template "processing.html"}}
+</div>
+<div data-bind="with:HVERevenue,visible:!HVERevenue.Processing()">
+	<table class="table table-striped table-bordered">
+	  <thead>
+	    <tr>
+	      <th class="align-center">Capacity Payment</th>
+	      <th class="align-center">Energy Payment</th>
+	      <th class="align-center">Startup Payment</th>
+	      <th class="align-center">Penalty</th>
+	      <th class="align-center">Incentive</th>
+	      <!-- <th class="align-center">Total</th> -->
+	    </tr>
+	  </thead>
+	  <tbody>
+	    <tr>
+	      <td data-bind="text:kendo.toString(CapacityPayment(),'N0')" class="align-right sar-currency"></td>
+	      <td data-bind="text:kendo.toString(EnergyPayment(),'N0')" class="align-right sar-currency"></td>
+	      <td data-bind="text:kendo.toString(StartupPayment(),'N0')" class="align-right sar-currency"></td>
+	      <td data-bind="text:kendo.toString(Penalty(),'N0')" class="align-right sar-currency"></td>
+	      <td data-bind="text:kendo.toString(Incentive(),'N0')" class="align-right sar-currency"></td>
+	      <!-- <td data-bind="text:kendo.toString(CapacityPayment() + EnergyPayment() + StartupPayment() + Penalty() + Incentive(),'N0')" class="align-right sar-currency"></td> -->
+	    </tr>
+	  </tbody>
+	  <tfoot>
+	    <tr>
+	      <th colspan="3" class="align-center">TOTAL REVENUE</th>
+	      <th colspan="2" data-bind="text:kendo.toString(TotalRevenue(),'N0')" class="align-right sar-currency"></th>
+	    </tr>
+	  </tfoot>
+	</table>
+
+  <div class="row" data-bind="visible:ExpandData()&&HVESummary.scope()!=='Unit'">
+  	<div id="GridRevExpand" class="col-md-12">
+  		<table class="table table-striped table-bordered">
+		  <thead>
+		    <tr>
+		      <th class="align-center" data-bind="text:BreakdownBy"></th>
+		      <th class="align-center">Capacity Payment</th>
+		      <th class="align-center">Energy Payment</th>
+		      <th class="align-center">Startup Payment</th>
+		      <th class="align-center">Penalty</th>
+		      <th class="align-center">Incentive</th>
+		      <th class="align-center">Total</th>
+		    </tr>
+		  </thead>
+		  <tbody data-bind="foreach:ChartDataRevEx">
+		    <tr>
+		    	<th data-bind="text:_id"></td>
+				<td data-bind="text:kendo.toString(CapacityPayment,'N0'),attr:{style:HVERevenue.isMaxOrMinCapacityPayment(CapacityPayment)}" class="align-right sar-currency"></td>
+				<td data-bind="text:kendo.toString(EnergyPayment,'N0'),attr:{style:HVERevenue.isMaxOrMinEnergyPayment(EnergyPayment)}" class="align-right sar-currency"></td>
+				<td data-bind="text:kendo.toString(StartupPayment,'N0'),attr:{style:HVERevenue.isMaxOrMinStartupPayment(StartupPayment)}" class="align-right sar-currency"></td>
+				<td data-bind="text:kendo.toString(PenaltyAmount,'N0'),attr:{style:HVERevenue.isMaxOrMinPenaltyAmount(PenaltyAmount)}" class="align-right sar-currency"></td>
+				<td data-bind="text:kendo.toString(Incentive,'N0'),attr:{style:HVERevenue.isMaxOrMinIncentive(Incentive)}" class="align-right sar-currency"></td>
+				<td data-bind="text:kendo.toString((CapacityPayment + EnergyPayment + StartupPayment - PenaltyAmount + Incentive),'N0'),attr:{style:HVERevenue.isMaxOrMinTotRev((CapacityPayment + EnergyPayment + StartupPayment - PenaltyAmount + Incentive))}" class="align-right sar-currency"></td>
+		    </tr>
+		  </tbody>
+		</table>
+  	</div>
+  </div>
+
+	<div class="row" data-bind="visible:HVESummary.scope()!=='Unit'">
+		<div class="col-md-6 align-left">
+			<button type="button" class="btn btn-warning btn-sm" data-bind="click:ExpandTrigger,visible:!ExpandData()">
+				<span class="fa fa-plus"></span> 
+				Expand
+			</button>
+			<button type="button" class="btn btn-warning btn-sm" data-bind="click:ExpandTrigger,visible:ExpandData()">
+				<span class="fa fa-minus"></span> 
+				Collapse
+			</button>
+			<button type="button" class="btn btn-warning btn-sm" data-bind="click:ExportToExcel,visible:ExpandData()">
+				<span class="fa fa-file-excel-o"></span> 
+				Export to XLS
+			</button>
+		</div>
+	</div>
+</div>
+
+<script>
+HVERevenue.GetData = function(){
+	HVERevenue.Processing(true);
+	HVERevenue.CapacityPayment(0);
+	HVERevenue.EnergyPayment(0);
+	HVERevenue.StartupPayment(0);
+	HVERevenue.Penalty(0);
+	HVERevenue.Incentive(0);
+	HVERevenue.TotalRevenue(0);
+	HistoricalValueEquipment.TotalRevenue(0);
+	var parm = ValueEquation.GetFilter();
+	var url = "/historicalvalueequation/getrevenue";
+	ajaxPost(url,parm,function(res){
+		if(!res.IsError){
+	      	HVERevenue.Processing(false);
+	      	if(res.Data!== null && res.Data.DataChartRevenue.length > 0){
+
+	      		var data = res.Data.DataChartRevenue[0];
+	      		HVERevenue.CapacityPayment(data.CapacityPayment);
+				HVERevenue.EnergyPayment(data.EnergyPayment);
+				HVERevenue.StartupPayment(data.StartupPayment);
+				HVERevenue.Penalty(data.PenaltyAmount);
+				HVERevenue.Incentive(data.Incentive);
+				HVERevenue.TotalRevenue(data.Revenue);
+				HistoricalValueEquipment.TotalRevenue(data.Revenue);
+
+				var DataRevEx = res.Data.DataChartRevenueEx;
+				if(HVESummary.scope()=="Plant"){
+					for(var i in DataRevEx){
+						DataRevEx[i].Index = parseFloat(DataRevEx[i]._id.substr(2));
+					}
+					var GTArr = Enumerable.From(DataRevEx).Where(function(x){return x._id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+					var STArr = Enumerable.From(DataRevEx).Where(function(x){return x._id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+					var arr = [];
+					for(var i in GTArr){
+					arr.push(GTArr[i]);
+					}
+					for(var i in STArr){
+					arr.push(STArr[i]);
+					}
+					var UnmappedArr = Enumerable.From(DataRevEx).Where(function(x){return x._id =="Unmapped Data"}).OrderBy(function(x){return x.Index}).ToArray();
+					for(var i in UnmappedArr){
+					arr.push(UnmappedArr[i]);
+					}
+					DataRevEx = arr;
+				}
+				if (ValueEquation.scope()!=='Unit'){
+					HVESummary.BreakdownBy('Plant');
+				}else{
+					HVESummary.BreakdownBy('Unit');
+				}
+
+				HVERevenue.ChartDataRevEx(DataRevEx);
+				HVERevenue.BreakdownBy(HVESummary.BreakdownBy());
+
+				for(var i in DataRevEx){
+					var Totrev = (DataRevEx[i].CapacityPayment + DataRevEx[i].EnergyPayment + DataRevEx[i].Incentive - DataRevEx[i].PenaltyAmount + DataRevEx[i].StartupPayment)
+					if(i == 0){
+						HVERevenue.MinCapacityPayment(DataRevEx[i].CapacityPayment)
+						HVERevenue.MinEnergyPayment(DataRevEx[i].EnergyPayment)
+						HVERevenue.MinIncentive(DataRevEx[i].Incentive)
+						HVERevenue.MinPenaltyAmount(DataRevEx[i].PenaltyAmount)
+						HVERevenue.MinStartupPayment(DataRevEx[i].StartupPayment)
+
+						HVERevenue.MaxCapacityPayment(DataRevEx[i].CapacityPayment)
+						HVERevenue.MaxEnergyPayment(DataRevEx[i].EnergyPayment)
+						HVERevenue.MaxIncentive(DataRevEx[i].Incentive)
+						HVERevenue.MaxPenaltyAmount(DataRevEx[i].PenaltyAmount)
+						HVERevenue.MaxStartupPayment(DataRevEx[i].StartupPayment)
+
+						var tot = (DataRevEx[i].CapacityPayment + DataRevEx[i].EnergyPayment + DataRevEx[i].Incentive - DataRevEx[i].PenaltyAmount + DataRevEx[i].StartupPayment)
+						HVERevenue.MinTotRev(tot)
+						HVERevenue.MaxTotRev(tot)
+					}
+
+					// Min Max TotRev
+					if(Totrev<HVERevenue.MinTotRev()){
+						HVERevenue.MinTotRev(Totrev);
+					}else if(Totrev>HVERevenue.MaxTotRev()){
+						HVERevenue.MaxTotRev(Totrev);
+					}
+
+					// Min Max CapacityPayment
+					if(DataRevEx[i].CapacityPayment<HVERevenue.MinCapacityPayment()){
+						HVERevenue.MinCapacityPayment(DataRevEx[i].CapacityPayment);
+					}else if(DataRevEx[i].CapacityPayment>HVERevenue.MaxCapacityPayment()){
+						HVERevenue.MaxCapacityPayment(DataRevEx[i].CapacityPayment);
+					}
+
+					// Min Max EnergyPayment
+					if(DataRevEx[i].EnergyPayment<HVERevenue.MinEnergyPayment()){
+						HVERevenue.MinEnergyPayment(DataRevEx[i].EnergyPayment);
+					}else if(DataRevEx[i].EnergyPayment>HVERevenue.MaxEnergyPayment()){
+						HVERevenue.MaxEnergyPayment(DataRevEx[i].EnergyPayment);
+					}
+
+					// Min Max Incentive
+					if(DataRevEx[i].Incentive<HVERevenue.MinIncentive() ){
+						HVERevenue.MinIncentive(DataRevEx[i].Incentive);
+					}else if(DataRevEx[i].Incentive>HVERevenue.MaxIncentive()){
+						HVERevenue.MaxIncentive(DataRevEx[i].Incentive);
+					}
+
+					// Min Max PenaltyAmount
+					if(DataRevEx[i].PenaltyAmount<HVERevenue.MinPenaltyAmount()){
+						HVERevenue.MinPenaltyAmount(DataRevEx[i].PenaltyAmount);
+					}else if(DataRevEx[i].PenaltyAmount>HVERevenue.MaxPenaltyAmount()){
+						HVERevenue.MaxPenaltyAmount(DataRevEx[i].PenaltyAmount);
+					}
+
+					// Min Max StartupPayment
+					if(DataRevEx[i].StartupPayment<HVERevenue.MinStartupPayment() ){
+						HVERevenue.MinStartupPayment(DataRevEx[i].StartupPayment);
+					}else if(DataRevEx[i].StartupPayment>HVERevenue.MaxStartupPayment()){
+						HVERevenue.MaxStartupPayment(DataRevEx[i].StartupPayment);
+					}
+				}
+
+	      	}
+		
+	      }else{
+	          alert(res.message);
+	      }
+	})
+}
+</script>
+
+<script type="text/javascript">
+
+	HVERevenue.isMaxOrMinTotRev = function(val){
+		if(val==HVERevenue.MaxTotRev() && val> 0){
+			return "background:green;color:white;"
+		}else if(val==HVERevenue.MinTotRev()){
+			return "background:red;color:white;"
+		}
+	}
+
+	HVERevenue.isMaxOrMinCapacityPayment = function(val){
+		if(val==HVERevenue.MaxCapacityPayment() && val> 0){
+			return "background:green;color:white;"
+		}else if(val==HVERevenue.MinCapacityPayment()){
+			return "background:red;color:white;"
+		}
+	}
+
+	HVERevenue.isMaxOrMinEnergyPayment = function(val){
+		if(val==HVERevenue.MaxEnergyPayment() && val> 0){
+			return "background:green;color:white;"
+		}else if(val==HVERevenue.MinEnergyPayment()){
+			return "background:red;color:white;"
+		}
+	}
+
+	HVERevenue.isMaxOrMinIncentive = function(val){
+		if(val==HVERevenue.MaxIncentive() && val> 0){
+			// return "background:green;color:white;"
+		}else if(val==HVERevenue.MinIncentive()){
+			// return "background:red;color:white;"
+		}
+	}
+
+	HVERevenue.isMaxOrMinPenaltyAmount = function(val){
+		if(val==HVERevenue.MaxPenaltyAmount()){
+			return "background:red;color:white;"
+		}else if(val==HVERevenue.MinPenaltyAmount()){
+			return "background:green;color:white;"
+		}
+	}
+
+	HVERevenue.isMaxOrMinStartupPayment = function(val){
+		if(val==HVERevenue.MaxStartupPayment() && val> 0){
+			return "background:green;color:white;"
+		}else if(val==HVERevenue.MinStartupPayment()){
+			return "background:red;color:white;"
+		}
+	}
+
+
+	HVERevenue.ExpandTrigger = function(){
+		HVERevenue.ExpandData(!HVERevenue.ExpandData());
+	}
+	HVERevenue.ExportToExcel = function(){
+		tableToExcel('GridRevExpand', '');
+	}
+</script>

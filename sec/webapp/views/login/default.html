@@ -1,0 +1,305 @@
+<html>
+<head>
+    <title>EACIIT SmartView</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+
+    <script src="/static/js/jquery-2.1.0.min.js"></script>
+    <script src="/static/js/knockout-3.1.0.js"></script>
+    <script src="/static/js/knockout.mapping-latest.js"></script>
+    <script src="/static/kendoui/js/kendo.all.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+
+    <link href="/static/css/bootstrap.css" type="text/css" rel="stylesheet" />
+    <link href="/static/css/bootstrap-theme.css" type="text/css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="/static/kendoui/styles/kendo.material.min.css" />
+    <link rel="stylesheet" href="/static/kendoui/styles/kendo.common-bootstrap.min.css" />
+    <link rel="stylesheet" href="/static/kendoui/styles/kendo.dataviz.min.css" />
+    <link rel="stylesheet" href="/static/kendoui/styles/kendo.dataviz.bootstrap.min.css" />
+
+    <script src="/static/js/linq.js"></script>
+    <script src="/static/js/ecis_config.js"></script>
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/ecis_start.js"></script>
+    <link rel="stylesheet" href="/static/css/Site.css" />
+
+    <style>
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+            max-height: 100%;
+            overflow-y: hidden;
+        }
+
+        .menu-header {
+            height: 30px;
+            background-color: #333;
+        }
+
+        .nav-bar-header li {
+            float: left;
+        }
+
+        .nav-bar-header li a {
+            font-size: 12px;
+            margin: 0px;
+            padding: 5px;
+            background-color: #000;
+        }
+
+        .nav-bar-header li.selected a {
+            background-color: #D33;
+        }
+
+        .nav-bar-header li a:hover {
+            font-size: 12px;
+            margin: 0px;
+            padding: 5px;
+            background-color: #D33;
+        }
+
+        .form-group label {
+            text-align: right;
+            padding-right: 10px;
+        }
+
+        .form-group input {
+            border: solid 1px #ccc;
+            padding: 2px;
+        }
+
+            .form-group input[type='number'] {
+                text-align: right;
+        }
+
+
+        .border1 {
+            border: solid 1px #000;
+        }
+
+        .form-group label{
+            text-align:left;
+        }
+
+        .login-form {
+            z-index: 100;
+        }
+
+        .login-bg {
+            background: #007dba url('/static/img/login_bg.jpg') no-repeat center top;
+            background-size: cover;
+            height: 100vh;
+            z-index: 99;
+        }
+        .login-logo {
+            background: url('/static/img/login-logo.png') no-repeat center top;
+            width: 300px;
+            height: 80px;
+            margin-left: -25px;
+            margin-bottom: 20px;
+        }
+        .login-loader { text-align: center; }
+        .login-loadingImage{opacity:0.1;}
+    </style>
+    <script>
+        var model = {
+            Processing: ko.observable(true)
+        }
+    </script>
+</head>
+<body>
+    <!-- wrapper starts here -->
+    <div class="container-fluid" data-bind="visible:Processing()==false">
+        <section class="row">
+            <!-- Main panel starts here -->
+            <div class="col-sm-12">
+                <div class="row">
+
+                    <div class="login-form col-md-3 col-xs-12" id="loginForm">
+
+                        <div class="form form-horizontal fh login-loader" data-bind="visible:Mode()=='Process'">
+                            <img src="/static/img/loader.gif" alt="Loading..." class="login-loadingImage" />
+                            <h6>Please wait while processing ...</h6>
+                        </div>
+
+                        <div class="form form-horizontal fh" data-bind="visible:Mode()==''">
+
+                            <div class="login-logo"></div>
+
+                            <div class="form-group">
+                                <label class="col-sm-12">Login ID</label>
+                                <div class="col-sm-12">
+                                    <input type="text" id="UserName" name="UserName" placeholder="Login ID" required />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-12">Password</label>
+                                <div class="col-sm-12">
+                                    <input type="password" id="Password" name="Password" placeholder="Your Password" required />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-sm-12">
+                                    <button class="btn btn-primary" id="btnLogin">Login</button>
+                                    <div class="form-login-forgot">
+                                        <a href="#" id="forgetPassword">Can't access your account?</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="label label-danger" data-bind="visible:Message()!='',text:Message"></label>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-sm-12 login-footer">
+                                    &copy; 2013 - 2017 EACIIT Pte Ltd<br />
+                                    Earnings & Cash Improvement Information Technologies<br />
+                                    <span>
+                                        Licensed for EACIIT demo Corporation - Valid throught 23 Jun 2015
+                                    </span>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="login-bg col-md-9">
+                       &nbsp;
+                    </div>
+
+                </div>
+
+                <!-- Modal Forget Password -->
+                <div class="modal fade myModal" id="modalForgetPassword" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                                <h4 class="modal-title" id="myModalLabel" data-bind="">Reset Password</h4>
+                            </div>
+                            <div class="modal-body">
+
+                                <div class="ec-panel" id="resetPasswordForm">
+                                    <div class="col-md-12 row" style="margin-bottom:20px;" data-bind="visible:!model.modalProcessing()">
+                                        <div class="col-md-4">
+                                            <label>Your Registered Email:</label>
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div class="col-md-12">
+                                                <input type="email" id="email" name="email" style="width:100%;" placeholder="e.g. yourmail@email.com" required data-email-msg="Email format is not valid" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="clearfix"></div>
+                                    <div data-bind="visible:model.modalProcessing()">
+                                        @Html.Partial("_processing")
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary" onclick="resetPassword();">Reset Password</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Modal Forget Password -->
+
+
+                </div>
+            </section>
+            </div>
+    <!-- section ends here -->
+    <!-- wrapper ends here -->
+    <script>
+    $(window).resize(resizeIt);
+
+    function resizeIt() {
+        $(".fh").height($(window).innerHeight());
+    }
+
+    model.Mode=ko.observable("");
+    model.Status=ko.observable("");
+    model.Message=ko.observable("");
+    model.Processing = ko.observable(false);
+    model.modalProcessing = ko.observable(false);
+    function LoginDo() {
+        var url = "/login/do";
+        var validator = $("#loginForm").data("kendoValidator");
+        if(validator==undefined){
+           validator= $("#loginForm").kendoValidator().data("kendoValidator");
+        }
+        if (validator.validate()) {
+            model.Mode("Process");
+            var parm = {
+                    UserName: $("#UserName").val(),
+                    Password: $("#Password").val(),
+                    rememberMe: false
+                };
+            ajaxPost(url,parm,function(data) {
+                    if(data.success){
+                        location.href = "/";
+                        model.Status("OK");
+                    }else{
+                        model.Status("NOK");
+                        model.Message("Invalid UserName or Password");
+                    }
+                    model.Mode("");
+            });
+        }
+        else {
+            alert("Unable to validate process");
+        }
+    }
+
+    function resetPassword() {
+        var validator = coalesce($("#resetPasswordForm").data("kendoValidator"), $("#resetPasswordForm").kendoValidator().data("kendoValidator"));
+        if (validator.validate()) {
+            model.modalProcessing(true);
+            ajaxPost("Account/ForgetPassword", {
+                UserEmail: $("#email").val()
+            },
+            function (data) {
+                model.modalProcessing(false);
+                switch (data.Result) {
+                    case "OK":
+                        alert("Please kindly check your email!");
+                        $('#modalForgetPassword').modal("hide");
+                        break;
+                    case "NOK":
+                        alert(data.Message);
+                        break;
+                }
+            });
+        }
+    }
+    ko.applyBindings(model);
+
+    $(document).ready(function () {
+        resizeIt();
+        $('#forgetPassword').click(function () {
+            $("#email").val("");
+            $('#modalForgetPassword').modal("show");
+        });
+        $("#btnLogin").click(LoginDo);
+
+        $("#Password").keyup(function (event) {
+            if (event.keyCode == 13) {
+                $("#btnLogin").click();
+            }
+        });
+
+        model.Processing(false);
+        if (typeof PageUpdate == "function") {
+            PageUpdate();
+        }
+    });
+    </script>
+</body>
+</html>

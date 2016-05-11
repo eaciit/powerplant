@@ -1,0 +1,435 @@
+<style>
+.remove-button{
+  color: #a94442;
+}
+.remove-button:hover{
+  color: #E91E63;
+}
+#resulttTable > thead > tr > th {
+  vertical-align: middle;
+}
+.remove-filter{
+  height: 30px;
+}
+.remove-filter>button{
+  float: right;
+    margin-right: -24px;
+    margin-bottom: 5px;
+}
+.capacity-mw:before{
+  content:"MW ";
+  float:left;
+}
+.sar-kwh:before{
+  content:"SAR / kWh ";
+  float:left;
+}
+.sar-currency:before{
+    content:"SAR ";
+    float:left;
+}
+#Tab{
+margin-bottom: 10px;
+}
+.nav-tabs{
+padding-left: 15px;
+}
+#selectedScenario>div{
+  margin-bottom: 3px;
+}
+</style>
+<script>
+model.PageId("{{.PageId}}");
+model.PageTitle("{{.PageTitle}}");
+model.BreadCrumbs.push(new BreadCrumb("{{.PageId}}", "{{.PageTitle}}", "#", "active", ""));
+var ScenarioSimulation = {
+  Processing:ko.observable(false),
+  SimulationName:ko.observable(""),
+  SimulationDescription:ko.observable(""),
+  startPeriod:ko.observable(new Date(2014,0,1)),
+  endPeriod:ko.observable(new Date(2014,11,31)),
+  PlantList:ko.observableArray([]),
+  selectedPlant:ko.observableArray([]),
+  selectedUnit:ko.observableArray([]),
+  UnitList:ko.observableArray([]),
+  isSelectedAvailable:ko.observable(false),
+  scenarioList:ko.observableArray([
+  {ID:"ReduceMaterialCost",Name:"Reduce Material Cost",isSelected:ko.observable(false),isSet:ko.observable(false),Value:ko.observable(0)},
+  {ID:"ReduceOutages",Name:"Reduce Outages",isSelected:ko.observable(false),isSet:ko.observable(false),Value:ko.observable(0)},
+  {ID:"ReduceMaintenanceDuration",Name:"Reduce Maintenance Duration",isSelected:ko.observable(false),isSet:ko.observable(false),Value:ko.observable(0)},
+  {ID:"ReducePMFrequency",Name:"Reduce PM Frequency",isSelected:ko.observable(false),isSet:ko.observable(false),Value:ko.observable(0)},
+  {ID:"IncreaseInspectionInterval",Name:"Increase Inspection Interval",isSelected:ko.observable(false),isSet:ko.observable(false),Value:ko.observable(0)},
+  {ID:"ExtendRepairReplaceCycles",Name:"Extend / Repair / Replace Cycles",isSelected:ko.observable(false),isSet:ko.observable(false),Value:ko.observable(0)},
+  {ID:"ManualWorkOrderChanges",Name:"Manual Work Order Changes",isSelected:ko.observable(false),isSet:ko.observable(false),Value:ko.observable(0)},
+  ]),
+  isResultAvailable:ko.observable(false),
+  isCreatingSimulation:ko.observable(false),
+  isPrinting:ko.observable(false),
+  selectedSimulation:ko.observable(""),
+  selectedDescription:ko.observable(""),
+  isCreateNewSimulation:ko.observable(false),
+}
+</script>
+<script src="/static/js/scenariosimulation.js"></script>
+<div data-bind="with:ScenarioSimulation">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+        Filter
+        <!-- <a class="align-right" id="showHideFilter" data-toggle="collapse" href="#contentFilter" aria-controls="contentFilter">show / hide</a> -->
+    </div>
+    <div class="panel-body collapse in left-mar" id="contentFilter">
+      <div class="row">
+
+        <div class="col-md-3">
+           <div class="row">
+                <label class="col-md-4 filter-label">From</label>
+                <div class="col-md-8">
+                    <input type="text" data-bind="kendoDatePicker: {value:startPeriod, start: 'month', depth: 'month', format: 'dd MMM yyyy'}" />
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+           <div class="row">
+                <label class="col-md-4 filter-label">To</label>
+                <div class="col-md-8">
+                    <input type="text" data-bind="kendoDatePicker: {value:endPeriod, start: 'month', depth: 'month', format: 'dd MMM yyyy'}" />
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+           <div class="row">
+                <label class="col-md-4 filter-label">Plant</label>
+                <div class="col-md-8">
+                    <input type="text" data-bind="kendoMultiSelect:{value:selectedPlant,data:PlantList,placeholder:'All'}"/>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+           <div class="row">
+                <label class="col-md-4 filter-label">Unit</label>
+                <div class="col-md-8">
+                    <input type="text" data-bind="kendoMultiSelect:{value:selectedUnit,data:UnitList,dataValueField:'Id',dataTextField:'Id',placeholder:'All'}"/>
+                </div>
+            </div>
+        </div>
+        <!-- <div class="col-md-12 align-right">
+            <button type="button" class="btn btn-primary btn-sm" data-bind="click:Refresh">
+              <span class="fa fa-refresh"></span>
+              Refresh
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" data-bind="click:Save">
+              <span class="fa fa-plus-circle"></span>
+              Reset
+            </button>
+        </div> -->
+      </div>
+    </div>  
+  </div>
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+        Vallue Equation Simulation
+    </div>
+    <div class="panel-body">
+      <div class="row" data-bind="visible:Processing()">
+        <div class="col-md-12 align-center">
+          {{template "processing.html"}}
+        </div>
+      </div>
+      <div data-bind="visible:!Processing()">
+        <div class="row" data-bind="visible:!isCreatingSimulation()">
+          <div class="col-md-12">
+            <div id="SimulationData"></div>
+          </div>  
+          <div class="col-md-12">
+            &nbsp;
+          </div>  
+          <div class="col-md-12 align-right">
+            <button type="button" class="btn btn-primary btn-sm" data-bind="click:CreateNewSimulation">
+              <span class="fa fa-plus-circle"></span>
+              Create New Simulation
+            </button>
+          </div>
+        </div>
+        <div class="row" id="ValueEquationSimulation" data-bind="visible:isCreatingSimulation()">
+          <div class="col-md-2">
+            <div class="row">
+              <label class="col-md-12">Select Scenario(s)</label>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <div class="btn-group-vertical" role="group" data-bind="foreach:scenarioList">
+                  <button type="button" data-bind="text:Name,attr:{disabled:isSelected()||$index()>2,class:isSet()?'btn btn-warning btn-sm':'btn btn-default btn-sm'},click:$parent.SetScenario"></button>
+                </div>
+              </div>
+              <div class="col-md-12">
+                &nbsp;
+              </div>
+              <div class="col-md-12 align-right">
+                <button type="button" class="btn btn-primary btn-sm" data-bind="click:ResetSelection">
+                  <span class="fa fa-undo"></span>
+                  Reset
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" data-bind="click:Select">
+                  <span class="fa fa-check-square"></span>
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="row">
+              <label class="col-md-12">&nbsp;</label>
+            </div>
+            <div data-bind="foreach:scenarioList" id="selectedScenario">
+              <div class="row" data-bind="visible:isSelected()&&!$parent.isPrinting()">
+                <div class="col-md-1">
+                  <button type="button" class="btn btn-danger btn-xs" data-bind="click:$parent.Remove">
+                    <span class="fa fa-times"></span>
+                  </button>
+                </div>
+                <label class="col-md-7 filter-label" data-bind="text:Name"></label>
+                <div class="col-md-4">
+                  <div class="input-group input-group-sm">
+                    <input type="text" class="form-control align-right" data-bind="value:Value">
+                    <span class="input-group-addon">%</span>
+                  </div>
+                </div>
+              </div>
+              <div class="row" data-bind="visible:isSelected()&&$parent.isPrinting()">
+                <label class="col-md-8" data-bind="text:Name"></label>
+                <div class="col-md-4 align-right" data-bind="text:Value()+' %'"></div>
+              </div>
+            </div>
+            <div data-bind="visible:!isSelectedAvailable()"  class="alert alert-info" role="alert">Empty Selection</div>
+            <div class="row">
+              <div class="col-md-12 align-right">
+                <button type="button" class="btn btn-default btn-sm" data-bind="click:Cancel">
+                  <span class="fa fa-undo"></span>
+                  Cancel Simulation
+                </button>
+                <button type="button" class="btn btn-warning btn-sm" data-bind="click:RunSimulation">
+                  <span class="fa fa-play-circle"></span>
+                  Run Simulation
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="row">
+              <label class="col-md-12">Result : </label>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <table id="resulttTable" class="table table-striped table-bordered">
+                  <thead>
+                    <tr>
+                      <th class="align-center">&nbsp;</th>
+                      <th class="align-center">Revenue</th>
+                      <th class="align-center">Maintenance Cost</th>
+                      <!-- <th class="align-center">Operating Cost</th> -->
+                      <th class="align-center">Production Cost</th>
+                      <th class="align-center">Value Equation</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr data-bind="with:HistoricValueEquation">
+                      <td width="200">Historic Value Equation</td>
+                      <td width="120" data-bind="text:kendo.toString(Revenue(),'N0')" class="align-right sar-currency"></td>
+                      <td width="120" data-bind="text:kendo.toString(MaintenanceCost(),'N0')" class="align-right sar-currency"></td>
+                      <td width="120" data-bind="text:kendo.toString(OperatingCost(),'N0')" class="align-right sar-currency"></td>
+                      <td width="120" data-bind="text:kendo.toString(ValueEquation() ,'N0')" class="align-right sar-currency"></td>
+                    </tr>
+                    <tr data-bind="with:FutureValueEquation,visible:!isCreateNewSimulation()">
+                      <td width="200">Future Value Equation</td>
+                      <td width="120" data-bind="text:kendo.toString(Revenue(),'N0')" class="align-right sar-currency"></td>
+                      <td width="120" data-bind="text:kendo.toString(MaintenanceCost(),'N0')" class="align-right sar-currency"></td>
+                      <td width="120" data-bind="text:kendo.toString(OperatingCost(),'N0')" class="align-right sar-currency"></td>
+                      <td width="120" data-bind="text:kendo.toString(ValueEquation() ,'N0')" class="align-right sar-currency"></td>
+                    </tr>
+                    <tr data-bind="with:FutureValueEquation,visible:isCreateNewSimulation()">
+                      <td width="200">Future Value Equation</td>
+                      <td width="120" data-bind="text:kendo.toString(0,'N0')" class="align-right sar-currency"></td>
+                      <td width="120" data-bind="text:kendo.toString(0,'N0')" class="align-right sar-currency"></td>
+                      <td width="120" data-bind="text:kendo.toString(0,'N0')" class="align-right sar-currency"></td>
+                      <td width="120" data-bind="text:kendo.toString(0 ,'N0')" class="align-right sar-currency"></td>
+                    </tr>
+                    
+                  </tbody>
+                  <tfoot>
+                    <tr data-bind="with:Differential">
+                      <th class="align-center">% Differential</th>
+                      <th width="120" data-bind="text:kendo.toString(Revenue(),'P2')" class="align-right"></th>
+                      <th width="120" data-bind="text:kendo.toString(MaintenanceCost(),'P2')" class="align-right"></th>
+                      <th width="120" data-bind="text:kendo.toString(OperatingCost(),'P2')" class="align-right"></th>
+                      <th width="120" data-bind="text:kendo.toString(ValueEquation() ,'P2')" class="align-right"></th>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              <div class="col-md-12"  data-bind="visible:isResultAvailable">
+                <div class="row" data-bind="visible:!isPrinting()">
+                  <label class="col-md-3 filter-label">Simulation Name</label>
+                  <div class="col-md-9">
+                      <input type="text" data-bind="value:SimulationName" class="form-control input-sm"/>
+                  </div>
+                </div>
+                <div class="row" data-bind="visible:!isPrinting()">
+                  <label class="col-md-3 filter-label">Description</label>
+                  <div class="col-md-9">
+                      <textarea class="form-control input-sm" data-bind="value:SimulationDescription" cols="50" rows="3"></textarea>
+                  </div>
+                </div>
+
+                <div class="row" data-bind="visible:isPrinting()">
+                  <label class="col-md-3">Simulation Name</label>
+                  <div class="col-md-9" data-bind="text:SimulationName"></div>
+                </div>
+                <div class="row" data-bind="visible:isPrinting()">
+                  <label class="col-md-3">Description</label>
+                  <div class="col-md-9" data-bind="text:SimulationDescription"></div>
+                </div>
+
+              </div>
+
+              <div class="col-md-12 align-right" data-bind="visible:isResultAvailable">
+                &nbsp;
+              </div>
+              <div class="col-md-12 align-right" data-bind="visible:isResultAvailable">
+                <button type="button" class="btn btn-default btn-sm" data-bind="click:PrintSimulation">
+                  <span class="fa fa-print"></span>
+                  Print
+                </button>
+                <button type="button" class="btn btn-success btn-sm" data-bind="click:SaveSimulation">
+                  <span class="fa fa-bookmark-o"></span>
+                  Save Simulation
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div> 
+  </div>
+</div>
+
+<script type="text/javascript">
+ScenarioSimulation.Cancel = function(){
+  ScenarioSimulation.ResetSelection();
+  ScenarioSimulation.isCreatingSimulation(false);
+}
+ScenarioSimulation.CreateNewSimulation = function(){
+  ScenarioSimulation.isCreatingSimulation(true);
+  ScenarioSimulation.GetData();
+  ScenarioSimulation.isCreateNewSimulation(true);
+}
+ScenarioSimulation.RunSimulation = function(){
+  if(ScenarioSimulation.isSelectedAvailable()){
+    ScenarioSimulation.isCreateNewSimulation(false);
+    ScenarioSimulation.GetData();
+  }else{
+    alert("Please add one scenario at least");
+  }
+}
+ScenarioSimulation.Remove = function(obj){
+  obj.isSet(false);
+  obj.isSelected(false);
+  obj.Value(0);
+}
+ScenarioSimulation.Select = function(){
+  var arr = ScenarioSimulation.scenarioList();
+  for(var i in arr){
+    if(arr[i].isSet()){
+      arr[i].isSelected(true);
+      ScenarioSimulation.isSelectedAvailable(true);
+    }
+  }
+}
+ScenarioSimulation.ResetSelection = function(){
+  ScenarioSimulation.SimulationName("");
+  ScenarioSimulation.SimulationDescription("");
+  ScenarioSimulation.isSelectedAvailable(false);
+  var arr = ScenarioSimulation.scenarioList();
+  for(var i in arr){
+    if(arr[i].isSet()){
+      arr[i].isSelected(false);
+      arr[i].Value(0);
+      arr[i].isSet(!arr[i].isSet());
+    }
+  }
+  ScenarioSimulation.ResetData();
+}
+ScenarioSimulation.SetScenario = function(obj){
+  obj.isSet(!obj.isSet());
+}
+
+ScenarioSimulation.GetDataSimulation = function(){
+  ScenarioSimulation.selectedSimulation("");
+  ScenarioSimulation.selectedDescription("");
+  var url = "/scenariosimulation/getdatasimulation"
+    var parm = ScenarioSimulation.GetFilter();
+    $.ajax({
+      url: url,
+      type: 'post',
+      dataType: 'json',
+      data : parm,
+      success : function(res) {
+          if(res.Status=="OK"){    
+            ScenarioSimulation.GenDataSimulation(res.Data);
+          }else{
+              alert(res.message);
+          }
+      },
+   });
+}
+
+ScenarioSimulation.GetData = function(){
+  var url = "/scenariosimulation/getdata"
+    var parm = ScenarioSimulation.GetFilter();
+    $.ajax({
+      url: url,
+      type: 'post',
+      dataType: 'json',
+      data : parm,
+      success : function(res) {
+          if(res.Status=="OK"){    
+            ScenarioSimulation.isResultAvailable(true);
+            ScenarioSimulation.ProcessingData(res.Data);
+          }else{
+              alert(res.message);
+          }
+      },
+   });
+}
+ScenarioSimulation.GetFilter = function(){
+  var parm = {
+    startPeriod:toUTC(ScenarioSimulation.startPeriod()),
+    endPeriod:toUTC(ScenarioSimulation.endPeriod()),
+    selectedPlant:ScenarioSimulation.selectedPlant(),
+    selectedUnit:ScenarioSimulation.selectedUnit(),
+    selectedSimulation:ScenarioSimulation.selectedSimulation(),
+    selectedDescription:ScenarioSimulation.selectedDescription(),
+  }
+
+  return parm;
+}
+ScenarioSimulation.selectedPlant.subscribe(function(newValue){
+  ScenarioSimulation.Initiate(true);
+});
+ScenarioSimulation.Initiate = function(updatingFilter){
+  ScenarioSimulation.Processing(true);
+  var url = "{{BaseUrl}}scenariosimulation/initiate"
+  ajaxPost
+}
+ScenarioSimulation.Refresh = function(){
+  ScenarioSimulation.GetData();
+}
+
+$(document).ready(function(){
+  ScenarioSimulation.Initiate();
+  ScenarioSimulation.GetDataSimulation();
+})
+</script>

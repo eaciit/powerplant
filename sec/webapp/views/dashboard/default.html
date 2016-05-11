@@ -1,0 +1,737 @@
+<style>
+
+    .fiter-labelvalue{
+        line-height: 25px;
+    }
+    #clearMapSelection{
+        float: right;
+        margin-top: 1px;
+    }
+    #clearMapSelection > button{
+        background-color: rgba(255, 255, 255, 0.25);
+    }
+    #BackToMainChart{
+        position: absolute;
+        right: 0;
+        z-index: 1;
+        margin-right: 5px;
+        margin-top: 1px;
+    }
+    #BackToMainChart > div >button{
+        background-color: rgba(255, 255, 255, 0.25);
+    }
+    #BackToMainChart > div >button:hover{
+        background-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .Snapshotbox > div>div>div>div>h4:hover{
+        cursor: pointer;
+        background: #034567
+    }
+    .Snapshotbox > div>div>div>div>h4.activeSnapshot{
+        cursor: pointer;
+        background: #023A56;
+    }
+    .Snapshotbox > div>div>div>div>h4.activeSnapshot:hover{
+        cursor: pointer;
+        background: #034567
+    }
+    #DetailedSimulation{
+        cursor: pointer;
+        margin-top: 10px;
+    }
+    #Tab{
+        margin-bottom: 10px;
+    }
+    .nav-tabs{
+        padding-left: 15px;
+    }
+    #RevenueTitle{
+        background: #272727;
+    }
+    #ValueEquationTitle{
+        background: #DE8A13;
+    }
+    #OperatingCostTitle{
+        background: #005A27;
+    }
+    #CapitalConsumedTitle{
+        background: #61122B;
+    }
+    #ActiveAssetTitle{
+        background: #0D6B69;
+    }
+    #PowerGeneratedTitle{
+        background: #4F5203;
+    }
+    .apply-border{
+        border:1px solid #DDD;
+    }
+    #RightSection>div>div>h4{
+        background: #C31414;
+        font-size: 11px;
+        font-weight: bold;
+        border: 1px solid #C31414;
+    }
+    #RightSection>div>div>h4.active{
+        background: #FFFFFF;
+        font-size: 11px;
+        color: #C31414;
+        font-weight: bold;
+        border: 1px solid #C31414;
+    }
+    #Show{
+        margin-top: 5px;
+    }
+    #Show > div >div>h4.title{
+        background: #3E3E3E;
+        font-size: 10px;
+    }
+    #Show > div > div > div{
+        padding-left: 0px;
+    }
+    #Show > div > div > div > div > label{
+        font-size: 10px;
+        border-radius: 0px;
+        padding: 7px 12px;
+        margin:0px 1.5px;
+    }
+
+    #SimulatoinFilter {
+        padding-bottom: 10px;
+        border-right: 1px solid #DDD;
+        border-bottom: 1px solid #DDD;
+    }
+    #SimulatoinFilterTitle{
+        margin-bottom: 10px;
+    }
+    .box-info h6{
+        padding: 0px 0px 5px 10px;
+        border-bottom: 1px solid #DDD;
+        margin: 0px 0px 10px 0px
+    }
+    .snapshotbox-title{
+        font-size: 13px;
+    }
+    .snapshotbox-content{
+        font-size: 20px;
+    }
+    #mapinfo{
+        font-size: 12px;
+    }
+    #mapinfo > div{
+        margin-top:3px;
+        margin-bottom:3px;
+    }
+    .MapsMarker>h5{
+        margin-bottom: 0px;
+    }
+    .MapsMarker>div{
+        font-size: 12px;
+    }
+    .MapsMarker>div>ul{
+        margin: 0;
+        padding-left: 15px;
+    }
+</style>
+
+<script src="http://maps.googleapis.com/maps/api/js?key=AIzaSyDY0kkJiTPVd2U7aTOAwhc9ySH6oHxOIYM&sensor=false"></script>
+
+<script type="text/javascript">
+   function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+   }
+
+   $("#showHideFilter").click();
+   var Dashboard = {
+        ActiveMarker:ko.observable(""),
+        selectedPlant:{
+            Name:ko.observable("All Plant"),
+            Code:ko.observable("-"),
+            TotalAsset:ko.observable(0),
+            TotalCapacity:ko.observable(0),
+        },
+        numberOfProcess:ko.observable(0),
+        selectedAsset:ko.observableArray([]),
+        MapDataSource:ko.observableArray([]),
+        MapData:ko.observableArray([]),
+        InspectionInterval:ko.observable(0),
+        MaintenanceInterval:ko.observable(0),
+        Sources:ko.observableArray([]),
+        dataPoints:ko.observableArray(["BreakdownTime"]),
+        GeneratedDataPoints:ko.observableArray([]),
+        dataPointList:ko.observableArray([
+            {Id:"Revenue",Title:"Revenue"},
+            {Id:"ValueEquation",Title:"Value Equation"},
+            {Id:"OperatingCost",Title:"Operating Cost"},
+            {Id:"MaintenanceCost",Title:"Maintenance Cost"},
+            {Id:"BreakdownTime",Title:"Breakdown Time"},
+            {Id:"UtilizedPower",Title:"Power Generated"},
+            {Id:"LossPower",Title:"Power Loss"},
+        ]),
+        ViewChart:{
+            Main:ko.observable(true),
+            Revenue:ko.observable(false),
+            OperatingCost:ko.observable(false),
+            CapitalConsumed:ko.observable(false),
+            ActiveAsset:ko.observable(false),
+            PowerGenerated:ko.observable(false),
+        },
+        Snapshotbox:{
+            Revenue:ko.observable(0),
+            OperationalCost:ko.observable(0),
+            CapitalConsumed:ko.observable(0),
+            ActiveAsset:ko.observable(0),
+            PowerGenerated:ko.observable(0),
+        },
+        ErrorOnMap:ko.observable(false),
+        Processing:ko.observable(true),
+        // startMonthly:ko.observable(new Date(Now.getFullYear(),Now.getMonth(),1)),
+        startMonthly:ko.observable(new Date(Now.getFullYear()-1,3,1)),
+        endMonthly:ko.observable(new Date(Now.getFullYear(),Now.getMonth()+1,0)),
+      period:ko.observable("LastFYToDate"),
+      periodList:ko.observableArray([
+         {Id:"ThisMonth",Title:"This Month"},
+            {Id:"LastMonth",Title:"Last Month"},
+            {Id:"ThisQuarter",Title:"This Quarter"},
+            {Id:"LastQuarter",Title:"Last Quarter"},
+            {Id:"FYToDate",Title:"FY To Date"},
+            {Id:"LastFYToDate",Title:"Last FY To Date"},
+            {Id:"LastFY",Title:"Last FY"}
+        ]),
+        assetClass:ko.observableArray([]),
+        assetClassList:ko.observableArray([
+            {Id:"All",Title:"All"},
+        ]),
+        assetLevel:ko.observableArray([]),
+        assetLevelList:ko.observableArray([
+            {Id:"All",Title:"All"},
+        ]),
+        assetType:ko.observableArray([]),
+        assetTypeList:ko.observableArray([
+            {Id:"All",Title:"All"},
+        ]),
+        functionalLocation:ko.observableArray([]),
+        functionalLocationList:ko.observableArray([
+            {Id:"All",Title:"All"},
+        ]),
+   }
+
+    Dashboard.ViewChart.Main.subscribe(function(NewVal){
+        if(NewVal){
+            Dashboard.ViewChart.Revenue(false);
+            Dashboard.ViewChart.OperatingCost(false);
+            Dashboard.ViewChart.CapitalConsumed(false);
+            Dashboard.ViewChart.ActiveAsset(false);
+            Dashboard.ViewChart.PowerGenerated(false);
+        }
+    })
+    Dashboard.CheckViewChart = function(){
+        return Dashboard.ViewChart.Main()||Dashboard.ViewChart.Revenue()||Dashboard.ViewChart.OperatingCost()||Dashboard.ViewChart.CapitalConsumed()||Dashboard.ViewChart.ActiveAsset()||Dashboard.ViewChart.PowerGenerated();
+    }
+    Dashboard.ViewChart.Revenue.subscribe(function(NewVal){
+        if(NewVal){
+            Dashboard.ViewChart.Main(false);
+        }else{
+            if(!Dashboard.CheckViewChart()){
+                Dashboard.ViewChart.Main(true);
+            }
+        }
+    });
+    Dashboard.ViewChart.OperatingCost.subscribe(function(NewVal){
+        if(NewVal){
+            Dashboard.ViewChart.Main(false);
+        }else{
+            if(!Dashboard.CheckViewChart()){
+                Dashboard.ViewChart.Main(true);
+            }
+        }
+    });
+    Dashboard.ViewChart.CapitalConsumed.subscribe(function(NewVal){
+        if(NewVal){
+            Dashboard.ViewChart.Main(false);
+        }else{
+            if(!Dashboard.CheckViewChart()){
+                Dashboard.ViewChart.Main(true);
+            }
+        }
+    });
+    Dashboard.ViewChart.ActiveAsset.subscribe(function(NewVal){
+        if(NewVal){
+            Dashboard.ViewChart.Main(false);
+        }else{
+            if(!Dashboard.CheckViewChart()){
+                Dashboard.ViewChart.Main(true);
+            }
+        }
+    });
+    Dashboard.ViewChart.PowerGenerated.subscribe(function(NewVal){
+        if(NewVal){
+            Dashboard.ViewChart.Main(false);
+        }else{
+            if(!Dashboard.CheckViewChart()){
+                Dashboard.ViewChart.Main(true);
+            }
+        }
+    });
+
+    Dashboard.period.subscribe(function(NewVal){
+        console.log(NewVal);
+        switch(NewVal){
+            case "ThisMonth":
+                Dashboard.startMonthly(new Date(Now.getFullYear(),Now.getMonth(),1));
+                Dashboard.endMonthly(new Date(Now.getFullYear(),Now.getMonth()+1,0));
+                break;
+            case "LastMonth":
+                Dashboard.startMonthly(new Date(Now.getFullYear(),Now.getMonth()-1,1));
+                Dashboard.endMonthly(new Date(Now.getFullYear(),Now.getMonth(),0));
+                break;
+            case "ThisQuarter":
+                var quarter = getQuarter();
+                switch(quarter){
+                    case 1:
+                        Dashboard.startMonthly(new Date(Now.getFullYear(),0,1));
+                        Dashboard.endMonthly(new Date(Now.getFullYear(),3,0));
+                        break;
+                    case 2:
+                        Dashboard.startMonthly(new Date(Now.getFullYear(),3,1));
+                        Dashboard.endMonthly(new Date(Now.getFullYear(),6,0));
+                        break;
+                    case 3:
+                        Dashboard.startMonthly(new Date(Now.getFullYear(),6,1));
+                        Dashboard.endMonthly(new Date(Now.getFullYear(),9,0));
+                        break;
+                    case 4:
+                        Dashboard.startMonthly(new Date(Now.getFullYear(),9,1));
+                        Dashboard.endMonthly(new Date(Now.getFullYear(),12,0));
+                        break;
+                    default:break;
+                }
+                break;
+            case "LastQuarter":
+                var quarter = getQuarter();
+                switch(quarter){
+                    case 1:
+                        Dashboard.startMonthly(new Date(Now.getFullYear(),0-3,1));
+                        Dashboard.endMonthly(new Date(Now.getFullYear(),3-3,0));
+                        break;
+                    case 2:
+                        Dashboard.startMonthly(new Date(Now.getFullYear(),3-3,1));
+                        Dashboard.endMonthly(new Date(Now.getFullYear(),6-3,0));
+                        break;
+                    case 3:
+                        Dashboard.startMonthly(new Date(Now.getFullYear(),6-3,1));
+                        Dashboard.endMonthly(new Date(Now.getFullYear(),9-3,0));
+                        break;
+                    case 4:
+                        Dashboard.startMonthly(new Date(Now.getFullYear(),9-3,1));
+                        Dashboard.endMonthly(new Date(Now.getFullYear(),12-3,0));
+                        break;
+                    default:break;
+                }
+                break;
+            case "FYToDate":
+                var Today = new Date(Now.getFullYear(),Now.getMonth()+1,0);
+                if(Now.getMonth()>=3){
+                    var EndDate = new Date(Now.getFullYear(),3+12,0);
+                    Dashboard.startMonthly(new Date(Now.getFullYear()-1,3,1));
+                    Dashboard.endMonthly(Today);
+                }else{
+                    Dashboard.startMonthly(new Date(Now.getFullYear()-1,3,1));
+                    Dashboard.endMonthly(Today);
+                }
+                break;
+            case "LastFYToDate":
+                var Today = new Date(Now.getFullYear(),Now.getMonth()+1,0);
+                if(Now.getMonth()>=3){
+                    Dashboard.startMonthly(new Date(Now.getFullYear()-1,3,1));
+                    Dashboard.endMonthly(Today);
+
+                }else{
+                    Dashboard.startMonthly(new Date(Now.getFullYear()-1,3,1));
+                    Dashboard.endMonthly(Today);
+                }
+                break;
+            case "LastFY":
+                if(Now.getMonth()>=3){
+                    Dashboard.startMonthly(new Date(Now.getFullYear()-1,3,1));
+                    Dashboard.endMonthly( new Date(Now.getFullYear()-1,3+12,0));
+                }else{
+                    Dashboard.startMonthly(new Date(Now.getFullYear()-1,3,1));
+                    Dashboard.endMonthly(new Date(Now.getFullYear()-1,3+12,0));
+                }
+                break;
+            default:
+                break;
+        }
+    });
+</script>
+<div class="panel panel-default" data-bind="with:Dashboard,visible:false">
+    <div class="panel-heading">
+        FILTER
+        <a class="align-right" id="showHideFilter" data-toggle="collapse" href="#contentFilter" aria-controls="contentFilter">show / hide</a>
+    </div>
+   <div class="panel-body collapse out" id="contentFilter">
+      <div class="row form-group">
+         <!-- <div class="col-md-3">
+                <label class="col-md-4 filter-label">Period</label>
+                <div class="col-md-8">
+                    <input type="text" data-bind="kendoDropDownList:{value:period,data:periodList,dataValueField:'Id',dataTextField:'Title'}"/>
+                </div>
+            </div> -->
+            <div class="col-md-3">
+                <div class="row">
+                    <label class="col-md-4 filter-label">From </label>
+                    <div class="col-md-8">
+                        <input type="text" data-bind="kendoDatePicker: {value: startMonthly, start: 'year', depth: 'year', format: 'MMMM yyyy'}" />
+                    </div>
+                </div>
+                <div class="row">
+                    <label class="col-md-4 filter-label">To </label>
+                    <div class="col-md-8">
+                        <input type="text" data-bind="kendoDatePicker: {value: endMonthly, start: 'year', depth: 'year', format: 'MMMM yyyy'}" />
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="row">
+                    <label class="col-md-6 filter-label">Asset Class</label>
+                    <div class="col-md-6">
+                        <input type="text" data-bind="kendoMultiSelect:{value:assetClass,data:assetClassList,dataValueField:'Id',dataTextField:'Title'}"/>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="row">
+                    <label class="col-md-4 filter-label">Asset Level</label>
+                    <div class="col-md-8">
+                      <input type="text" data-bind="kendoMultiSelect:{value:assetLevel,data:assetLevelList,dataValueField:'Id',dataTextField:'Title'}"/>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="row">
+                    <label class="col-md-4 filter-label">Asset Type</label>
+                    <div class="col-md-8">
+                      <input type="text" data-bind="kendoMultiSelect:{value:assetType,data:assetTypeList,dataValueField:'Id',dataTextField:'Title'}"/>
+                    </div>
+                </div>
+                <div class="row form-group">
+                    <div class="col-md-4">&nbsp;</div>
+                    <div class="col-md-8 align-right">
+                        <button type="button" class="btn btn-primary btn-sm" data-bind="click:Refresh">
+                          <span class="fa fa-refresh"></span>
+                          Refresh
+                        </button>
+                        <button type="button" class="btn btn-warning btn-sm"  data-bind="click:Reset">
+                          <span class="fa fa-share-square"></span>
+                          Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+      </div>
+   </div>
+</div>
+
+<div class="panel panel-default" data-bind="with:Dashboard">
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-12" style="height:1px;"><div id="FullChart" style="height:1px;">&nbsp;</div></div>
+                    <div class="col-md-6" style="height:1px;">
+                        <div id="HalfChart" style="height:1px;">&nbsp;</div>
+                    </div>
+                    <div class="col-md-6" style="height:1px;">&nbsp;</div>
+                </div>
+            </div>
+        </div>
+       <div class="row" data-bind="visible:Processing()">
+            <div class="col-md-12 align-center">
+                {{template "processing.html"}}
+            </div>
+       </div>
+       <div class="row" data-bind="visible:!Processing()">
+        <div class="col-md-4">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="box-info">
+                        <h4 class="box-title">Plant Info</h4>
+                    </div>
+                    <div id="maps" class="map" style="height:300px;width:100%;">&nbsp;</div>
+                </div>
+            </div>
+            <div class="row" data-bind="visible:selectedAsset().length>0">
+                <div class="col-md-12">
+                    <div class="box-info">
+                            <div id="clearMapSelection">
+                                <button type="button" class="btn btn-sm btn-custom" onclick="Dashboard.ResetMap()">
+                                  <span class="fa fa-eraser"></span>
+                                  Clear
+                                </button>
+                            </div>
+                            <h4 class="box-title">Latest Info According Selected Point</h4>
+                            <div class="row">
+                                <div class="row" id="mapinfo">
+                                    <div class="col-md-12">
+                                        <b><span class="mapinfo-icon fa fa-briefcase"></span>&nbsp;Plant Name :</b>
+                                        <span data-bind="text:Dashboard.selectedPlant.Name()"></span>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <b><span class="mapinfo-icon fa fa-codepen"></span>&nbsp;Plant Code :</b>
+                                        <span  data-bind="text:Dashboard.selectedPlant.Code()"></span>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <b><span class="mapinfo-icon fa fa-calculator"></span>&nbsp;Total Capacity :</b>
+                                        <span data-bind="text:kendo.toString(Dashboard.selectedPlant.TotalCapacity(),'N0')"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <!-- <div class="row"><div class="col-md-12">&nbsp;</div></div> -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="row">
+                        <div class="col-md-6">
+                        {{template "numberofturbines.html"}}
+                        </div>
+                        <div class="col-md-6">
+                        {{template "powervsfuelconsumtion.html"}}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                        {{template "numberofworkorders.html"}}
+                        </div>
+                        <div class="col-md-6">
+                        {{template "maintenancecost.html"}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+</div>
+
+<script>
+    function onMouseOverMarker(marker) {
+        if (marker != Dashboard.ActiveMarker()) {
+            if (Dashboard.ActiveMarker() != "") {
+                Dashboard.ActiveMarker().infoWindow.close();
+            }
+            Dashboard.ActiveMarker(marker);
+            marker.infoWindow.open(marker.map, marker);
+        }
+    }
+    function OnClickMaker(marker, PCode){
+        var arr = Dashboard.MapData();
+        var selectedMap = Enumerable.From(arr).Where(function(x){
+            return x.City == marker.title && x.PlantCode == PCode
+        }).ToArray();
+        var selectedAsset = [];
+        Dashboard.selectedPlant.Name("All Plant");
+        Dashboard.selectedPlant.Code("-");
+        Dashboard.selectedPlant.TotalAsset(0);
+        Dashboard.selectedPlant.TotalCapacity(0);
+        var Name = "";
+        var Code = "";
+        for(var i in selectedMap){
+            // console.log(selectedMap[i]);
+            selectedAsset = selectedAsset.concat(selectedMap[i]);
+            console.log(selectedAsset);
+            if(i==selectedMap.length-1){
+                Name += selectedMap[i].PlantName;
+                Code += selectedMap[i].PlantCode;
+            }else{
+                Name += selectedMap[i].PlantName+", ";
+                Code += selectedMap[i].PlantCode+", ";
+            }
+
+            // Dashboard.selectedPlant.TotalAsset(Dashboard.selectedPlant.TotalAsset()+selectedMap[i].Assets.length);
+            Dashboard.selectedPlant.TotalCapacity(Dashboard.selectedPlant.TotalCapacity()+selectedMap[i].TotalCapacity);
+        }
+
+        Dashboard.selectedPlant.Name(Name);
+        Dashboard.selectedPlant.Code(Code);
+
+        Dashboard.selectedAsset(selectedAsset);
+        Dashboard.Refresh();
+        // selectedAsset
+    }
+    function createMarker(pos, t, m, info, PCode) {
+        var marker = new google.maps.Marker({
+            position: pos,
+            infoWindow: info,
+            map: m,  // google.maps.Map
+            title: t
+        });
+        google.maps.event.addListener(marker, 'mouseover', function () {
+            onMouseOverMarker(marker)
+        });
+        google.maps.event.addListener(marker, 'click', function () {
+            OnClickMaker(marker, PCode)
+        });
+        return marker;
+    }
+   Dashboard.RenderMap = function (MapData) {
+        Dashboard.MapData(MapData);
+        //Initiate
+        Dashboard.ErrorOnMap(false);
+        try{
+            var mapOptions = {
+                zoom: 4,
+                center: new google.maps.LatLng(24.266906,45.1078489)
+            };
+            var map = new google.maps.Map(document.getElementById('maps'), mapOptions);
+            google.maps.event.addListenerOnce(map, 'idle', function () {
+                google.maps.event.trigger(map, 'resize');
+            });
+
+            // Add Merchant Mark
+            // var MerchantData = data.MerchantList;
+            map.setCenter(new google.maps.LatLng(24.266906,45.1078489));
+            map.setZoom(4);
+            for (var i in MapData) {
+                //Create Content
+                var CityName = MapData[i].City;
+                var Latitude = parseFloat(MapData[i].Latitude);
+                var Longitude = parseFloat(MapData[i].Longitude);
+                var PCode = MapData[i].PlantCode;
+
+                var content = "<div class='MapsMarker'>" +"<h5>"+CityName +", "+MapData[i].Region+ "</h5><div><ul>";
+                var AvailablePlant = Enumerable.From(MapData).Where(function(x){return x.Latitude == Latitude && x.Longitude == Longitude}).ToArray();
+                for(var p in AvailablePlant){
+                    content+="<li><b>"+AvailablePlant[p].PlantCode+"</b> - "+AvailablePlant[p].PlantName+"</li>";
+                }
+                content+="</ul></div></div>";
+
+                var position = new google.maps.LatLng(Latitude, Longitude);
+                var MarkInfo = new google.maps.InfoWindow({ content: content});
+                var Mark = createMarker(position, CityName, map, MarkInfo, PCode);
+
+            }
+        } catch (err) {
+            console.log(err);
+            Dashboard.ErrorOnMap(true);
+        }
+
+    }
+
+    Dashboard.GetFilter = function(){
+        var selectedPlant = [];
+        var arr = Dashboard.selectedAsset();
+        for(var i in arr){
+            selectedPlant.push(arr[i].PlantName);
+        }
+        var parm = {
+            StartDate:moment(Dashboard.startMonthly()).format("DD/MM/YYYY"),
+            EndDate:moment(Dashboard.endMonthly()).format("DD/MM/YYYY"),
+            Plant:selectedPlant,
+            // AssetLevel:Dashboard.assetLevel(),
+            // AssetClass:Dashboard.assetClass(),
+            // AssetType:Dashboard.assetType(),
+        };
+        return parm;
+    }
+    Dashboard.GetMap = function(){
+        var parm = Dashboard.GetFilter();
+        var url = "/dashboard/getdata";
+        Dashboard.Processing(true);
+        $.ajax({
+            url: url,
+            type: 'post',
+            dataType: 'json',
+            data : parm,
+            success : function(res) {
+                if(res.Data.success){
+                    var result = res.Data.Data.PlantList;
+                    var plantCapacity = res.Data.Data.PlantCapacityList;
+                    for(var r in result){
+                        for(var pc in plantCapacity){
+                            if(result[r].PlantCode == plantCapacity[pc].PlantCode){
+                                result[r].TotalCapacity = plantCapacity[pc].TotalCapacity;
+                                break;
+                            }
+                        }
+                    }
+                    Dashboard.MapDataSource(result);
+                    Dashboard.ProcessComplete();
+                }else{
+                    alert(res.message);
+                }
+            },
+         });
+    }
+    Dashboard.GetData = function(){
+        Dashboard.numberOfProcess(4);
+        Dashboard.GetMap();
+        Dashboard.GetNumberOfTurbines();
+        Dashboard.GetPowerVsFuelConsumtion();
+        Dashboard.GetNumberOfWorkOrder();
+    }
+    Dashboard.ProcessComplete = function(){
+        Dashboard.numberOfProcess(Dashboard.numberOfProcess()-1);
+        if(Dashboard.numberOfProcess()==0){
+            Dashboard.Processing(false);
+            Dashboard.RenderMap(Dashboard.MapDataSource());
+        }
+    }
+    Dashboard.Initiate = function() {
+        var url = "/dashboard/initiate"
+        $.ajax({
+            url: url,
+            type: 'post',
+            dataType: 'json',
+            data : null,
+            success : function(res) {
+                if(res.success){
+                    Dashboard.assetClassList(res.data.AssetClass);
+                    Dashboard.assetLevelList(res.data.AssetLevel);
+                    Dashboard.assetTypeList(res.data.AssetType);
+                }else{
+                    alert(res.message);
+                }
+            },
+         });
+    }
+    Dashboard.Refresh = function(){
+        Dashboard.GetData();
+    }
+    Dashboard.ResetMap = function(){
+        Dashboard.Reset();
+        Dashboard.Refresh();
+    }
+
+    Dashboard.Reset = function(){
+        Dashboard.period("LastFYToDate");
+        Dashboard.assetClass([]);
+        Dashboard.assetLevel([]);
+        Dashboard.assetType([]);
+        Dashboard.selectedAsset([]);
+        Dashboard.dataPoints(["BreakdownTime"]);
+        Dashboard.selectedPlant.Name("All Plant");
+        Dashboard.selectedPlant.Code("-");
+        Dashboard.selectedPlant.TotalAsset(0);
+        Dashboard.selectedPlant.TotalCapacity(0);
+    }
+
+   $(document).ready(function(){
+      model.Processing(false);
+        Dashboard.Initiate();
+        Dashboard.Refresh();
+   });
+</script>
+
+<script type="text/javascript">
+model.PageId("{{.PageId}}");
+model.PageTitle("{{.PageTitle}}");
+model.BreadCrumbs.push(new BreadCrumb("{{.PageId}}", "{{.PageTitle}}", "#", "active", ""));
+</script>
+
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">

@@ -1,0 +1,329 @@
+<style>
+.capacity-mw:before{
+  content:"MW ";
+  float:left;
+}
+.netgeneration-mwhr:before{
+  content:"MWHr ";
+  float:left;
+}
+
+.sar-mwhr:before{
+  content:"SAR / MWHr ";
+  float:left;
+}
+.sar-mw:before{
+  content:"SAR / MW ";
+  float:left;
+}
+#Tab{
+margin-bottom: 10px;
+}
+.nav-tabs{
+padding-left: 15px;
+}
+</style>
+<script>
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+model.PageId("{{.PageId}}");
+model.PageTitle("{{.PageTitle}}");
+model.BreadCrumbs.push(new BreadCrumb("{{.PageId}}", "{{.PageTitle}}", "#", "active", ""));
+var ValueEquation = {
+  Processing:ko.observable(false),
+  startPeriod:ko.observable(new Date(2014,0,1)),
+  endPeriod:ko.observable(new Date(2014,11,31)),
+  scope:ko.observable("Kingdom"),
+  scopeList:ko.observableArray([
+      {Id:"Kingdom"},
+      {Id:"Plant"},
+      // {Id:"Phase"},
+      {Id:"Unit"},
+      {Id:"Equipment"},
+  ]),
+  selected:ko.observableArray(["Kingdom"]),
+  selectedList:ko.observableArray([{Id:"Kingdom"}]),
+  plantList:ko.observableArray([]),
+  selectedPlant:ko.observable(""),
+  phaseList:ko.observableArray([]),
+  unitList:ko.observableArray([]),
+  ScenarioName:ko.observable(""),
+  Description:ko.observable(""),
+  WOTOP:ko.observable(""),
+  DF:ko.observable(""),
+}
+ValueEquation.scope.subscribe(function(newVal){
+  
+  switch(newVal){
+    case "Kingdom":
+      ValueEquation.selectedPlant("");
+      ValueEquation.selectedList([{Id:"Kingdom"}]);
+      ValueEquation.selected(["Kingdom"]);
+      break;
+    case "Plant":
+      ValueEquation.selectedList(ValueEquation.plantList());
+      ValueEquation.selected([]);
+      break;
+    case "Phase":
+      ValueEquation.selectedList(ValueEquation.phaseList());
+      ValueEquation.selected([]);
+      break;
+    case "Unit":
+      if(ValueEquation.selected().toString().length <= 0)
+      {
+        ValueEquation.selectedPlant(ValueEquation.plantList()[0].Id);
+      }
+      else
+      {
+       if (ValueEquation.selected()[0]!=="Kingdom"){
+        ValueEquation.selectedPlant(ValueEquation.selected()[0]); 
+       }else{
+        ValueEquation.selectedPlant(ValueEquation.plantList()[0].Id); 
+       }
+      }
+      ValueEquation.GetUnitList();
+      ValueEquation.selected([]);
+      break;
+    case "Equipment":
+      if(ValueEquation.selected().toString().length <= 0)
+      {
+        ValueEquation.selectedPlant(ValueEquation.plantList()[0].Id);
+      }
+      else
+      {
+       if (ValueEquation.selected()[0]!=="Kingdom"){
+        ValueEquation.selectedPlant(ValueEquation.selected()[0]); 
+       }else{
+        ValueEquation.selectedPlant(ValueEquation.plantList()[0].Id); 
+       }
+      }
+      ValueEquation.GetUnitList();
+      ValueEquation.selected([]);
+      break;
+  }
+});
+ValueEquation.selectedPlant.subscribe(function(newVal){
+  ValueEquation.GetUnitList();
+});
+
+</script>
+{{template "browse.html"}}
+<div class="row">
+  <div class="col-md-12">
+    <div class="col-md-12">
+      <div class="col-md-12">
+        <div id="chart-fullwidth">&nbsp;</div>
+      </div>
+      <div class="col-md-4">
+        <div id="chart-leftsectionwidth">&nbsp;</div>
+      </div>
+      <div class="col-md-8">
+        <div id="chart-rightsectionwidth">&nbsp;</div>
+      </div>
+      
+    </div>
+  </div>
+</div>
+<div class="row" data-bind="visible:ValueEquation.Processing()">
+  <div class="col-md-12 align-center">
+    {{template "processing.html"}}
+  </div>
+</div>
+<div data-bind="with:ValueEquation,visible:!ValueEquation.Processing()">
+<div class="panel panel-default">
+  <div class="panel-heading">
+      Filter & Scenario
+      <!-- <a class="align-right" id="showHideFilter" data-toggle="collapse" href="#contentFilter" aria-controls="contentFilter">show / hide</a> -->
+  </div>
+  <div class="panel-body collapse in left-mar" id="contentFilter">
+    <div class="row">
+      <div class="col-md-4">
+         <div class="row">
+              <label class="col-md-4 filter-label">From</label>
+              <div class="col-md-5">
+                  <input type="text" data-bind="kendoDatePicker: {value:startPeriod, start: 'month', depth: 'month', format: 'dd MMM yyyy'}" />
+              </div>
+              <label class="col-md-3 filter-label">To</label>
+          </div>
+      </div>
+      <div class="col-md-2">
+         <div class="row">
+              <!-- <label class="col-md-4 filter-label">To</label> -->
+              <div class="col-md-12">
+                  <input type="text" data-bind="kendoDatePicker: {value:endPeriod, start: 'month', depth: 'month', format: 'dd MMM yyyy'}" />
+              </div>
+          </div>
+      </div>
+      <div class="col-md-3">
+         <div class="row">
+              <label class="col-md-4 filter-label">Scope</label>
+              <div class="col-md-8">
+                  <input type="text" data-bind="kendoDropDownList:{value:scope,data:scopeList,dataValueField:'Id',dataTextField:'Id',placeholder:'All'}"/>
+              </div>
+          </div>
+      </div>
+      <div class="col-md-3" data-bind="visible:(scope()=='Unit' || scope()=='Equipment')">
+         <div class="row">
+              <label class="col-md-4 filter-label">Plant</label>
+              <div class="col-md-8">
+                  <input type="text" data-bind="kendoDropDownList:{value:selectedPlant,data:plantList,dataValueField:'Id',dataTextField:'Id',placeholder:'All'}"/>
+              </div>
+          </div>
+      </div>
+      <div data-bind="visible:(scope()!='Equipment'), attr:{class:scope()=='Unit' ? 'col-md-4' : 'col-md-3'}">
+         <div class="row">
+              <label class="col-md-4 filter-label" data-bind="text:scope()=='Kingdom'? 'Selected' : 'Selected '+scope()">Selected</label>
+              <div class="col-md-8">
+                  <input type="text" data-bind="kendoMultiSelect:{value:selected,data:selectedList,dataValueField:'Id',dataTextField:'Id',placeholder:'All'}"/>
+              </div>
+          </div>
+      </div>
+      <div data-bind="visible:(scope()=='Equipment')" class="col-md-4">
+         <div class="row">
+              <label class="col-md-4 filter-label">Unit</label>
+              <div class="col-md-5">
+                  <input type="text" data-bind="kendoDropDownList:{value:selected,data:selectedList,dataValueField:'Id',dataTextField:'Id',placeholder:'All'}"/>
+              </div>
+              <label class="col-md-3 filter-label">Equipment</label>
+          </div>
+      </div>
+      <div class="col-md-4" data-bind="visible:scope()=='Equipment'">
+         <div class="row">
+              <div class="col-md-8">
+                  <input type="text" data-bind="kendoDropDownList:{value:[],data:[],dataValueField:'Id',dataTextField:'Id',placeholder:'All'}"/>
+              </div>
+          </div>
+      </div>
+      
+
+     <!--  <div class="col-md-4">
+         <div class="row">
+              <label class="col-md-4 filter-label">Scenario Name</label>
+              <div class="col-md-5">
+                  <input type="text" data-bind="value:ScenarioName" class="form-control input-sm"/>
+              </div>
+              <label class="col-md-3 filter-label">Description</label>
+          </div>
+      </div>
+      <div data-bind="attr:{class:scope()=='Unit' ? 'col-md-4' : 'col-md-8'}">
+         <div class="row">
+              <div class="col-md-12">
+                  <textarea data-bind="value:Description" style="width:100%" rows="3" class="form-control input-sm"></textarea>
+              </div>
+          </div>
+      </div> -->
+      <div class="col-md-12">&nbsp;</div>
+      <div class="col-md-12 align-right">
+          <button type="button" class="btn btn-primary btn-sm" data-bind="click:Refresh">
+            <span class="fa fa-refresh"></span>
+            Refresh
+          </button>
+          <!-- <button type="button" class="btn btn-primary btn-sm" data-bind="click:Save">
+            <span class="fa fa-plus-circle"></span>
+            Save
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" data-bind="click:Browse">
+            <span class="fa fa-search"></span>
+            Browse
+          </button> -->
+      </div>
+    </div>
+  </div>  
+</div>
+<div class="panel panel-default">
+  <div class="panel-heading">
+      Historical Value Equation
+  </div>
+  <div class="panel-body">
+    <div class="row">
+      <div class="col-md-12">
+        {{template "index.html"}}
+      </div>
+    </div>
+  </div>  
+</div>
+
+</div>
+<script type="text/javascript">
+$("#multiselect").kendoMultiSelect({
+  animation: false
+});
+ValueEquation.GetUnitList = function(){
+  var parm = {
+    selectedPlant:ValueEquation.selectedPlant()
+  }
+  var url = "/valueequation/getunitlist";
+  ajaxPost(url,parm,function(res){
+    if(!res.IsError){
+        var ds = res.Data;
+        for(var i in ds){
+          ds[i].Index = parseFloat(ds[i].Id.substr(2));
+        }
+        var GTArr = Enumerable.From(ds).Where(function(x){return x.Id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+        var STArr = Enumerable.From(ds).Where(function(x){return x.Id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+        var arr = [];
+        for(var i in GTArr){
+          arr.push(GTArr[i]);
+        }
+        for(var i in STArr){
+          arr.push(STArr[i]);
+        }
+        ValueEquation.selectedList(arr)
+    }else{
+        alert(res.message);
+    }
+  });
+}
+ValueEquation.GetFilter = function(){
+  var parm = {
+    startPeriod:toUTC(ValueEquation.startPeriod()),
+    endPeriod:toUTC(ValueEquation.endPeriod()),
+    scope:ValueEquation.scope(),
+    selectedPlant:ValueEquation.selectedPlant(),
+    selected:ValueEquation.selected(),
+    WOTOP:ValueEquation.WOTOP(),
+    DF:ValueEquation.DF(),
+  }
+  return parm;
+}
+ValueEquation.Initiate = function(){
+  ValueEquation.Processing(true);
+  var url = "/valueequation/initiate"
+  $.ajax({
+      url: url,
+      type: 'post',
+      dataType: 'json',
+      data : null,
+      success : function(res) {
+          if(!res.IsError){
+              ValueEquation.Processing(false);
+              for(var i in res.Data.PlantList){
+                res.Data.PlantList[i].Id = res.Data.PlantList[i].Plant;
+              }
+              ValueEquation.plantList(res.Data.PlantList);
+              ValueEquation.phaseList(res.Data.PhaseList);
+              ValueEquation.unitList(res.Data.UnitList);
+              
+          }else{
+              alert(res.message);
+          }
+      },
+   });
+}
+ValueEquation.Refresh = function(){
+  HVESummary.GetData();
+  HVEMaintenance.GetData();
+  HVEOperating.GetTableOperating()
+  HVERevenue.GetData();
+  HVEDataQuality.GetData();
+  HVEPerformance.GetData();
+  HVEAssetWork.GetData();
+}
+
+$(document).ready(function(){
+  ValueEquation.Initiate();
+  ValueEquation.Refresh();
+})
+</script>

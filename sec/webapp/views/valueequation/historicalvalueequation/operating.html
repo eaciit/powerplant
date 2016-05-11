@@ -1,0 +1,192 @@
+<script>
+	var HVEOperating = {
+		Processing:ko.observable(true),
+		DataTable : ko.observableArray([]),
+		DetailDataSource: ko.observableArray([]),
+		FuelTransportCost:ko.observable(0),
+		OperatingCost:ko.observable(0),
+		scope:ko.observable(""),
+		BreakdownBy:ko.observable(""),
+		ExpandData:ko.observable(false),
+		MaxFCperNetGeneration:ko.observable(0),
+		MinFCperNetGeneration:ko.observable(0),
+		MaxOperatingCost:ko.observable(0),
+		MinOperatingCost:ko.observable(0),
+	}
+
+	HVEOperating.GetTableOperating = function(){
+		HVEOperating.Processing(true);
+		var url = "/historicalvalueequation/getoperating"
+		var parm = ValueEquation.GetFilter();
+		HVEOperating.scope(ValueEquation.scope());
+		ajaxPost(url,parm,function(res){
+			if(!res.IsError){
+		      	HVEOperating.Processing(false);
+		      	var DataTable = res.Data.DataTable;
+		      	HVEOperating.DataTable(DataTable);
+		      	var DataTotal = res.Data.DataTotal;
+		      	HVEOperating.FuelTransportCost(0);
+		      	HVEOperating.OperatingCost(0);
+		      	if(DataTotal!==null && DataTotal.length > 0){
+		      		HVEOperating.FuelTransportCost(DataTotal[0].FuelTransportCost);
+		      		HVEOperating.OperatingCost(DataTotal[0].OperatingCost);	
+		      		HistoricalValueEquipment.TotalOperatingCost(DataTotal[0].OperatingCost);
+		      	}
+		      	HVEOperating.GenDetailDataSource(res.Data.DataDetail);
+	      }else{
+	          	alert(res.message);
+	      }
+		});
+	}
+	HVEOperating.GenDetailDataSource = function(dataSource){
+		var DataDetail = [];
+		if(HVEOperating.scope()=="Plant"){
+			for(var i in dataSource){
+				dataSource[i].Index = parseFloat(dataSource[i]._id.substr(2));
+			}
+			var GTArr = Enumerable.From(dataSource).Where(function(x){return x._id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+			var STArr = Enumerable.From(dataSource).Where(function(x){return x._id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+			var arr = [];
+			for(var i in GTArr){
+			arr.push(GTArr[i]);
+			}
+			for(var i in STArr){
+			arr.push(STArr[i]);
+			}
+		var UnmappedArr = Enumerable.From(dataSource).Where(function(x){return x._id =="Unmapped Data"}).OrderBy(function(x){return x.Index}).ToArray();
+				for(var i in UnmappedArr){
+				arr.push(UnmappedArr[i]);
+				}
+			dataSource = arr;
+		}
+
+		for(var i in dataSource){
+			
+			dataSource[i].FCperNetGeneration = dataSource[i].NetGeneration !== 0 ? dataSource[i].OperatingCost/dataSource[i].NetGeneration : 0;
+			DataDetail.push(dataSource[i]);
+			if(i==0){
+								HVEOperating.MinOperatingCost(dataSource[i].OperatingCost);
+				HVEOperating.MaxOperatingCost(dataSource[i].OperatingCost);
+				HVEOperating.MinFCperNetGeneration(dataSource[i].FCperNetGeneration);
+				HVEOperating.MaxFCperNetGeneration(dataSource[i].FCperNetGeneration);
+			}
+			// Min Max Operating Cost
+			if(dataSource[i].OperatingCost<HVEOperating.MinOperatingCost() ){
+				HVEOperating.MinOperatingCost(dataSource[i].OperatingCost);
+			}else if(dataSource[i].OperatingCost>HVEOperating.MaxOperatingCost()){
+				HVEOperating.MaxOperatingCost(dataSource[i].OperatingCost);
+			}
+			// Min Max FC Per NetGeneration
+			if(dataSource[i].FCperNetGeneration<HVEOperating.MinFCperNetGeneration() ){
+				HVEOperating.MinFCperNetGeneration(dataSource[i].FCperNetGeneration);
+			}else if(dataSource[i].FCperNetGeneration>HVEOperating.MaxFCperNetGeneration()){
+				HVEOperating.MaxFCperNetGeneration(dataSource[i].FCperNetGeneration);
+			}
+		}
+
+		HVEOperating.DetailDataSource(DataDetail);
+	}
+</script>
+
+
+<div data-bind="visible:HVEOperating.Processing()" class="align-center">
+	{{template "processing.html"}}
+</div>
+<div data-bind="with:HVEOperating,visible:!HVEOperating.Processing()">
+<table class="table table-striped table-bordered">
+	<thead>
+		<th></th>
+		<th>Fuel Type</th>
+		<th>Fuel Consumed</th>
+		<th>Cost per Unit</th>
+		<th>Total</th>
+	</thead>
+	<tbody data-bind="foreach:DataTable">
+		<tr>
+			<td data-bind="text:_id.isPrimaryFuel?'Primary':'Backup'"></td>
+			<td data-bind="text: _id.FuelType"></td>
+			<td class="align-right" data-bind="text: kendo.toString(ConvertedFuelConsumed, 'N2'), css: {'mmbtu-currency' : _id.FuelType == 'GAS', 'litre-currency' : _id.FuelType != 'GAS'}"></td>
+			<td class="align-right sar-currency" data-bind="text: kendo.toString(FuelCostPerUnit, 'N3')"></td>
+			<td class="align-right sar-currency" data-bind="text: kendo.toString(FuelCost, 'N0')"></td>
+		</tr>
+	</tbody>
+	<tfoot>
+		<tr>
+			<td>Fuel Transport</td>
+			<td class="align-right">-</td>
+			<td class="align-right">-</td>
+			<td class="align-right">-</td>
+			<td class="align-right sar-currency" data-bind="text: kendo.toString(FuelTransportCost(), 'N0')"></td>
+		</tr>
+		<tr>
+			<th>TOTAL</th>
+			<td class="align-right">-</td>
+			<td class="align-right">-</td>
+			<td class="align-right">-</td>
+			<th class="align-right sar-currency" data-bind="text: kendo.toString(OperatingCost(), 'N0')"></th>
+		</tr>
+	</tfoot>
+</table>
+<div class="row" data-bind="visible:ExpandData()&&scope()!=='Unit'">
+  	<div id="GridOperatingExpand" class="col-md-12">
+  		<table class="table table-striped table-bordered">
+		  <thead>
+		    <tr>
+		      <th class="align-center" data-bind="text:HVESummary.BreakdownBy()"></th>
+		      <th class="align-center">Total Fuel Cost</th>
+		      <th class="align-center">Net Generation</th>
+		      <th class="align-center">Fuel Cost / Net Generation</th>
+		    </tr>
+		  </thead>
+		  <tbody data-bind="foreach:DetailDataSource">
+		    <tr>
+		    	<th data-bind="text:_id"></td>
+		    	<td data-bind="text:kendo.toString(OperatingCost,'N0'),attr:{style:HVEOperating.isMaxOrMinOperatingCost(OperatingCost)}" class="align-right sar-currency"></td>
+		    	<td data-bind="text:kendo.toString(NetGeneration,'N0')" class="align-right netgeneration-mwhr"></td>
+		    	<td data-bind="text:kendo.toString(FCperNetGeneration,'N0'),attr:{style:HVEOperating.isMaxOrMinFCperNetGeneration(FCperNetGeneration)}" class="align-right sar-mwhr"></td>
+		    </tr>
+		  </tbody>
+		</table>
+  	</div>
+</div>
+<div class="row">
+  	<div class="col-md-6 align-left" data-bind="visible:scope()!=='Unit'">
+  		<button type="button" class="btn btn-warning btn-sm" data-bind="click:ExpandTrigger,visible:!ExpandData()">
+	  	<span class="fa fa-plus"></span> 
+	    Expand
+	  </button>
+	  <button type="button" class="btn btn-warning btn-sm" data-bind="click:ExpandTrigger,visible:ExpandData()">
+	  	<span class="fa fa-minus"></span> 
+	    Collapse
+	  </button>
+	  <button type="button" class="btn btn-warning btn-sm" data-bind="click:ExportToExcel,visible:ExpandData()">
+	  	<span class="fa fa-file-excel-o"></span> 
+	    Export to XLS
+	  </button>
+  	</div>
+</div>
+</div>
+<script>
+
+	HVEOperating.isMaxOrMinOperatingCost = function(val){
+		if(val==HVEOperating.MaxOperatingCost()){
+			return "background:red;color:white;"
+		}else if(val==HVEOperating.MinOperatingCost()){
+			return "background:green;color:white;"
+		}
+	}
+
+	HVEOperating.isMaxOrMinFCperNetGeneration = function(val){
+		if(val==HVEOperating.MaxFCperNetGeneration()){
+			return "background:red;color:white;"
+		}else if(val==HVEOperating.MinFCperNetGeneration()){
+			return "background:green;color:white;"
+		}
+	}
+	HVEOperating.ExpandTrigger = function(){
+		HVEOperating.ExpandData(!HVEOperating.ExpandData());
+	}
+	HVEOperating.ExportToExcel = function(){
+		tableToExcel('GridOperatingExpand', '')
+	}
+</script>

@@ -1,0 +1,489 @@
+<style type="text/css">
+	.ktooltip
+	{
+		text-align: left;
+	}
+</style>
+
+<script>
+	var HVEMaintenance = {
+		Processing:ko.observable(false),
+		Data:ko.observableArray([]),
+		LaborCostTotal:ko.observable(0),
+		MaterialCostTotal:ko.observable(0),
+		ServiceCostTotal:ko.observable(0),
+		ShowVisualisation:ko.observable(false),
+		WOTOP:ko.observable(10),
+		ShowChartValue:ko.observable("Cost"),
+		ShowChartValueList:ko.observableArray([{Id:"Cost",Title:"Cost (SAR)"},{Id:"Duration",Title:"Duration (Hour)"}]),
+		OrderType:ko.observable(),
+		OrderTypeList:ko.observableArray([]),
+		ChartDataSource:ko.observableArray([]),
+		refreshChartStat:ko.observable(false),
+
+		DataMainEx:ko.observableArray([]),
+		BreakdownBy:ko.observable(""),
+		ExpandData:ko.observable(false),
+
+		MinLaborCost :ko.observable(0),
+		MaxLaborCost :ko.observable(0),
+		MinMaterialCost :ko.observable(0),
+		MaxMaterialCost :ko.observable(0),
+		MinServiceCost :ko.observable(0),
+		MaxServiceCost :ko.observable(0),
+		MinTotMain :ko.observable(0),
+		MaxTotMain :ko.observable(0),
+		ProcessingMaintenanceChart:ko.observable(false)
+
+	}
+</script>
+
+<div data-bind="visible:HVEMaintenance.Processing()" class="align-center">
+	{{template "processing.html"}}
+</div>
+<div  data-bind="with:HVEMaintenance,visible:!HVEMaintenance.Processing()">
+	<table class="table table-striped table-bordered">
+	  <thead>
+	    <tr>
+	      <th class="align-center">Data Source</th>
+	      <th class="align-center">Work Order Type</th>
+	      <th class="align-center">Labour SAR</th>
+	      <th class="align-center">Material SAR</th>
+	      <th class="align-center">External Services SAR</th>
+	      <th class="align-center">Total</th>
+	    </tr>
+	  </thead>
+	  <tbody data-bind="foreach:Data">
+	    <tr>
+	      <td data-bind="text:_id.DataSource"></td>
+	      <td data-bind="text:_id.WorkOrderType"></td>
+	      <td width="200" data-bind="text:kendo.toString(LaborCost,'N0')" class="align-right sar-currency"></td>
+	      <td width="200" data-bind="text:kendo.toString(MaterialCost,'N0')" class="align-right sar-currency"></td>
+	      <td width="200" data-bind="text:kendo.toString(ServiceCost,'N0')" class="align-right sar-currency"></td>
+	      <td width="200" data-bind="text:kendo.toString(LaborCost + MaterialCost + ServiceCost ,'N0')" class="align-right sar-currency"></td>
+	    </tr>
+	  </tbody>
+	  <tfoot>
+	    <tr>
+	      <th colspan="2" class="align-center">TOTAL</th>
+	      <th  data-bind="text:kendo.toString(LaborCostTotal(),'N0')" class="align-right sar-currency"></th>
+	      <th  data-bind="text:kendo.toString(MaterialCostTotal(),'N0')" class="align-right sar-currency"></th>
+	      <th  data-bind="text:kendo.toString(ServiceCostTotal(),'N0')" class="align-right sar-currency"></th>
+	      <th  data-bind="text:kendo.toString(LaborCostTotal() + MaterialCostTotal() + ServiceCostTotal() ,'N0')" class="align-right sar-currency"></th>
+	    </tr>
+	  </tfoot>
+	</table>
+	<hr/>
+
+	<div class="row" data-bind="visible:ExpandData()&&HVESummary.scope()!=='Unit'">
+	  	<div id="GridMainExpand" class="col-md-12">
+	  		<table class="table table-striped table-bordered">
+			  <thead>
+			    <tr>
+			      <th class="align-center" data-bind="text:BreakdownBy"></th>
+			      <th class="align-center">Labour SAR</th>
+			      <th class="align-center">Material SAR</th>
+			      <th class="align-center">External Services SAR</th>
+			      <th class="align-center">Total</th>
+			    </tr>
+			  </thead>
+			  <tbody data-bind="foreach:DataMainEx">
+			    <tr>
+			    	<th data-bind="text:_id"></td>
+					<td data-bind="text:kendo.toString(LaborCost,'N0'),attr:{style:HVEMaintenance.isMaxOrMinLaborCost(LaborCost)}" class="align-right sar-currency"></td>
+					<td data-bind="text:kendo.toString(MaterialCost,'N0'),attr:{style:HVEMaintenance.isMaxOrMinMaterialCost(MaterialCost)}" class="align-right sar-currency"></td>
+					<td data-bind="text:kendo.toString(ServiceCost,'N0'),attr:{style:HVEMaintenance.isMaxOrMinServiceCost(ServiceCost)}" class="align-right sar-currency"></td>
+					<td data-bind="text:kendo.toString((LaborCost + MaterialCost + ServiceCost),'N0'),attr:{style:HVEMaintenance.isMaxOrMinTotMain((LaborCost + MaterialCost + ServiceCost))}" class="align-right sar-currency"></td>
+					
+			    </tr>
+			  </tbody>
+			</table>
+	  	</div>
+	  </div>
+
+	<div class="row">
+		<div class="col-md-6 align-left" data-bind="visible:HVESummary.scope()!=='Unit'">
+			<button type="button" class="btn btn-warning btn-sm" data-bind="click:ExpandTrigger,visible:!ExpandData()">
+				<span class="fa fa-plus"></span> 
+				Expand
+			</button>
+			<button type="button" class="btn btn-warning btn-sm" data-bind="click:ExpandTrigger,visible:ExpandData()">
+				<span class="fa fa-minus"></span> 
+				Collapse
+			</button>
+			<button type="button" class="btn btn-warning btn-sm" data-bind="click:ExportToExcel,visible:ExpandData()">
+				<span class="fa fa-file-excel-o"></span> 
+				Export to XLS
+			</button>
+		</div>
+		<div class="col-md-6 align-left" data-bind="visible:HVESummary.scope()=='Unit'">
+			&nbsp;
+		</div>
+		<!-- <div class="col-md-6 align-right">
+		  <button type="button" class="btn btn-warning btn-sm" data-bind="click:ShowVisualisationTrigger,visible:!ShowVisualisation()">
+		  	<span class="fa fa-bar-chart"></span>
+		    Show Visualisation
+		  </button>
+		  <button type="button" class="btn btn-warning btn-sm" data-bind="click:ShowVisualisationTrigger,visible:ShowVisualisation()">
+		  	<span class="fa fa-bar-chart"></span>
+		    Hide Visualisation
+		  </button>
+		</div> -->
+	</div>
+
+
+	<div class="row" data-bind="visible:ShowVisualisation()">
+		<div class="col-md-4">
+			<div class="row">
+				<label class="col-md-5 filter-label">Work Order TOP</label>
+				<div class="col-md-4">
+				  <input type="text" class="form-control input-sm" data-bind="value:WOTOP"/>
+				</div>
+			</div>
+			<div class="row">
+				<label class="col-md-5 filter-label">Display Figure </label>
+				<div class="col-md-4">
+                  <input type="text" data-bind="kendoDropDownList:{value:ShowChartValue,data:ShowChartValueList,dataValueField:'Id',dataTextField:'Title',placeholder:'All'}"/>
+				</div>
+			</div>
+			<div class="row">
+				<label class="col-md-5 filter-label">Order Type </label>
+				<div class="col-md-4">
+                  <input type="text" data-bind="kendoMultiSelect:{value:OrderType,data:OrderTypeList,placeholder:'All'}"/>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12 align-right">
+
+				  <button type="button" class="btn btn-info btn-sm" data-bind="click:RefreshMaintenanceChart,visible:ShowVisualisation()">
+				  	<span class="fa fa-refresh"></span>
+				    Refresh Chart
+				  </button>
+				  <button type="button" class="btn btn-warning btn-sm" data-bind="click:SaveExcelVisualisation">
+		  	<span class="fa fa-file-pdf-o"></span>
+		    Export to PDF
+		  </button>
+				</div>
+			</div>
+		</div>
+		<div data-bind="visible:ProcessingMaintenanceChart()" class="col-md-8 align-center">
+			{{template "processing.html"}}
+		</div>
+		<div class="col-md-8"  data-bind="visible:!ProcessingMaintenanceChart()" id="MaintenanceVisualisationWrapper" >
+			<div id="MaintenanceVisualisation"></div>
+			<div id="MaintenanceVisualisationDetail"></div>
+		</div>
+	</div>
+
+</div>
+
+<script>
+HVEMaintenance.SaveExcelVisualisation = function(){
+	kendo.drawing.drawDOM($("#MaintenanceVisualisationWrapper"))
+    .then(function(group) {
+        // Render the result as a PDF file
+        return kendo.drawing.exportPDF(group, {
+            paperSize: "auto",
+            margin: { left: "1cm", top: "1cm", right: "1cm", bottom: "1cm" }
+        });
+    })
+    .done(function(data) {
+        // Save the PDF file
+        kendo.saveAs({
+            dataURI: data,
+            fileName: "Maintenance Visualisation.pdf",
+            proxyURL: "//demos.telerik.com/kendo-ui/service/export"
+        });
+    });
+}
+HVEMaintenance.isMaxOrMinLaborCost = function(val){
+	if(val==HVEMaintenance.MaxLaborCost()){
+		return "background:red;color:white;"
+	}else if(val==HVEMaintenance.MinLaborCost()){
+		return "background:green;color:white;"
+	}
+}
+
+HVEMaintenance.isMaxOrMinMaterialCost = function(val){
+	if(val==HVEMaintenance.MaxMaterialCost()){
+		return "background:red;color:white;"
+	}else if(val==HVEMaintenance.MinMaterialCost()){
+		return "background:green;color:white;"
+	}
+}
+
+HVEMaintenance.isMaxOrMinServiceCost = function(val){
+	if(val==HVEMaintenance.MaxServiceCost()){
+		// return "background:red;color:white;"
+	}else if(val==HVEMaintenance.MinServiceCost()){
+		// return "background:green;color:white;"
+	}
+}
+
+HVEMaintenance.isMaxOrMinTotMain = function(val){
+	if(val==HVEMaintenance.MaxTotMain()){
+		return "background:red;color:white;"
+	}else if(val==HVEMaintenance.MinTotMain()){
+		return "background:green;color:white;"
+	}
+}
+
+
+
+HVEMaintenance.ExpandTrigger = function(){
+	HVEMaintenance.ExpandData(!HVEMaintenance.ExpandData());
+}
+
+HVEMaintenance.ShowVisualisationTrigger = function(){
+	HVEMaintenance.ShowVisualisation(!HVEMaintenance.ShowVisualisation());
+}
+HVEMaintenance.ExportToExcel = function(){
+	tableToExcel('GridMainExpand', '');
+}
+HVEMaintenance.RefreshMaintenanceChart = function(){
+	HVEMaintenance.ProcessingMaintenanceChart(true);
+	// HVEMaintenance.GenerateChart(HVEMaintenance.ChartDataSource());
+	HVEMaintenance.refreshChartStat(true);
+	HVEMaintenance.GetData();
+}
+HVEMaintenance.GenerateChart = function(dataSource){
+	HVEMaintenance.ProcessingMaintenanceChart(false);
+	var field = HVEMaintenance.ShowChartValue();
+	var source = new kendo.data.DataSource({
+            data: dataSource
+        });
+
+	$("#MaintenanceVisualisation").html("");
+	$("#MaintenanceVisualisation").kendoChart({
+        chartArea: { 
+            background: "",
+            height: 350,
+            width:$("#chart-rightsectionwidth").width()
+        },
+        dataSource: source,
+        legend: {
+            position: "bottom"
+        },
+        seriesDefaults: {
+            type: "column",
+            labels: {
+                visible: false,
+            },
+            markers:{visible:false}
+        },
+        series: [
+            {
+            	field:field,
+            	name:field,
+            	categoryField: "_id",
+            },
+        ],
+        valueAxis: {
+        	title:{
+        		text:field=="Cost" ? "SAR": "Hour",
+        	},
+            labels: {
+                format:"{0:N0}",
+                visible:true,
+                font: "10px Arial,Helvetica,sans-serif",
+            },
+            line: {
+                visible: true
+            }
+        },
+        categoryAxis: {
+            majorGridLines: {
+                visible: false
+            },
+            labels: {
+                rotation: 35,
+                font: "10px Arial,Helvetica,sans-serif",
+            }
+
+        },
+        tooltip: {
+            visible: true,
+            template: "<div class='ktooltip'>Equipment Type : #= dataItem.EquipmentType #<br>WorkOrder Type : #= dataItem.WorkOrderType #<br>#= series.name # : #= kendo.toString(value,'N2') #</div>",
+            //format: "{0:N2}",
+        },
+        seriesColors:ecisColors,
+    });
+    
+    $("#MaintenanceVisualisationDetail").html("");
+
+	$("#MaintenanceVisualisationDetail").kendoGrid({
+        chartArea: { 
+            background: "",
+            height: 350,
+            width:$("#chart-rightsectionwidth").width()
+        },
+        dataSource:source,
+        // dataSource: {
+        //     data: dataSource,
+        //     // pageSize: 10
+        // },
+        // pageable: true,
+        scrollable: true,
+        sortable: true,
+        filterable: true,
+        columns: [
+            {
+            	field:"_id",
+            	title:"Maintenance Order",
+            },
+            {
+            	field:"Plant",
+            	title:"Plant",
+            },
+
+            {
+            	field:"Unit",
+            	title:"Unit",
+            },
+
+            {
+            	field:"WorkOrderType",
+            	title:"Work Order Type",
+            },
+            {
+            	field:"EquipmentType",
+            	title:"Equipment Type",
+            },
+            {
+            	field:field,
+            	// title:field,
+            	format:"{0:N2}",
+            	attributes: {
+			      style: "text-align: right;"
+			    }
+            },
+            
+        ],
+        // toolbar: ["excel"],
+        // excel: {
+        //     fileName: "Maintenance Table.xlsx"
+        // },
+    });
+	
+	// setTimeout(function () {
+	//     $('#MaintenanceVisualisation').getKendoChart().refresh();
+	// }, 100);
+}
+HVEMaintenance.GetData = function(){
+	HVEMaintenance.Processing(true);
+	HistoricalValueEquipment.TotalMaintenanceCost(0);
+	// ValueEquation.DF() = HVEMaintenance.ShowChartValue()
+	// ValueEquation.WOTOP() = HVEMaintenance.WOTOP()
+	var parm = ValueEquation.GetFilter();
+	parm.WOTOP = HVEMaintenance.WOTOP();
+	parm.DF = HVEMaintenance.ShowChartValue();
+	parm.OrderType = HVEMaintenance.OrderType();
+	
+  	var url = "/historicalvalueequation/getmaintenance";
+
+  	ajaxPost(url,parm,function(res) {
+		if(!res.IsError){
+			HVEMaintenance.Processing(false);
+			HVEMaintenance.LaborCostTotal(0);
+			HVEMaintenance.MaterialCostTotal(0);
+			HVEMaintenance.ServiceCostTotal(0);
+
+		var OrderTypeList =  Enumerable.From(res.Data.DataOrder).Where(function(x){return x._id!==null}).Select(function(x){return x._id}).OrderBy(function(x){return x}).ToArray();
+
+		if(!HVEMaintenance.refreshChartStat()){
+			HVEMaintenance.OrderTypeList(OrderTypeList);
+		}
+
+			HVEMaintenance.GenerateChart(res.Data.DataChart);
+			HVEMaintenance.ChartDataSource(res.Data.DataChart);
+		var DataSource = res.Data.DataTable;
+		for(var i in DataSource){
+			HVEMaintenance.LaborCostTotal(HVEMaintenance.LaborCostTotal()+DataSource[i].LaborCost);
+			HVEMaintenance.MaterialCostTotal(HVEMaintenance.MaterialCostTotal()+DataSource[i].MaterialCost);
+			HVEMaintenance.ServiceCostTotal(HVEMaintenance.ServiceCostTotal()+DataSource[i].ServiceCost);
+		}
+		HistoricalValueEquipment.TotalMaintenanceCost(HVEMaintenance.LaborCostTotal()+HVEMaintenance.MaterialCostTotal()+HVEMaintenance.ServiceCostTotal());
+		HVEMaintenance.Data(DataSource)
+
+
+		var DataMainEx = res.Data.DataMainEx;
+		if(HVESummary.scope()=="Plant"){
+			for(var i in DataMainEx){
+				DataMainEx[i].Index = parseFloat(DataMainEx[i]._id.substr(2));
+			}
+			var GTArr = Enumerable.From(DataMainEx).Where(function(x){return x._id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+			var STArr = Enumerable.From(DataMainEx).Where(function(x){return x._id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+			var UnmappedArr = Enumerable.From(DataMainEx).Where(function(x){return x._id =="Unmapped Data"}).OrderBy(function(x){return x.Index}).ToArray();
+			var arr = [];
+			for(var i in GTArr){
+			arr.push(GTArr[i]);
+			}
+			for(var i in STArr){
+			arr.push(STArr[i]);
+			}
+			for(var i in UnmappedArr){
+			arr.push(UnmappedArr[i]);
+			}
+			DataMainEx = arr;
+		}
+		if (ValueEquation.scope()=='Kingdom'){
+			HVESummary.BreakdownBy('Plant');
+		}else{
+			HVESummary.BreakdownBy('Unit');
+		}
+
+		HVEMaintenance.DataMainEx(DataMainEx);
+		HVEMaintenance.BreakdownBy(HVESummary.BreakdownBy());
+
+
+		for(var i in DataMainEx){
+			var Totrev = (DataMainEx[i].LaborCost + DataMainEx[i].MaterialCost + DataMainEx[i].ServiceCost )
+			if(i == 0){
+				HVEMaintenance.MinLaborCost(DataMainEx[i].LaborCost)
+				HVEMaintenance.MinMaterialCost(DataMainEx[i].MaterialCost)
+				HVEMaintenance.MinServiceCost(DataMainEx[i].ServiceCost)
+
+				HVEMaintenance.MaxLaborCost(DataMainEx[i].LaborCost)
+				HVEMaintenance.MaxMaterialCost(DataMainEx[i].MaterialCost)
+				HVEMaintenance.MaxServiceCost(DataMainEx[i].ServiceCost)
+
+				var tot = (DataMainEx[i].LaborCost + DataMainEx[i].MaterialCost + DataMainEx[i].ServiceCost )
+				HVEMaintenance.MinTotMain(tot)
+				HVEMaintenance.MaxTotMain(tot)
+			}
+
+			// Min Max MinTotMain
+			if(Totrev<HVEMaintenance.MinTotMain()){
+				HVEMaintenance.MinTotMain(Totrev);
+			}else if(Totrev>HVEMaintenance.MaxTotMain()){
+				HVEMaintenance.MaxTotMain(Totrev);
+			}
+
+			// Min Max LaborCost
+			if(DataMainEx[i].LaborCost<HVEMaintenance.MinLaborCost() ){
+				HVEMaintenance.MinLaborCost(DataMainEx[i].LaborCost);
+			}else if(DataMainEx[i].LaborCost>HVEMaintenance.MaxLaborCost()){
+				HVEMaintenance.MaxLaborCost(DataMainEx[i].LaborCost);
+			}
+
+			// Min Max MaterialCost
+			if(DataMainEx[i].MaterialCost<HVEMaintenance.MinMaterialCost()){
+				HVEMaintenance.MinMaterialCost(DataMainEx[i].MaterialCost);
+			}else if(DataMainEx[i].MaterialCost>HVEMaintenance.MaxMaterialCost()){
+				HVEMaintenance.MaxMaterialCost(DataMainEx[i].MaterialCost);
+			}
+
+			// Min Max ServiceCost
+			if(DataMainEx[i].ServiceCost<HVEMaintenance.MinServiceCost()){
+				HVEMaintenance.MinServiceCost(DataMainEx[i].ServiceCost);
+			}else if(DataMainEx[i].ServiceCost>HVEMaintenance.MaxServiceCost()){
+				HVEMaintenance.MaxServiceCost(DataMainEx[i].ServiceCost);
+			}
+		}
+
+		}else{
+		  alert(res.message);
+		}
+		});
+}
+</script>
