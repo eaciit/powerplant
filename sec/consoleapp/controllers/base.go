@@ -25,6 +25,28 @@ type BaseController struct {
 	SqlCtx   *orm.DataContext
 }
 
+func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
+	csr, e := b.MongoCtx.Connection.NewQuery().From(m.TableName()).Cursor(nil)
+	defer csr.Close()
+	if e != nil {
+		return e
+	}
+	result := []tk.M{}
+	e = csr.Fetch(&result, 0, false)
+	if e != nil {
+		return e
+	}
+	query := b.SqlCtx.Connection.NewQuery().SetConfig("multiexec", true).From(m.TableName()).Save()
+	for _, i := range result {
+		e = tk.Serde(i, m, "json")
+		e = query.Exec(tk.M{"data": m})
+		if e != nil {
+			return e
+		}
+	}
+	return nil
+}
+
 func (b *BaseController) GetById(m orm.IModel, id interface{}, column_name ...string) error {
 	var e error
 	c := b.SqlCtx.Connection
@@ -69,7 +91,7 @@ func (b *BaseController) Update(m orm.IModel, id interface{}, column_name ...str
 	return nil
 }
 
-func (b *BaseController) Turncate(m orm.IModel) error {
+func (b *BaseController) Truncate(m orm.IModel) error {
 	c := b.SqlCtx.Connection
 	e := c.NewQuery().From(m.(orm.IModel).TableName()).Delete().Exec(nil)
 	if e != nil {

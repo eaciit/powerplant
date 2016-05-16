@@ -13,9 +13,10 @@ type Sample struct {
 
 func (c *Sample) InsertSampleData() {
 	tk.Println("Starting Insert sample data..")
-	availability := m.Availability{}
-	// c.Turncate(new(m.Availability))
-	availability.ConvertMGOToSQLServer(c.MongoCtx, c.SqlCtx)
+	e := c.ConvertMGOToSQLServer(new(m.Availability))
+	if e != nil {
+		tk.Println(e)
+	}
 	tk.Println("Process Complete")
 }
 
