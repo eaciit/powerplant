@@ -88,7 +88,7 @@ func (m *Availability) TableName() string {
 
 // ALTER PROCEDURE TEST @ID INT AS
 // BEGIN
-// 	SELECT * FROM Availability WHERE _id = @ID
+// 	SELECT * FROM Availability WHERE id = @ID
 // END
 // GO
 

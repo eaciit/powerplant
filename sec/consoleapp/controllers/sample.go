@@ -29,7 +29,8 @@ func (c *Sample) GetSampleData() {
 
 func (c *Sample) RemoveSampleData() {
 	data := new(m.Availability)
-	e := c.GetById(data, 526)
+	e := c.GetById(data, 526, "id")
+	tk.Println(data)
 	e = c.SqlCtx.Delete(data)
 	if e != nil {
 		tk.Errorf("Unable to remove: %s \n", e.Error())
