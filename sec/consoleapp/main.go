@@ -41,6 +41,8 @@ func main() {
 
 	s := Sample{base}
 	s.GetSampleData()
+	s.UpdateSampleData()
+	s.GetSampleData()
 	// s.InsertSampleData()
 	// s.RemoveSampleData()
 }

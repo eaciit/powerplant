@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/orm"
+	tk "github.com/eaciit/toolkit"
 	"log"
 	"os"
 )
@@ -56,13 +57,12 @@ func (b *BaseController) Delete(m orm.IModel, id interface{}, column_name ...str
 	return nil
 }
 
-func (b *BaseController) Update(m orm.IModel, id interface{}, data interface{}, column_name ...string) error {
+func (b *BaseController) Update(m orm.IModel, id interface{}, column_name ...string) error {
 	column_id := "Id"
 	if column_name != nil && len(column_name) > 0 {
 		column_id = column_name[0]
 	}
-	e := b.SqlCtx.Connection.NewQuery().From(m.(orm.IModel).TableName()).Where(dbox.Eq(column_id, id)).Update().Exec(nil)
-	// tk.M{"data", data}
+	e := b.SqlCtx.Connection.NewQuery().From(m.(orm.IModel).TableName()).Where(dbox.Eq(column_id, id)).Update().Exec(tk.M{"data": m})
 	if e != nil {
 		return e
 	}

@@ -27,6 +27,17 @@ func (c *Sample) GetSampleData() {
 	tk.Println("Process Complete")
 }
 
+func (c *Sample) UpdateSampleData() {
+	id := 1
+	data := new(m.Availability)
+	e := c.GetById(data, id, "id")
+	data.PrctWUF = 1.2
+	c.Update(data, id, "id")
+	if e != nil {
+		tk.Errorf("Unable to remove: %s \n", e.Error())
+	}
+}
+
 func (c *Sample) RemoveSampleData() {
 	data := new(m.Availability)
 	e := c.GetById(data, 526, "id")
