@@ -40,7 +40,8 @@ func main() {
 	base.SqlCtx = orm.New(sql)
 
 	s := Sample{base}
-	s.InsertSampleData()
+	s.GetSampleData()
+	// s.InsertSampleData()
 	// s.RemoveSampleData()
 }
 func PrepareConnection(ConnectionType string) (dbox.IConnection, error) {

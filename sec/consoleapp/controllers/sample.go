@@ -14,33 +14,24 @@ type Sample struct {
 func (c *Sample) InsertSampleData() {
 	tk.Println("Starting Insert sample data..")
 	availability := m.Availability{}
+	// c.Turncate(new(m.Availability))
 	availability.ConvertMGOToSQLServer(c.MongoCtx, c.SqlCtx)
 	tk.Println("Process Complete")
 }
 
-func (c *Sample) RemoveSampleData() {
-	// Removing all data.
-	// d := new([]m.Availability)
-	// // d.Id = 526
-	// csr, _ := c.SqlCtx.Connection.NewQuery().From("Availability").Where(dbox.Eq("Id", 526)).Cursor(nil)
-	// defer csr.Close()
-	// e := csr.Fetch(d, 1, false)
-	// if e != nil {
-	// 	tk.Errorf("Error : %s \n", e.Error())
-	// }
-	// tk.Println(d)
-	// x := d[0]
-	// tk.Println(x)
-	// tk.Println(d)
-
-	// _ = c.SqlCtx.Delete()
-	// defer csr.Close()
-	data, e := c.GetById(new(m.Availability), 526)
+func (c *Sample) GetSampleData() {
+	tk.Println("Getting sample data..")
+	availability := m.Availability{}
+	data, _ := availability.GetData(1, c.SqlCtx)
 	tk.Println(data)
-	// e = c.SqlCtx.Delete(&zxc)
-	// tk.Println(zxc)
+	tk.Println("Process Complete")
+}
+
+func (c *Sample) RemoveSampleData() {
+	data := new(m.Availability)
+	e := c.GetById(data, 526)
+	e = c.SqlCtx.Delete(data)
 	if e != nil {
 		tk.Errorf("Unable to remove: %s \n", e.Error())
 	}
-	// tk.Println(d)
 }

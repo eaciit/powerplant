@@ -3,10 +3,8 @@ package controllers
 import (
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/orm"
-	tk "github.com/eaciit/toolkit"
 	"log"
 	"os"
-	// "reflect"
 )
 
 var (
@@ -26,7 +24,7 @@ type BaseController struct {
 	SqlCtx   *orm.DataContext
 }
 
-func (b *BaseController) GetById(m orm.IModel, id interface{}, column_name ...string) (interface{}, error) {
+func (b *BaseController) GetById(m orm.IModel, id interface{}, column_name ...string) error {
 	var e error
 	c := b.SqlCtx.Connection
 	column_id := "Id"
@@ -36,14 +34,14 @@ func (b *BaseController) GetById(m orm.IModel, id interface{}, column_name ...st
 	csr, e := c.NewQuery().From(m.(orm.IModel).TableName()).Where(dbox.Eq(column_id, id)).Cursor(nil)
 	defer csr.Close()
 	if e != nil {
-		return nil, e
+		return e
 	}
-	result := []tk.M{}
-	e = csr.Fetch(&result, 1, false)
-	for _, i := range result {
-		return i, nil
+	e = csr.Fetch(m, 1, false)
+	if e != nil {
+		return e
 	}
-	return tk.M{}, nil
+
+	return nil
 }
 
 func (b *BaseController) Delete(m orm.IModel, id interface{}, column_name ...string) error {
@@ -63,7 +61,8 @@ func (b *BaseController) Update(m orm.IModel, id interface{}, data interface{}, 
 	if column_name != nil && len(column_name) > 0 {
 		column_id = column_name[0]
 	}
-	e := b.SqlCtx.Connection.NewQuery().From(m.(orm.IModel).TableName()).Where(dbox.Eq(column_id, id)).Update().Exec(tk.M{"data", data})
+	e := b.SqlCtx.Connection.NewQuery().From(m.(orm.IModel).TableName()).Where(dbox.Eq(column_id, id)).Update().Exec(nil)
+	// tk.M{"data", data}
 	if e != nil {
 		return e
 	}
