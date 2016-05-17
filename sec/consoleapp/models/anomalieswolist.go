@@ -1,14 +1,16 @@
 package models
 
 import (
+	"sync"
 	"time"
 
 	"github.com/eaciit/orm"
 )
 
 type AnomaliesWOList struct {
-	orm.ModelBase      `bson:"-",json:"-"`
-	Id                 int64     `bson:"id",json:"id"`
+	sync.RWMutex
+	orm.ModelBase `bson:"-",json:"-"`
+	// Id                 int64     `bson:"id",json:"id"`
 	UserStatus         string    `bson:"UserStatus",json:"UserStatus"`
 	SystemStatus       string    `bson:"SystemStatus",json:"SystemStatus"`
 	Type               string    `bson:"Type",json:"Type"`

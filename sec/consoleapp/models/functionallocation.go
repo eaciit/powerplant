@@ -1,13 +1,14 @@
 package models
 
 import (
+	"sync"
 	"time"
 
 	"github.com/eaciit/orm"
 )
 
-
 type FunctionalLocation struct {
+	sync.RWMutex
 	orm.ModelBase          `bson:"-",json:"-"`
 	FunctionalLocationCode string    `bson:"FunctionalLocationCode",json:"FunctionalLocationCode"`
 	Str                    string    `bson:"FLDescription",json:"Description"`
@@ -40,6 +41,7 @@ func (m *FunctionalLocation) TableName() string {
 }
 
 type AnomaliesFunctionalLocation struct {
+	sync.RWMutex
 	orm.ModelBase          `bson:"-",json:"-"`
 	FunctionalLocationCode string    `bson:"FunctionalLocationCode",json:"FunctionalLocationCode"`
 	Str                    string    `bson:"FLDescription",json:"Description"`

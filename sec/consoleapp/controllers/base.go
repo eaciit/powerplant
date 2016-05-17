@@ -1,11 +1,12 @@
 package controllers
 
 import (
+	"log"
+	"os"
+
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/orm"
 	tk "github.com/eaciit/toolkit"
-	"log"
-	"os"
 )
 
 var (
@@ -26,6 +27,8 @@ type BaseController struct {
 }
 
 func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
+	tk.Printf("\nConvertMGOToSQLServer: Converting %v \n", m.TableName())
+	tk.Println("ConvertMGOToSQLServer: Starting to convert...\n")
 	csr, e := b.MongoCtx.Connection.NewQuery().From(m.TableName()).Cursor(nil)
 	defer csr.Close()
 	if e != nil {
@@ -40,10 +43,13 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 	for _, i := range result {
 		e = tk.Serde(i, m, "json")
 		e = query.Exec(tk.M{"data": m})
+		tk.Printf("# %#v \n", i)
+		tk.Printf("# %#v \n", m)
 		if e != nil {
 			return e
 		}
 	}
+	tk.Println("\nConvertMGOToSQLServer: Finish.")
 	return nil
 }
 

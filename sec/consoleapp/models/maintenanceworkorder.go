@@ -1,13 +1,14 @@
 package models
 
 import (
+	"sync"
 	"time"
 
 	"github.com/eaciit/orm"
 )
 
-
 type MaintenanceWorkOrder struct {
+	sync.RWMutex
 	orm.ModelBase       `bson:"-",json:"-"`
 	OrderCode           string    `bson:"OrderCode",json:"OrderCode"`
 	OrderDescription    string    `bson:"OrderDescription",json:"OrderDescription"`

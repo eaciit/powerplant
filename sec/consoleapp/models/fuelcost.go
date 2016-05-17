@@ -1,8 +1,13 @@
 package models
 
-import "github.com/eaciit/orm"
+import (
+	"sync"
+
+	"github.com/eaciit/orm"
+)
 
 type FuelCost struct {
+	sync.RWMutex
 	orm.ModelBase `bson:"-",json:"-"`
 	// Id            int64     `bson:"id",json:"id"`
 	Plant                 string  `bson:"Plant",json:"Plant"`

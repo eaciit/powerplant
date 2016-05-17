@@ -2,15 +2,17 @@ package main
 
 import (
 	"bufio"
+	"os"
+	"runtime"
+	"strings"
+
 	"github.com/eaciit/dbox"
 	_ "github.com/eaciit/dbox/dbc/mongo"
 	_ "github.com/eaciit/dbox/dbc/mssql"
 	"github.com/eaciit/orm"
 	. "github.com/eaciit/powerplant/sec/consoleapp/controllers"
+	. "github.com/eaciit/powerplant/sec/consoleapp/models"
 	tk "github.com/eaciit/toolkit"
-	"os"
-	"runtime"
-	"strings"
 )
 
 var (
@@ -39,11 +41,28 @@ func main() {
 	base.MongoCtx = orm.New(mongo)
 	base.SqlCtx = orm.New(sql)
 
-	s := Sample{base}
+	// base.ConvertMGOToSQLServer(new(AnomaliesWOList))
+	base.ConvertMGOToSQLServer(new(Availability))
+	// base.ConvertMGOToSQLServer(new(Consolidated))
+	// base.ConvertMGOToSQLServer(new(FuelCost))
+	// base.ConvertMGOToSQLServer(new(FuelTransport))
+	// base.ConvertMGOToSQLServer(new(FunctionalLocation))
+	// base.ConvertMGOToSQLServer(new(AnomaliesFunctionalLocation))
+	// base.ConvertMGOToSQLServer(new(GenerationAppendix))
+	// base.ConvertMGOToSQLServer(new(MaintenanceCost))
+	// base.ConvertMGOToSQLServer(new(MaintenanceCostByHour))
+	// base.ConvertMGOToSQLServer(new(MaintenancePlan))
+	// base.ConvertMGOToSQLServer(new(MaintenanceWorkOrder))
+	// base.ConvertMGOToSQLServer(new(MappedEquipmentType))
+	// base.ConvertMGOToSQLServer(new(MasterEquipmentType))
+	// base.ConvertMGOToSQLServer(new(MasterMROElement))
+	// base.ConvertMGOToSQLServer(new(MasterOrderType))
+
+	// s := Sample{base}
 	// s.GetSampleData()
 	// s.UpdateSampleData()
 	// s.GetSampleData()
-	s.InsertSampleData()
+	// s.InsertSampleData()
 	// s.RemoveSampleData()
 }
 func PrepareConnection(ConnectionType string) (dbox.IConnection, error) {

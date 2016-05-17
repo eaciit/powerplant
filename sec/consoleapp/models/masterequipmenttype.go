@@ -1,8 +1,13 @@
 package models
 
-import "github.com/eaciit/orm"
+import (
+	"sync"
+
+	"github.com/eaciit/orm"
+)
 
 type MasterEquipmentType struct {
+	sync.RWMutex
 	orm.ModelBase     `bson:"-",json:"-"`
 	EquipmentType     string `bson:"EquipmentType",json:"EquipmentType"`
 	EquipmentTypeDesc string `bson:"EquipmentTypeDesc",json:"EquipmentTypeDesc"`
