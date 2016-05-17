@@ -5,6 +5,7 @@ import (
 )
 
 type OperationalData struct {
+	base.ConvertMGOToSQLServer(new(WOList))
 	orm.ModelBase                 `bson:"-",json:"-"`
 	Name                          string  `bson:"Name",json:"Name"`
 	Year                          int     `bson:"Year",json:"Year"`

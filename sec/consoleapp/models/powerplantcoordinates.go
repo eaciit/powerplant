@@ -1,10 +1,13 @@
 package models
 
 import (
+	"sync"
+
 	"github.com/eaciit/orm"
 )
 
 type PowerPlantCoordinates struct {
+	sync.RWMutex
 	orm.ModelBase         `bson:"-",json:"-"`
 	PlantCode             string  `bson:"PlantCode",json:"PlantCode"`
 	PlantName             string  `bson:"PlantName",json:"PlantName"`

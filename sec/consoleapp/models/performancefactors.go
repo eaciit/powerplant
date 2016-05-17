@@ -1,10 +1,13 @@
 package models
 
 import (
+	"sync"
+
 	"github.com/eaciit/orm"
 )
 
 type PerformanceFactors struct {
+	sync.RWMutex
 	orm.ModelBase `bson:"-",json:"-"`
 	id            int64   `bson:"id",json:"id"`
 	Plant         string  `bson:"Plant",json:"Plant"`

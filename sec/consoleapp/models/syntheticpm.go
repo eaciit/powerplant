@@ -6,6 +6,7 @@ import (
 )
 
 type SyntheticPM struct {
+	sync.RWMutex
 	orm.ModelBase `bson:"-",json:"-"`
 	// Id                 int64    `bson:"id",json:"id"`
 	Plant              string    `bson:"Plant",json:"Plant"`

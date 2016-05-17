@@ -5,6 +5,7 @@ import (
 )
 
 type UnitCost struct {
+	sync.RWMutex
 	orm.ModelBase `bson:"-",json:"-"`
 	// id                              string  `bson:"id",json:"id"`
 	Plant                           string  `bson:"Plant",json:"Plant"`

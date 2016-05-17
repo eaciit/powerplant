@@ -6,6 +6,7 @@ import (
 )
 
 type WOList struct {
+	sync.RWMutex
 	orm.ModelBase      `bson:"-",json:"-"`
 	UserStatus         string    `bson:"UserStatus",json:"UserStatus"`
 	SystemStatus       string    `bson:"SystemStatus",json:"SystemStatus"`

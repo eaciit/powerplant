@@ -6,6 +6,7 @@ import (
 )
 
 type RPPCloseWO struct {
+	sync.RWMutex
 	orm.ModelBase `bson:"-",json:"-"`
 	// id	int64	`bson:"id",json:"id"`
 	Notification       string    `bson:"Notification",json:"Notification"`

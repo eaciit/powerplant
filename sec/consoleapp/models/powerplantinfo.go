@@ -5,6 +5,7 @@ import (
 )
 
 type PowerPlantInfo struct {
+	sync.RWMutex
 	orm.ModelBase         `bson:"-",json:"-"`
 	Name                  string  `bson:"Name",json:"Name"`
 	System                string  `bson:"System",json:"System"`
