@@ -43,8 +43,10 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 	for _, i := range result {
 		e = tk.Serde(i, m, "json")
 		e = query.Exec(tk.M{"data": m})
-		tk.Printf("# %#v \n", i)
-		tk.Printf("# %#v \n", m)
+		// if key == 0 {
+		tk.Printf("----- \n# %#v \n\n", i)
+		tk.Printf("# %#v \n-----", m)
+		// }
 		if e != nil {
 			return e
 		}

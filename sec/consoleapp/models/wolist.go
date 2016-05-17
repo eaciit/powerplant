@@ -1,8 +1,10 @@
 package models
 
 import (
-	"github.com/eaciit/orm"
+	"sync"
 	"time"
+
+	"github.com/eaciit/orm"
 )
 
 type WOList struct {

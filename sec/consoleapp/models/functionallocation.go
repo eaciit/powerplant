@@ -32,7 +32,7 @@ type FunctionalLocation struct {
 	InvNo                  string    `bson:"InvNo",json:"InvNo"`
 	ConstType              string    `bson:"ConstType",json:"ConstType"`
 	StartFrom              time.Time `bson:"StartFrom",json:"StartFrom"`
-	CreatedOn              string    `bson:"CreatedOn",json:"CreatedOn"`
+	CreatedOn              time.Time `bson:"CreatedOn",json:"CreatedOn"`
 	SupFunctionalLocation  string    `bson:"SupFunctionalLocation",json:"SupFunctionalLocation"`
 }
 
@@ -65,7 +65,7 @@ type AnomaliesFunctionalLocation struct {
 	InvNo                  string    `bson:"InvNo",json:"InvNo"`
 	ConstType              string    `bson:"ConstType",json:"ConstType"`
 	StartFrom              time.Time `bson:"StartFrom",json:"StartFrom"`
-	CreatedOn              string    `bson:"CreatedOn",json:"CreatedOn"`
+	CreatedOn              time.Time `bson:"CreatedOn",json:"CreatedOn"`
 	SupFunctionalLocation  string    `bson:"SupFunctionalLocation",json:"SupFunctionalLocation"`
 }
 

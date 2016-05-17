@@ -1,13 +1,15 @@
 package models
 
 import (
+	"sync"
+
 	"github.com/eaciit/orm"
 )
 
 type OperationalData struct {
-	base.ConvertMGOToSQLServer(new(WOList))
+	sync.RWMutex
 	orm.ModelBase                 `bson:"-",json:"-"`
-	Name                          string  `bson:"Name",json:"Name"`
+	Plant                         string  `bson:"Plant",json:"Plant"`
 	Year                          int     `bson:"Year",json:"Year"`
 	GenerationGross               float64 `bson:"GenerationGross",json:"GenerationGross"`
 	GenerationAux                 float64 `bson:"GenerationAux",json:"GenerationAux"`

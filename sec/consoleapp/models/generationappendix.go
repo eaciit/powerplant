@@ -8,8 +8,7 @@ import (
 
 type GenerationAppendix struct {
 	sync.RWMutex
-	orm.ModelBase `bson:"-",json:"-"`
-	// Id            int64     `bson:"id",json:"id"`
+	orm.ModelBase      `bson:"-",json:"-"`
 	Plant              string  `bson:"Plant",json:"Plant"`
 	Type               string  `bson:"Type",json:"Type"`
 	Units              int     `bson:"Units",json:"Units"`

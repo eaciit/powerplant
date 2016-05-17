@@ -20,7 +20,7 @@ type MaintenanceCostByHour struct {
 	Equipment               string    `bson:"Equipment",json:"Equipment"`
 	EquipmentDesc           string    `bson:"EquipmentDesc",json:"EquipmentDesc"`
 	MaintenanceActivityType string    `bson:"MaintenanceActivityType",json:"MaintenanceActivityType"`
-	Plan                    float64   `bson:"Plan",json:"Plan"`
+	PlanVal                 float64   `bson:"Plan",json:"PlanVal"`
 	Period                  time.Time `bson:"Period",json:"Period"`
 	Plant                   string    `bson:"Plant",json:"Plant"`
 	Actual                  float64   `bson:"Actual",json:"Actual"`
