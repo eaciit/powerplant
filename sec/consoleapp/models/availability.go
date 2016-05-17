@@ -8,30 +8,10 @@ import (
 
 type Availability struct {
 	orm.ModelBase `bson:"-",json:"-"`
-	// Id            int     `bson:"-",json:"_id"`
-	PowerPlant string  ` bson:"PowerPlant" , json:"PowerPlant" `
-	Turbine    string  ` bson:"Turbine" , json:"Turbine" `
-	PrctWUF    float64 ` bson:"PrctWUF" , json:"PrctWUF" `
-	PrctWAF    float64 ` bson:"PrctWAF" , json:"PrctWAF" `
-}
-
-func (m *Availability) ConvertMGOToSQLServer(MongoCtx *orm.DataContext, SqlCtx *orm.DataContext) {
-	csr, e := MongoCtx.Connection.NewQuery().From(m.TableName()).Cursor(nil)
-	result := []Availability{}
-	e = csr.Fetch(&result, 0, false)
-	defer csr.Close()
-	if e != nil {
-		tk.Errorf("Unable to save: %s \n", e.Error())
-		return
-	}
-	query := SqlCtx.Connection.NewQuery().SetConfig("multiexec", true).From(m.TableName()).Save()
-	for _, i := range result {
-		e = query.Exec(tk.M{"data": i})
-		if e != nil {
-			tk.Errorf("Unable to save: %s \n", e.Error())
-			return
-		}
-	}
+	PowerPlant    string  ` bson:"PowerPlant" , json:"PowerPlant" `
+	Turbine       string  ` bson:"Turbine" , json:"Turbine" `
+	PrctWUF       float64 ` bson:"PrctWUF" , json:"PrctWUF" `
+	PrctWAF       float64 ` bson:"PrctWAF" , json:"PrctWAF" `
 }
 
 func (m *Availability) GetData(ID int, SqlCtx *orm.DataContext) (interface{}, error) {
