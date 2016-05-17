@@ -43,7 +43,7 @@ func main() {
 	s.GetSampleData()
 	// s.UpdateSampleData()
 	// s.GetSampleData()
-	// s.InsertSampleData()
+	s.InsertSampleData()
 	// s.RemoveSampleData()
 }
 func PrepareConnection(ConnectionType string) (dbox.IConnection, error) {

@@ -23,7 +23,7 @@ func (c *Sample) InsertSampleData() {
 func (c *Sample) GetSampleData() {
 	tk.Println("Getting sample data..")
 	availability := m.Availability{}
-	data, _ := availability.GetData(1, c.SqlCtx)
+	data, _ := availability.GetData(176, c.SqlCtx)
 	tk.Println(data)
 	tk.Println("Process Complete")
 }
