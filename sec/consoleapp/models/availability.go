@@ -10,12 +10,12 @@ import (
 
 type Availability struct {
 	sync.RWMutex
-	orm.ModelBase `bson:"-",json:"-"`
-	// Id                 int64     `bson:"id",json:"id"`
-	Plant   string  ` bson:"Plant" , json:"Plant" `
-	Turbine string  ` bson:"Turbine" , json:"Turbine" `
-	PrctWUF float64 ` bson:"PrctWUF" , json:"PrctWUF" `
-	PrctWAF float64 ` bson:"PrctWAF" , json:"PrctWAF" `
+	orm.ModelBase `bson:"-" json:"-"`
+	// Id            int64   `bson:"id" json:"id"`
+	Plant   string  ` bson:"PowerPlant" json:"Plant" `
+	Turbine string  ` bson:"Turbine" json:"Turbine" `
+	PrctWUF float64 ` bson:"PrctWUF" json:"PrctWUF" `
+	PrctWAF float64 ` bson:"PrctWAF" json:"PrctWAF" `
 }
 
 func (m *Availability) GetData(ID int, SqlCtx *orm.DataContext) (interface{}, error) {

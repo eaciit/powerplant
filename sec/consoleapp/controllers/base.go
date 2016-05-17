@@ -3,6 +3,7 @@ package controllers
 import (
 	"log"
 	"os"
+	"reflect"
 
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/orm"
@@ -41,7 +42,16 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 	}
 	query := b.SqlCtx.Connection.NewQuery().SetConfig("multiexec", true).From(m.TableName()).Save()
 	for _, i := range result {
-		e = tk.Serde(i, m, "json")
+		valueType := reflect.TypeOf(m).Elem()
+		for f := 0; f < valueType.NumField(); f++ {
+			field := valueType.Field(f)
+			bsonField := field.Tag.Get("bson")
+			jsonField := field.Tag.Get("json")
+			if jsonField != bsonField && field.Name != "RWMutex" && field.Name != "ModelBase" {
+				i.Set(field.Name, i.Get(bsonField))
+			}
+		}
+		e := tk.Serde(i, m, "json")
 		e = query.Exec(tk.M{"data": m})
 		// if key == 0 {
 		tk.Printf("----- \n# %#v \n\n", i)
