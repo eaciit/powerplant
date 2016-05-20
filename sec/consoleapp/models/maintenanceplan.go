@@ -41,7 +41,7 @@ type MaintenancePlan struct {
 	MWC_PLNDescription    string    `bson:"MWC_PLNDescription",json:"MWC_PLNDescription"`
 	MWC_TLH               string    `bson:"MWC_TLH",json:"MWC_TLH"`
 	MWC_TLHDescription    string    `bson:"MWC_TLHDescription",json:"MWC_TLHDescription"`
-	MWC_TLODescription    string    `bson:"MWC_TLODescription",json:"MWC_TLODescription"`
+	PWC_TLODescription    string    `bson:"PWC_TLODescription",json:"PWC_TLODescription"`
 	MWC_EQ                string    `bson:"MWC_EQ",json:"MWC_EQ"`
 	MWC_FL                string    `bson:"MWC_FL",json:"MWC_FL"`
 	PG_PLNDescription     string    `bson:"PG_PLNDescription",json:"PG_PLNDescription"`

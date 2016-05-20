@@ -10,7 +10,7 @@ import (
 type PrevMaintenanceValueEquation struct {
 	sync.RWMutex
 	orm.ModelBase `bson:"-",json:"-"`
-	// Id	int64	`bson:"_id",json:"_id"`
+	// _Id                 int64     `bson:"_id",json:"_id"`
 	Plant               string    `bson:"Plant",json:"Plant"`
 	Phase               string    `bson:"Phase",json:"Phase"`
 	Block               string    `bson:"Block",json:"Block"`

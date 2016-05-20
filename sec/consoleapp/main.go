@@ -53,26 +53,26 @@ func main() {
 	// convert(new(MaintenanceCost), base)
 	// convert(new(MaintenanceCostByHour), base)
 
-	//// convert(new(MaintenancePlan),base)
-	//// convert(new(MaintenanceWorkOrder),base)
+	//// convert(new(MaintenancePlan), base)
+	//// convert(new(MaintenanceWorkOrder), base)
 	// convert(new(MappedEquipmentType),base)
-	// convert(new(MasterEquipmentType),base)
-	// convert(new(MasterMROElement),base)
+	// convert(new(MasterEquipmentType), base) // done
+	// convert(new(MasterMROElement), base) // done
 	// convert(new(MasterOrderType),base)
-	// convert(new(MasterPlant),base)
-	// convert(new(NewEquipmentType),base)
-	// convert(new(NotificationFailure),base)
+	// convert(new(MasterPlant), base) // done
+	// convert(new(NewEquipmentType), base) // done
+	// convert(new(NotificationFailure), base)
 	//// convert(new(OperationalData), base)
-	// convert(new(PerformanceFactors),base)
-	// convert(new(PlannedMaintenance),base)
-	// convert(new(PowerPlantCoordinates),base)
+	// convert(new(PerformanceFactors), base)
+	// convert(new(PlannedMaintenance), base)
+	// convert(new(PowerPlantCoordinates), base)
 	//// convert(new(PowerPlantInfo),base)
-	// convert(new(PrevMaintenanceValueEquation),base)
+	// convert(new(PrevMaintenanceValueEquation), base)
 	//// convert(new(RPPCloseWO),base)
-	// convert(new(StartupPaymentAndPenalty),base)
-	// convert(new(SyntheticPM),base)
+	// convert(new(StartupPaymentAndPenalty), base) // done
+	// convert(new(SyntheticPM),base) // done
 	// convert(new(UnitCost),base)
-	// convert(new(Vibration),base)
+	// convert(new(Vibration), base)
 
 	// s := Sample{base}
 	// s.GetSampleData()

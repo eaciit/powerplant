@@ -8,8 +8,8 @@ import (
 
 type UnitCost struct {
 	sync.RWMutex
-	orm.ModelBase `bson:"-",json:"-"`
-	// id                              string  `bson:"id",json:"id"`
+	orm.ModelBase                   `bson:"-",json:"-"`
+	id                              string  `bson:"id",json:"id"`
 	Plant                           string  `bson:"Plant",json:"Plant"`
 	Turbine                         string  `bson:"Turbine",json:"Turbine"`
 	MaterialCostStorehouse          float64 `bson:"MaterialCostStorehouse",json:"MaterialCostStorehouse"`

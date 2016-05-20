@@ -10,7 +10,7 @@ import (
 type PlannedMaintenance struct {
 	sync.RWMutex
 	orm.ModelBase `bson:"-",json:"-"`
-	// Id	int64	`bson:"id",json:"id"`
+	// Id                    int64     `bson:"id",json:"id"`
 	Equipment             string    `bson:"Equipment",json:"Equipment"`
 	MaintenancePlan       string    `bson:"MaintenancePlan",json:"MaintenancePlan"`
 	MainWorkCtr           string    `bson:"MainWorkCtr",json:"MainWorkCtr"`
@@ -45,6 +45,7 @@ type PlannedMaintenance struct {
 	SettlementOrder       string    `bson:"SettlementOrder",json:"SettlementOrder"`
 	MaintenanceActiveType string    `bson:"MaintenanceActiveType",json:"MaintenanceActiveType"`
 	ILOAIndividual        string    `bson:"ILOAIndividual",json:"ILOAIndividual"`
+	LOCACCAssmt           string    `bson:"LOC_ACCAssmt",json:"LOC_ACCAssmt"`
 	SettlementRule        string    `bson:"SettlementRule",json:"SettlementRule"`
 	PlanningPlant         string    `bson:"PlanningPlant",json:"PlanningPlant"`
 	SalesDocument         string    `bson:"SalesDocument",json:"SalesDocument"`
