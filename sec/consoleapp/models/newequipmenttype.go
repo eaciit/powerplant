@@ -8,10 +8,10 @@ import (
 
 type NewEquipmentType struct {
 	sync.RWMutex
-	orm.ModelBase     `bson:"-",json:"-"`
-	EquipmentType     string `bson:"EquipmentType",json:"EquipmentType"`
-	EquipmentText     string `bson:"EquipmentText",json:"EquipmentText"`
-	NewEquipmentGroup string `bson:"NewEquipmentGroup",json:"NewEquipmentGroup"`
+	orm.ModelBase     `bson:"-" json:"-"`
+	EquipmentType     string `bson:"EquipmentType" json:"EquipmentType"`
+	EquipmentText     string `bson:"EquipmentText" json:"EquipmentText"`
+	NewEquipmentGroup string `bson:"NewEquipmentGroup" json:"NewEquipmentGroup"`
 }
 
 func (m *NewEquipmentType) TableName() string {

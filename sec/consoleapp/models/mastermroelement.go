@@ -8,8 +8,8 @@ import (
 
 type MasterMROElement struct {
 	sync.RWMutex
-	orm.ModelBase `bson:"-",json:"-"`
-	Element       string `bson:"Element",json:"Element"`
+	orm.ModelBase `bson:"-" json:"-"`
+	Element       string `bson:"Element" json:"Element"`
 }
 
 func (m *MasterMROElement) TableName() string {
