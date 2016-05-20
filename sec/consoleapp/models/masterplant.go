@@ -8,8 +8,8 @@ import (
 
 type MasterPlant struct {
 	sync.RWMutex
-	orm.ModelBase `bson:"-",json:"-"`
-	Plant         string `bson:"Plant",json:"Plant"`
+	orm.ModelBase `bson:"-" json:"-"`
+	Plant         string `bson:"Plant" json:"Plant"`
 }
 
 func (m *MasterPlant) TableName() string {

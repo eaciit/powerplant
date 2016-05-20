@@ -1,13 +1,13 @@
 package controllers
 
 import (
-	"log"
-	"os"
-	"reflect"
-
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/orm"
 	tk "github.com/eaciit/toolkit"
+	"log"
+	"os"
+	"reflect"
+	"time"
 )
 
 var (
@@ -50,13 +50,13 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 			if jsonField != bsonField && field.Name != "RWMutex" && field.Name != "ModelBase" {
 				i.Set(field.Name, i.Get(bsonField))
 			}
+			if field.Type.Name() == "Time" && i.Get(bsonField) == nil {
+				i.Set(field.Name, time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC))
+			}
 		}
+
 		e := tk.Serde(i, m, "json")
 		e = query.Exec(tk.M{"data": m})
-		// if key == 0 {
-		tk.Printf("----- \n# %#v \n\n", i)
-		tk.Printf("# %#v \n-----", m)
-		// }
 		if e != nil {
 			return e
 		}
