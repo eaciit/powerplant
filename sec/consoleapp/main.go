@@ -11,7 +11,7 @@ import (
 	_ "github.com/eaciit/dbox/dbc/mssql"
 	"github.com/eaciit/orm"
 	. "github.com/eaciit/powerplant/sec/consoleapp/controllers"
-	. "github.com/eaciit/powerplant/sec/consoleapp/models"
+	// . "github.com/eaciit/powerplant/sec/consoleapp/models"
 	tk "github.com/eaciit/toolkit"
 )
 
@@ -43,36 +43,36 @@ func main() {
 
 	// convert(new(WOList), base)
 	// convert(new(AnomaliesWOList),base)
-	//// convert(new(Availability),base)
+	//// convert(new(Availability), base) //			done
 	// convert(new(Consolidated), base)
 	// convert(new(FuelCost), base)
-	////// convert(new(FuelTransport), base) // done
+	////// convert(new(FuelTransport), base) // 		done
 	// convert(new(FunctionalLocation), base)
 	// convert(new(AnomaliesFunctionalLocation),base)
-	// convert(new(GenerationAppendix), base)
+	// convert(new(GenerationAppendix), base) //		done
 	// convert(new(MaintenanceCost), base)
+	// convert(new(MaintenanceCostFL), base)
 	// convert(new(MaintenanceCostByHour), base)
-
 	//// convert(new(MaintenancePlan), base)
 	//// convert(new(MaintenanceWorkOrder), base)
 	// convert(new(MappedEquipmentType),base)
-	// convert(new(MasterEquipmentType), base) // done
-	// convert(new(MasterMROElement), base) // done
-	// convert(new(MasterOrderType),base)
-	// convert(new(MasterPlant), base) // done
-	// convert(new(NewEquipmentType), base) // done
+	// convert(new(MasterEquipmentType), base) // 		done
+	// convert(new(MasterMROElement), base) // 			done
+	// convert(new(MasterOrderType), base) // 			done
+	// convert(new(MasterPlant), base) // 				done
+	// convert(new(NewEquipmentType), base) // 			done
 	// convert(new(NotificationFailure), base)
-	//// convert(new(OperationalData), base)
+	// convert(new(OperationalData), base) // 			done
 	// convert(new(PerformanceFactors), base)
 	// convert(new(PlannedMaintenance), base)
 	// convert(new(PowerPlantCoordinates), base)
 	//// convert(new(PowerPlantInfo),base)
 	// convert(new(PrevMaintenanceValueEquation), base)
 	//// convert(new(RPPCloseWO),base)
-	// convert(new(StartupPaymentAndPenalty), base) // done
-	// convert(new(SyntheticPM),base) // done
-	// convert(new(UnitCost),base)
-	// convert(new(Vibration), base)
+	// convert(new(StartupPaymentAndPenalty), base) // 	done
+	// convert(new(SyntheticPM),base) // 				done
+	// convert(new(UnitCost), base) // 					done
+	// convert(new(Vibration), base) // 				done
 
 	// s := Sample{base}
 	// s.GetSampleData()

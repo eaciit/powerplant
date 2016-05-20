@@ -1,13 +1,15 @@
 package controllers
 
 import (
-	"github.com/eaciit/dbox"
-	"github.com/eaciit/orm"
-	tk "github.com/eaciit/toolkit"
+	"fmt"
 	"log"
 	"os"
 	"reflect"
 	"time"
+
+	"github.com/eaciit/dbox"
+	"github.com/eaciit/orm"
+	tk "github.com/eaciit/toolkit"
 )
 
 var (
@@ -53,11 +55,17 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 			if field.Type.Name() == "Time" && i.Get(bsonField) == nil {
 				i.Set(field.Name, time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC))
 			}
+			fmt.Print("#")
 		}
 
 		e := tk.Serde(i, m, "json")
+
 		e = query.Exec(tk.M{"data": m})
 		if e != nil {
+			tk.Printf("\n------------------------- \n %#v \n\n", i)
+			tk.Printf("%#v \n-------------------------  \n", m)
+			tk.Printf("ERROR: %v\n", e.Error())
+
 			return e
 		}
 	}

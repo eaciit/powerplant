@@ -9,7 +9,7 @@ import (
 type GenerationAppendix struct {
 	sync.RWMutex
 	orm.ModelBase      `bson:"-" json:"-"`
-	Plant              string  `bson:"Plant" json:"Plant"`
+	Plant              string  `bson:"PowerPlant" json:"Plant"`
 	Type               string  `bson:"Type" json:"Type"`
 	Units              int     `bson:"Units" json:"Units"`
 	ContractedCapacity float64 `bson:"ContractedCapacity" json:"ContractedCapacity"`
