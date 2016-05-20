@@ -11,7 +11,7 @@ import (
 	_ "github.com/eaciit/dbox/dbc/mssql"
 	"github.com/eaciit/orm"
 	. "github.com/eaciit/powerplant/sec/consoleapp/controllers"
-	// . "github.com/eaciit/powerplant/sec/consoleapp/models"
+	. "github.com/eaciit/powerplant/sec/consoleapp/models"
 	tk "github.com/eaciit/toolkit"
 )
 
@@ -42,7 +42,7 @@ func main() {
 	base.SqlCtx = orm.New(sql)
 
 	// convert(new(WOList), base)
-	// convert(new(AnomaliesWOList),base)
+	convert(new(AnomaliesWOList), base)
 	//// convert(new(Availability), base) //			done
 	// convert(new(Consolidated), base)
 	// convert(new(FuelCost), base)

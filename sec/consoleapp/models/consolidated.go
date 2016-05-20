@@ -10,7 +10,7 @@ import (
 type Consolidated struct {
 	sync.RWMutex
 	orm.ModelBase `bson:"-" json:"-"`
-	// Id            int64     `bson:"id" json:"id"`
+	// Id            int64     `bson:"id" json:"Id"`
 	Plant                  string    `bson:"Plant" json:"Plant"`
 	Unit                   string    `bson:"Unit" json:"Unit"`
 	ConsolidatedDate       time.Time `bson:"ConsolidatedDate" json:"ConsolidatedDate"`
