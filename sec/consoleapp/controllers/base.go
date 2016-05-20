@@ -51,10 +51,9 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 				i.Set(field.Name, i.Get(bsonField))
 			}
 			if field.Type.Name() == "Time" && i.Get(bsonField) == nil {
-				i.Set(field.Name, time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC))
+				i.Set(field.Name, time.Time{})
 			}
 		}
-
 		e := tk.Serde(i, m, "json")
 		e = query.Exec(tk.M{"data": m})
 		if e != nil {
