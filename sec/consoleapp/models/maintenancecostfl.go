@@ -13,6 +13,7 @@ type MaintenanceCostFL struct {
 	Id                     int64     `bson:"_id" json:"id"`
 	OrderType              string    `bson:"OrderType" json:"OrderType"`
 	OrderTypeDesc          string    `bson:"OrderTypeDesc" json:"OrderTypeDesc"`
+	FunctionalLocation     string    `bson:"FunctionalLocation" json:"FunctionalLocation"`
 	InternalLaborPlan      float64   `bson:"InternalLaborPlan" json:"InternalLaborPlan"`
 	Period                 time.Time `bson:"Period" json:"Period"`
 	Plant                  string    `bson:"Plant" json:"Plant"`

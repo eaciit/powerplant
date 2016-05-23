@@ -13,17 +13,17 @@ type Consolidated struct {
 	// Id            int64     `bson:"id" json:"Id"`
 	Plant                  string    `bson:"Plant" json:"Plant"`
 	Unit                   string    `bson:"Unit" json:"Unit"`
-	ConsolidatedDate       time.Time `bson:"ConsolidatedDate" json:"ConsolidatedDate"`
+	ConsolidatedDate       time.Time `bson:"ConsolidateDate" json:"ConsolidatedDate"`
 	Load0                  float64   `bson:"Load0" json:"Load0"`
-	Load1                  float64   `bson:"Load1" json:"Load"`
-	Load2                  float64   `bson:"Load2" json:"Load"`
-	Load3                  float64   `bson:"Load3" json:"Load"`
-	Load4                  float64   `bson:"Load4" json:"Load"`
-	Load5                  float64   `bson:"Load5" json:"Load"`
-	Load6                  float64   `bson:"Load6" json:"Load"`
-	Load7                  float64   `bson:"Load7" json:"Load"`
-	Load8                  float64   `bson:"Load8" json:"Load"`
-	Load9                  float64   `bson:"Load9" json:"Load"`
+	Load1                  float64   `bson:"Load1" json:"Load1"`
+	Load2                  float64   `bson:"Load2" json:"Load2"`
+	Load3                  float64   `bson:"Load3" json:"Load3"`
+	Load4                  float64   `bson:"Load4" json:"Load4"`
+	Load5                  float64   `bson:"Load5" json:"Load5"`
+	Load6                  float64   `bson:"Load6" json:"Load6"`
+	Load7                  float64   `bson:"Load7" json:"Load7"`
+	Load8                  float64   `bson:"Load8" json:"Load8"`
+	Load9                  float64   `bson:"Load9" json:"Load9"`
 	Load10                 float64   `bson:"Load10" json:"Load10"`
 	Load11                 float64   `bson:"Load11" json:"Load11"`
 	Load12                 float64   `bson:"Load12" json:"Load12"`

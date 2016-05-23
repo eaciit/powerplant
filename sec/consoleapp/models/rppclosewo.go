@@ -12,7 +12,7 @@ type RPPCloseWO struct {
 	orm.ModelBase `bson:"-" json:"-"`
 	// id	int64	`bson:"id" json:"id"`
 	Notification       string    `bson:"Notification" json:"Notification"`
-	OrderCode          string    `bson:"OrderCode" json:"OrderCode"`
+	OrderCode          string    `bson:"Order" json:"OrderCode"`
 	UserStatus         string    `bson:"UserStatus" json:"UserStatus"`
 	FunctionalLocation string    `bson:"FunctionalLocation" json:"FunctionalLocation"`
 	MainWorkCtr        string    `bson:"MainWorkCtr" json:"MainWorkCtr"`
