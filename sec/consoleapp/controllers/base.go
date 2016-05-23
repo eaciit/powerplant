@@ -41,7 +41,7 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 		return e
 	}
 	query := b.SqlCtx.Connection.NewQuery().SetConfig("multiexec", true).From(m.TableName()).Save()
-	for _, i := range result {
+	for idx, i := range result {
 		valueType := reflect.TypeOf(m).Elem()
 		for f := 0; f < valueType.NumField(); f++ {
 			field := valueType.Field(f)
@@ -50,12 +50,19 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 			if jsonField != bsonField && field.Name != "RWMutex" && field.Name != "ModelBase" {
 				i.Set(field.Name, i.Get(bsonField))
 			}
-			if field.Type.Name() == "Time" && i.Get(bsonField) == nil {
-				i.Set(field.Name, time.Time{})
+			if field.Type.Name() == "Time" {
+				if i.Get(bsonField) == nil {
+					i.Set(field.Name, time.Time{})
+				} else {
+					i.Set(field.Name, i.Get(bsonField).(time.Time).UTC())
+				}
 			}
 		}
 		e := tk.Serde(i, m, "json")
 		e = query.Exec(tk.M{"data": m})
+		if idx%10000 == 0 && idx != 0 {
+			tk.Println("Completion : ", idx, "/", len(result))
+		}
 		if e != nil {
 			return e
 		}
