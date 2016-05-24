@@ -29,13 +29,11 @@ func main() {
 	if e != nil {
 		tk.Println(e)
 	}
-	defer mongo.Close()
 
 	sql, e := PrepareConnection("mssql")
 	if e != nil {
 		tk.Println(e)
 	}
-	defer sql.Close()
 
 	base := new(BaseController)
 	base.MongoCtx = orm.New(mongo)
@@ -47,7 +45,7 @@ func main() {
 	// convert(new(Consolidated), base) // 					done
 	// convert(new(FuelCost), base) //						done
 	////// convert(new(FuelTransport), base) // 			done
-	// convert(new(FunctionalLocation), base)
+	convert(new(FunctionalLocation), base)
 	// convert(new(AnomaliesFunctionalLocation), base) //	done
 	// convert(new(GenerationAppendix), base) //			done
 	// convert(new(MaintenanceCost), base)
@@ -65,30 +63,26 @@ func main() {
 	// convert(new(OperationalData), base) // 				done
 	// convert(new(PerformanceFactors), base) // 			done
 	// convert(new(PlannedMaintenance), base)
-	// convert(new(PowerPlantCoordinates), base)
+	// convert(new(PowerPlantCoordinates), base) // 		done
 	// convert(new(PowerPlantInfo),base)
 	// convert(new(PrevMaintenanceValueEquation), base) // ------------ ngaco
-	convert(new(RPPCloseWO), base)
+	// convert(new(RPPCloseWO), base) // 					done
 	// convert(new(StartupPaymentAndPenalty), base) // 		done
 	// convert(new(SyntheticPM),base) // 					done
 	// convert(new(UnitCost), base) // 						done
 	// convert(new(Vibration), base) // 					done
 
-	// convert(new(SummaryData), base)
-	// convert(new(MORSummary), base)
-	// convert(new(MORCalculationFlatSummary), base)
+	// convert(new(SummaryData), base) // -------------------- error comma
+	// -- convert(new(MORSummary), base)
+	// convert(new(MORCalculationFlatSummary), base) // --------------- gak bisa utk anaknya period.year
 	// convert(new(PreventiveCorrectiveSummary), base)
 	// convert(new(WODurationSummary), base)
 	// convert(new(WOListSummary), base)
-	// convert(new(FailureAfterPreventiveSummary), base)
-	// convert(new(RegenMasaterPlant), base)
+	// -- convert(new(FailureAfterPreventiveSummary), base)
+	// convert(new(RegenMasterPlant), base)
 
-	// s := Sample{base}
-	// s.GetSampleData()
-	// s.UpdateSampleData()
-	// s.GetSampleData()
-	// s.InsertSampleData()
-	// s.RemoveSampleData()
+	defer mongo.Close()
+	defer sql.Close()
 }
 
 func convert(m orm.IModel, base *BaseController) {

@@ -15,7 +15,7 @@ type PlannedMaintenance struct {
 	MaintenancePlan       string    `bson:"MaintenancePlan" json:"MaintenancePlan"`
 	MainWorkCtr           string    `bson:"MainWorkCtr" json:"MainWorkCtr"`
 	MaintenanceItem       string    `bson:"MaintenanceItem" json:"MaintenanceItem"`
-	CostCtr               string    `bson:"CostCtr" json:"CostCtr"`
+	CostCtr               string    `bson:"CostCenter" json:"CostCtr"`
 	FunctionalLocation    string    `bson:"FunctionalLocation" json:"FunctionalLocation"`
 	Description           string    `bson:"Description" json:"Description"`
 	MaintenanceItemText   string    `bson:"MaintenanceItemText" json:"MaintenanceItemText"`
@@ -27,10 +27,10 @@ type PlannedMaintenance struct {
 	ChangedBy             string    `bson:"ChangedBy" json:"ChangedBy"`
 	Asset                 string    `bson:"Asset" json:"Asset"`
 	SubNumber             string    `bson:"SubNumber" json:"SubNumber"`
-	WorkCtr               string    `bson:"WorkCtr" json:"WorkCtr"`
+	WorkCtr               string    `bson:"WorkCenter" json:"WorkCtr"`
 	OrderType             string    `bson:"OrderType" json:"OrderType"`
-	OrderNo               string    `bson:"OrderNo" json:"OrderNo"`
-	Assembl               string    `bson:"Assembl" json:"Assembl"`
+	OrderNo               string    `bson:"Order" json:"OrderNo"`
+	Assembl               string    `bson:"Assembly" json:"Assembl"`
 	PlantSection          string    `bson:"PlantSection" json:"PlantSection"`
 	PurchaseOrder         string    `bson:"PurchaseOrder" json:"PurchaseOrder"`
 	Item1                 string    `bson:"Item1" json:"Item1"`
@@ -45,7 +45,7 @@ type PlannedMaintenance struct {
 	SettlementOrder       string    `bson:"SettlementOrder" json:"SettlementOrder"`
 	MaintenanceActiveType string    `bson:"MaintenanceActiveType" json:"MaintenanceActiveType"`
 	ILOAIndividual        string    `bson:"ILOAIndividual" json:"ILOAIndividual"`
-	LOCACCAssmt           string    `bson:"LOC_ACCAssmt" json:"LOC_ACCAssmt"`
+	LOCACCAssmt           string    `bson:"LOC_ACCAssmt" json:"LOCACCAssmt"`
 	SettlementRule        string    `bson:"SettlementRule" json:"SettlementRule"`
 	PlanningPlant         string    `bson:"PlanningPlant" json:"PlanningPlant"`
 	SalesDocument         string    `bson:"SalesDocument" json:"SalesDocument"`

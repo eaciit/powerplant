@@ -27,5 +27,5 @@ type MORSummary struct {
 }
 
 func (m *MORSummary) TableName() string {
-	return "MorSummary"
+	return "MORSummary"
 }

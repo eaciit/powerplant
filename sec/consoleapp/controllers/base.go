@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"reflect"
@@ -33,16 +32,16 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 	tk.Printf("\nConvertMGOToSQLServer: Converting %v \n", m.TableName())
 	tk.Println("ConvertMGOToSQLServer: Starting to convert...\n")
 	csr, e := b.MongoCtx.Connection.NewQuery().From(m.TableName()).Cursor(nil)
-	defer csr.Close()
 	if e != nil {
 		return e
 	}
 	result := []tk.M{}
 	e = csr.Fetch(&result, 0, false)
+	defer csr.Close()
 	if e != nil {
 		return e
 	}
-	query := b.SqlCtx.Connection.NewQuery().SetConfig("multiexec", true).From(m.TableName()).Save()
+
 	for idx, i := range result {
 		valueType := reflect.TypeOf(m).Elem()
 		for f := 0; f < valueType.NumField(); f++ {
@@ -59,19 +58,19 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 					i.Set(field.Name, i.Get(bsonField).(time.Time).UTC())
 				}
 			}
-			fmt.Print("#")
+			// fmt.Print("#")
 		}
 		e := tk.Serde(i, m, "json")
 
-		e = query.Exec(tk.M{"data": m})
-		if idx%10000 == 0 && idx != 0 {
+		b.SqlCtx.Insert(m)
+
+		if idx%100 == 0 && idx != 0 {
 			tk.Println("Completion : ", idx, "/", len(result))
 		}
+
 		if e != nil {
 			tk.Printf("\n------------------------- \n %#v \n\n", i)
 			tk.Printf("%#v \n-------------------------  \n", m)
-			tk.Printf("ERROR: %v\n", e.Error())
-
 			return e
 		}
 	}
