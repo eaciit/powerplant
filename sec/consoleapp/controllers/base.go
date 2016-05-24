@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -48,13 +49,13 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 			bsonField := field.Tag.Get("bson")
 			jsonField := field.Tag.Get("json")
 			if jsonField != bsonField && field.Name != "RWMutex" && field.Name != "ModelBase" {
-				i.Set(field.Name, i.Get(bsonField))
+				i.Set(field.Name, GetMgoValue(i, bsonField))
 			}
 			if field.Type.Name() == "Time" {
 				if i.Get(bsonField) == nil {
 					i.Set(field.Name, time.Time{})
 				} else {
-					i.Set(field.Name, i.Get(bsonField).(time.Time).UTC())
+					i.Set(field.Name, GetMgoValue(i, bsonField).(time.Time).UTC())
 				}
 			}
 		}
@@ -70,7 +71,14 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 	tk.Println("\nConvertMGOToSQLServer: Finish.")
 	return nil
 }
-
+func GetMgoValue(d tk.M, fieldName string) interface{} {
+	index := strings.Index(fieldName, ".")
+	if index < 0 {
+		return d.Get(fieldName)
+	} else {
+		return GetMgoValue(d.Get(fieldName[0:index]).(tk.M), fieldName[(index+1):len(fieldName)])
+	}
+}
 func (b *BaseController) GetById(m orm.IModel, id interface{}, column_name ...string) error {
 	var e error
 	c := b.SqlCtx.Connection
