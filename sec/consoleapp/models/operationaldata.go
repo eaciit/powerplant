@@ -9,7 +9,7 @@ import (
 type OperationalData struct {
 	sync.RWMutex
 	orm.ModelBase                 `bson:"-" json:"-"`
-	Plant                         string  `bson:"Plant" json:"Plant"`
+	Plant                         string  `bson:"PowerPlant" json:"Plant"`
 	Year                          int     `bson:"Year" json:"Year"`
 	GenerationGross               float64 `bson:"GenerationGross" json:"GenerationGross"`
 	GenerationAux                 float64 `bson:"GenerationAux" json:"GenerationAux"`
