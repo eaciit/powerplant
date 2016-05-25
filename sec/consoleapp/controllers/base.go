@@ -1,16 +1,15 @@
 package controllers
 
 import (
-	"fmt"
-	"log"
-	"os"
-	"reflect"
-	"strings"
-	"time"
-
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/orm"
 	tk "github.com/eaciit/toolkit"
+	"log"
+	"os"
+	"reflect"
+	"runtime"
+	"strings"
+	"time"
 )
 
 var (
@@ -18,6 +17,8 @@ var (
 		d, _ := os.Getwd()
 		return d + "/"
 	}()
+
+	retry = 10
 )
 
 type IBaseController interface {
@@ -31,19 +32,23 @@ type BaseController struct {
 }
 
 func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
+	tStart := time.Now()
+
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
 	tk.Printf("\nConvertMGOToSQLServer: Converting %v \n", m.TableName())
 	tk.Println("ConvertMGOToSQLServer: Starting to convert...\n")
 	csr, e := b.MongoCtx.Connection.NewQuery().From(m.TableName()).Cursor(nil)
-	defer csr.Close()
 	if e != nil {
 		return e
 	}
 	result := []tk.M{}
 	e = csr.Fetch(&result, 0, false)
+	defer csr.Close()
 	if e != nil {
 		return e
 	}
-	query := b.SqlCtx.Connection.NewQuery().SetConfig("multiexec", true).From(m.TableName()).Save()
+
 	for idx, i := range result {
 		valueType := reflect.TypeOf(m).Elem()
 		for f := 0; f < valueType.NumField(); f++ {
@@ -60,23 +65,40 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 					i.Set(field.Name, GetMgoValue(i, bsonField).(time.Time).UTC())
 				}
 			}
-			fmt.Print("#")
 		}
 		e := tk.Serde(i, m, "json")
-
-		e = query.Exec(tk.M{"data": m})
-		if idx%10000 == 0 && idx != 0 {
-			tk.Println("Completion : ", idx, "/", len(result))
-		}
 		if e != nil {
 			tk.Printf("\n------------------------- \n %#v \n\n", i)
 			tk.Printf("%#v \n-------------------------  \n", m)
-			tk.Printf("ERROR: %v\n", e.Error())
-
+			tk.Printf("Completed in %v \n", time.Since(tStart))
 			return e
 		}
+
+		for index := 0; index < retry; index++ {
+			e = b.SqlCtx.Insert(m)
+			if e == nil {
+				break
+			} else {
+				tk.Println("retry : ", index+1)
+				b.MongoCtx.Connection.Connect()
+				b.SqlCtx.Connection.Connect()
+			}
+		}
+
+		if e != nil {
+			tk.Printf("\n------------------------- \n %#v \n\n", i)
+			tk.Printf("%#v \n-------------------------  \n", m)
+			tk.Printf("Completed With Error in %v \n", time.Since(tStart))
+			return e
+		}
+
+		if idx%100 == 0 && idx != 0 {
+			tk.Println("Completion : ", idx, "/", len(result))
+		}
+
 	}
 	tk.Println("\nConvertMGOToSQLServer: Finish.")
+	tk.Printf("Completed Success in %v \n", time.Since(tStart))
 	return nil
 }
 func GetMgoValue(d tk.M, fieldName string) interface{} {

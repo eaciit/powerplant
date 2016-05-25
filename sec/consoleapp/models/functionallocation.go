@@ -17,7 +17,7 @@ type FunctionalLocation struct {
 	Location               string    `bson:"Location" json:"Location"`
 	PIPI                   string    `bson:"PIPI" json:"PIPI"`
 	PInt                   string    `bson:"PInt" json:"PInt"`
-	MainWorkCtr            string    `bson:"MainWorkCtr" json:"MainWorkCtr"`
+	MainWorkCtr            string    `bson:"MnWkCtr" json:"MainWorkCtr"`
 	CatProf                string    `bson:"CatProf" json:"CatProf"`
 	SortField              string    `bson:"SortField" json:"SortField"`
 	ModelNo                string    `bson:"ModelNo" json:"ModelNo"`
