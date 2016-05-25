@@ -1,14 +1,18 @@
 package controllers
 
 import (
+	"bufio"
+	"fmt"
 	"log"
 	"os"
 	"reflect"
-	"runtime"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/orm"
+	. "github.com/eaciit/powerplant/sec/consoleapp/models"
 	tk "github.com/eaciit/toolkit"
 )
 
@@ -18,7 +22,9 @@ var (
 		return d + "/"
 	}()
 
-	retry = 10
+	retry  = 10
+	mu     = &sync.Mutex{}
+	worker = 100
 )
 
 type IBaseController interface {
@@ -31,7 +37,7 @@ type BaseController struct {
 	SqlCtx   *orm.DataContext
 }
 
-func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
+/*func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 	tStart := time.Now()
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
@@ -100,6 +106,107 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 	tk.Println("\nConvertMGOToSQLServer: Finish.")
 	tk.Printf("Completed Success in %v \n", time.Since(tStart))
 	return nil
+}*/
+
+func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
+	tStart := time.Now()
+
+	tk.Printf("\nConvertMGOToSQLServer: Converting %v \n", m.TableName())
+	tk.Println("ConvertMGOToSQLServer: Starting to convert...\n")
+	csr, e := b.MongoCtx.Connection.NewQuery().From(m.TableName()).Cursor(nil)
+	if e != nil {
+		return e
+	}
+	result := []tk.M{}
+	e = csr.Fetch(&result, 0, false)
+	defer csr.Close()
+	if e != nil {
+		return e
+	}
+
+	dtLen := len(result)
+	resPart := make([][]tk.M, worker)
+
+	if dtLen < worker {
+		resPart = make([][]tk.M, 1)
+		resPart[0] = result
+	} else {
+		workerTaskCount := tk.ToInt(tk.ToFloat64(dtLen/worker, 0, tk.RoundingAuto), tk.RoundingAuto)
+		count := 0
+
+		for i := 0; i < worker; i++ {
+			if i == worker-1 {
+				resPart[i] = result[count:]
+			} else {
+				resPart[i] = result[count : count+workerTaskCount]
+			}
+			count += workerTaskCount
+		}
+	}
+
+	for _, val := range resPart {
+		go Insert(val, m)
+	}
+
+	var input string
+	fmt.Scanln(&input)
+
+	tk.Println("\nConvertMGOToSQLServer: Finish.")
+	tk.Printf("Completed Success in %v \n", time.Since(tStart))
+	return nil
+}
+
+func Insert(result []tk.M, m orm.IModel) {
+	tStart := time.Now()
+	muinsert := &sync.Mutex{}
+
+	sql, e := PrepareConnection("mssql")
+	if e != nil {
+		tk.Println(e.Error())
+	}
+	sqlCtx := orm.New(sql)
+
+	for _, i := range result {
+		valueType := reflect.TypeOf(m).Elem()
+		for f := 0; f < valueType.NumField(); f++ {
+			field := valueType.Field(f)
+			bsonField := field.Tag.Get("bson")
+			jsonField := field.Tag.Get("json")
+			if jsonField != bsonField && field.Name != "RWMutex" && field.Name != "ModelBase" {
+				i.Set(field.Name, i.Get(bsonField))
+			}
+			if field.Type.Name() == "Time" {
+				if i.Get(bsonField) == nil {
+					i.Set(field.Name, time.Time{})
+				} else {
+					i.Set(field.Name, i.Get(bsonField).(time.Time).UTC())
+				}
+			}
+		}
+
+		newPointer := getNewPointer(m)
+
+		e := tk.Serde(i, newPointer, "json")
+
+		muinsert.Lock()
+		for index := 0; index < retry; index++ {
+			e = sqlCtx.Insert(newPointer)
+			if e == nil {
+				break
+			} else {
+				tk.Println("retry : ", index+1)
+				sqlCtx.Connection.Connect()
+			}
+		}
+		muinsert.Unlock()
+
+		if e != nil {
+			tk.Printf("\n------------------------- \n %#v \n\n", i)
+			tk.Printf("%#v \n-------------------------  \n", newPointer)
+			tk.Printf("Completed in %v \n", time.Since(tStart))
+		}
+
+	}
 }
 
 func (b *BaseController) GetById(m orm.IModel, id interface{}, column_name ...string) error {
@@ -120,6 +227,18 @@ func (b *BaseController) GetById(m orm.IModel, id interface{}, column_name ...st
 	}
 
 	return nil
+}
+
+func getNewPointer(m orm.IModel) orm.IModel {
+	switch m.TableName() {
+	case "PlannedMaintenance":
+		return new(PlannedMaintenance)
+	case "SummaryData":
+		return new(SummaryData)
+	default:
+		return m
+	}
+
 }
 
 func (b *BaseController) Delete(m orm.IModel, id interface{}, column_name ...string) error {
@@ -167,4 +286,45 @@ func (b *BaseController) CloseDb() {
 func (b *BaseController) WriteLog(msg interface{}) {
 	log.Printf("%#v\n\r", msg)
 	return
+}
+
+func PrepareConnection(ConnectionType string) (dbox.IConnection, error) {
+	config := ReadConfig()
+	tk.Println(config["host"])
+	ci := &dbox.ConnectionInfo{config["host_"+ConnectionType], config["database_"+ConnectionType], config["username_"+ConnectionType], config["password_"+ConnectionType], nil}
+	c, e := dbox.NewConnection(ConnectionType, ci)
+
+	if e != nil {
+		return nil, e
+	}
+
+	e = c.Connect()
+	if e != nil {
+		return nil, e
+	}
+
+	return c, nil
+}
+
+func ReadConfig() map[string]string {
+	ret := make(map[string]string)
+	file, err := os.Open(wd + "conf/app.conf")
+	if err == nil {
+		defer file.Close()
+
+		reader := bufio.NewReader(file)
+		for {
+			line, _, e := reader.ReadLine()
+			if e != nil {
+				break
+			}
+
+			sval := strings.Split(string(line), "=")
+			ret[sval[0]] = sval[1]
+		}
+	} else {
+		tk.Println(err.Error())
+	}
+
+	return ret
 }

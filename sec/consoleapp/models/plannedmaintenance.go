@@ -57,9 +57,9 @@ type PlannedMaintenance struct {
 	Client                string    `bson:"Client" json:"Client"`
 	MPlanCategory         string    `bson:"MPlanCategory" json:"MPlanCategory"`
 	Room                  string    `bson:"Room" json:"Room"`
-	ObjectList            int       `bson:"ObjectList" json:"ObjectList"`
+	ObjectList            float64   `bson:"ObjectList" json:"ObjectList"`
 	GroupCounter          string    `bson:"GroupCounter" json:"GroupCounter"`
-	Group                 string    `bson:"Group" json:"Grup"`
+	Grup                  string    `bson:"Group" json:"Grup"`
 	TaskListType          string    `bson:"TaskListType" json:"TaskListType"`
 	FLDescription         string    `bson:"FLDescription" json:"FLDescription"`
 	WBSElement            string    `bson:"WBSElement" json:"WBSElement"`
