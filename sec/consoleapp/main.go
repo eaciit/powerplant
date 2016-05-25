@@ -39,18 +39,18 @@ func main() {
 	base.MongoCtx = orm.New(mongo)
 	base.SqlCtx = orm.New(sql)
 
-	// convert(new(WOList), base) // ----------------------------- ngaco
+	// convert(new(WOList), base) // 						done
 	// convert(new(AnomaliesWOList), base) //				done
 	//// convert(new(Availability), base) //				done
 	// convert(new(Consolidated), base) // 					done
 	// convert(new(FuelCost), base) //						done
 	////// convert(new(FuelTransport), base) // 			done
-	convert(new(FunctionalLocation), base)
+	// convert(new(FunctionalLocation), base) // 			done
 	// convert(new(AnomaliesFunctionalLocation), base) //	done
 	// convert(new(GenerationAppendix), base) //			done
-	// convert(new(MaintenanceCost), base)
-	// convert(new(MaintenanceCostFL), base)
-	// convert(new(MaintenanceCostByHour), base)
+	// convert(new(MaintenanceCost), base) //				done
+	// convert(new(MaintenanceCostFL), base) //				done
+	// convert(new(MaintenanceCostByHour), base) //			done
 	// convert(new(MaintenancePlan), base) // 				done
 	// convert(new(MaintenanceWorkOrder), base) // 			done
 	// convert(new(MappedEquipmentType), base) // 			done
@@ -62,10 +62,10 @@ func main() {
 	// convert(new(NotificationFailure), base)
 	// convert(new(OperationalData), base) // 				done
 	// convert(new(PerformanceFactors), base) // 			done
-	// convert(new(PlannedMaintenance), base)
+	convert(new(PlannedMaintenance), base)
 	// convert(new(PowerPlantCoordinates), base) // 		done
-	// convert(new(PowerPlantInfo),base)
-	// convert(new(PrevMaintenanceValueEquation), base) // ------------ ngaco
+	// convert(new(PowerPlantInfo),base) // 				done
+	// convert(new(PrevMaintenanceValueEquation), base) // 	done
 	// convert(new(RPPCloseWO), base) // 					done
 	// convert(new(StartupPaymentAndPenalty), base) // 		done
 	// convert(new(SyntheticPM),base) // 					done
@@ -73,12 +73,12 @@ func main() {
 	// convert(new(Vibration), base) // 					done
 
 	// convert(new(SummaryData), base) // -------------------- error comma
-	// -- convert(new(MORSummary), base)
+	// convert(new(MORSummary), base) // 					done
 	// convert(new(MORCalculationFlatSummary), base) // --------------- gak bisa utk anaknya period.year
 	// convert(new(PreventiveCorrectiveSummary), base)
 	// convert(new(WODurationSummary), base)
 	// convert(new(WOListSummary), base)
-	// -- convert(new(FailureAfterPreventiveSummary), base)
+	// convert(new(FailureAfterPreventiveSummary), base) // done
 	// convert(new(RegenMasterPlant), base)
 
 	defer mongo.Close()

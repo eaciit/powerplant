@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"runtime"
 	"time"
 
 	"github.com/eaciit/dbox"
@@ -16,6 +17,8 @@ var (
 		d, _ := os.Getwd()
 		return d + "/"
 	}()
+
+	retry = 10
 )
 
 type IBaseController interface {
@@ -29,6 +32,10 @@ type BaseController struct {
 }
 
 func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
+	tStart := time.Now()
+
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
 	tk.Printf("\nConvertMGOToSQLServer: Converting %v \n", m.TableName())
 	tk.Println("ConvertMGOToSQLServer: Starting to convert...\n")
 	csr, e := b.MongoCtx.Connection.NewQuery().From(m.TableName()).Cursor(nil)
@@ -58,23 +65,40 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 					i.Set(field.Name, i.Get(bsonField).(time.Time).UTC())
 				}
 			}
-			// fmt.Print("#")
 		}
 		e := tk.Serde(i, m, "json")
+		if e != nil {
+			tk.Printf("\n------------------------- \n %#v \n\n", i)
+			tk.Printf("%#v \n-------------------------  \n", m)
+			tk.Printf("Completed in %v \n", time.Since(tStart))
+			return e
+		}
 
-		b.SqlCtx.Insert(m)
-
-		if idx%100 == 0 && idx != 0 {
-			tk.Println("Completion : ", idx, "/", len(result))
+		for index := 0; index < retry; index++ {
+			e = b.SqlCtx.Insert(m)
+			if e == nil {
+				break
+			} else {
+				tk.Println("retry : ", index+1)
+				b.MongoCtx.Connection.Connect()
+				b.SqlCtx.Connection.Connect()
+			}
 		}
 
 		if e != nil {
 			tk.Printf("\n------------------------- \n %#v \n\n", i)
 			tk.Printf("%#v \n-------------------------  \n", m)
+			tk.Printf("Completed With Error in %v \n", time.Since(tStart))
 			return e
 		}
+
+		if idx%100 == 0 && idx != 0 {
+			tk.Println("Completion : ", idx, "/", len(result))
+		}
+
 	}
 	tk.Println("\nConvertMGOToSQLServer: Finish.")
+	tk.Printf("Completed Success in %v \n", time.Since(tStart))
 	return nil
 }
 
