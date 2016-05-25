@@ -40,41 +40,50 @@ func main() {
 	base := new(BaseController)
 	base.MongoCtx = orm.New(mongo)
 	base.SqlCtx = orm.New(sql)
+
 	// convert(new(MasterUnitNoTurbineParent), base)	done
 	// convert(new(MasterFailureCode), base)			done
-	// convert(new(WOList), base)						done
-	// convert(new(AnomaliesWOList),base)				done
-	//// convert(new(Availability), base) //			done
-	// convert(new(Consolidated), base)
-	// convert(new(FuelCost), base)
-	////// convert(new(FuelTransport), base) // 		done
+	// convert(new(WOList), base) // ----------------------------- ngaco
+	// convert(new(AnomaliesWOList), base) //				done
+	//// convert(new(Availability), base) //				done
+	// convert(new(Consolidated), base) // 					done
+	// convert(new(FuelCost), base) //						done
+	////// convert(new(FuelTransport), base) // 			done
 	// convert(new(FunctionalLocation), base)
-	// convert(new(AnomaliesFunctionalLocation),base)
-	// convert(new(GenerationAppendix), base) //		done
-	// convert(new(MaintenanceCost), base)				done
-	// convert(new(MaintenanceCostFL), base)			done
-	// convert(new(MaintenanceCostByHour), base)		done
-	//// convert(new(MaintenancePlan), base)
-	//// convert(new(MaintenanceWorkOrder), base)
-	// convert(new(MappedEquipmentType),base)
-	// convert(new(MasterEquipmentType), base) // 		done
-	// convert(new(MasterMROElement), base) // 			done
-	// convert(new(MasterOrderType), base) // 			done
-	// convert(new(MasterPlant), base) // 				done
-	// convert(new(NewEquipmentType), base) // 			done
+	// convert(new(AnomaliesFunctionalLocation), base) //	done
+	// convert(new(GenerationAppendix), base) //			done
+	// convert(new(MaintenanceCost), base)					done
+	// convert(new(MaintenanceCostFL), base)				done
+	// convert(new(MaintenanceCostByHour), base)			done
+	// convert(new(MaintenancePlan), base) // 				done
+	// convert(new(MaintenanceWorkOrder), base) // 			done
+	// convert(new(MappedEquipmentType), base) // 			done
+	// convert(new(MasterEquipmentType), base) // 			done
+	// convert(new(MasterMROElement), base) // 				done
+	// convert(new(MasterOrderType), base) // 				done
+	// convert(new(MasterPlant), base) // 					done
+	// convert(new(NewEquipmentType), base) // 				done
 	// convert(new(NotificationFailure), base)
-	// convert(new(OperationalData), base) // 			done
-	// convert(new(PerformanceFactors), base)			done
+	// convert(new(OperationalData), base) // 				done
+	// convert(new(PerformanceFactors), base) // 			done
 	// convert(new(PlannedMaintenance), base)
-	// convert(new(PowerPlantCoordinates), base)		done
-	// convert(new(PowerPlantInfo), base)				done
-	// convert(new(PrevMaintenanceValueEquation), base)
-	//// convert(new(RPPCloseWO),base)
-	// convert(new(StartupPaymentAndPenalty), base) // 	done
-	// convert(new(SyntheticPM),base) // 				done
-	// convert(new(UnitCost), base) // 					done
-	// convert(new(Vibration), base) // 				done
+	// convert(new(PowerPlantCoordinates), base)			done
+	// convert(new(PowerPlantInfo),base)					done
+	// convert(new(PrevMaintenanceValueEquation), base) // ------------ ngaco
+	convert(new(RPPCloseWO), base)
+	// convert(new(StartupPaymentAndPenalty), base) // 		done
+	// convert(new(SyntheticPM),base) // 					done
+	// convert(new(UnitCost), base) // 						done
+	// convert(new(Vibration), base) // 					done
 
+	// convert(new(SummaryData), base)
+	// convert(new(MORSummary), base)
+	// convert(new(MORCalculationFlatSummary), base)
+	// convert(new(PreventiveCorrectiveSummary), base)
+	// convert(new(WODurationSummary), base)
+	// convert(new(WOListSummary), base)
+	// convert(new(FailureAfterPreventiveSummary), base)
+	// convert(new(RegenMasaterPlant), base)
 	// s := Sample{base}
 	// s.GetSampleData()
 	// s.UpdateSampleData()

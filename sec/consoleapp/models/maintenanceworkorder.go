@@ -9,8 +9,9 @@ import (
 
 type MaintenanceWorkOrder struct {
 	sync.RWMutex
-	orm.ModelBase       `bson:"-" json:"-"`
-	OrderCode           string    `bson:"OrderCode" json:"OrderCode"`
+	orm.ModelBase `bson:"-" json:"-"`
+	// Id                  `bson:"Id" json:"Id"`
+	OrderCode           string    `bson:"Order" json:"OrderCode"`
 	OrderDescription    string    `bson:"OrderDescription" json:"OrderDescription"`
 	FunctionalLocation  string    `bson:"FunctionalLocation" json:"FunctionalLocation"`
 	UserStatus          string    `bson:"UserStatus" json:"UserStatus"`

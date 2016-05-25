@@ -9,10 +9,12 @@ import (
 
 type MaintenancePlan struct {
 	sync.RWMutex
-	orm.ModelBase         `bson:"-" json:"-"`
+	orm.ModelBase `bson:"-" json:"-"`
+	// Id         `bson:"Id" json:"Id"`
 	MaintenanceItem       string    `bson:"MaintenanceItem" json:"MaintenanceItem"`
 	MaintenancePlanCode   string    `bson:"MaintenancePlanCode" json:"MaintenancePlanCode"`
 	FunctionalLocation    string    `bson:"FunctionalLocation" json:"FunctionalLocation"`
+	FLDescription         string    `bson:"FLDescription" json:"FLDescription"`
 	PWC_TLO               string    `bson:"PWC_TLO" json:"PWC_TLO"`
 	PG_PLN                string    `bson:"PG_PLN" json:"PG_PLN"`
 	TaskListType          string    `bson:"TaskListType" json:"TaskListType"`
@@ -36,7 +38,7 @@ type MaintenancePlan struct {
 	Location              string    `bson:"Location" json:"Location"`
 	PlantSection          string    `bson:"PlantSection" json:"PlantSection"`
 	CompanyCode           string    `bson:"CompanyCode" json:"CompanyCode"`
-	CostCtr               string    `bson:"CostCtr" json:"CostCtr"`
+	CostCtr               string    `bson:"CostCenter" json:"CostCtr"`
 	MWC_PLN               string    `bson:"MWC_PLN" json:"MWC_PLN"`
 	MWC_PLNDescription    string    `bson:"MWC_PLNDescription" json:"MWC_PLNDescription"`
 	MWC_TLH               string    `bson:"MWC_TLH" json:"MWC_TLH"`

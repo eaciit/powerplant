@@ -11,7 +11,8 @@ type FunctionalLocation struct {
 	sync.RWMutex
 	orm.ModelBase          `bson:"-" json:"-"`
 	FunctionalLocationCode string    `bson:"FunctionalLocationCode" json:"FunctionalLocationCode"`
-	Str                    string    `bson:"FLDescription" json:"Description"`
+	Str                    string    `bson:"Str" json:"Str"`
+	Description            string    `bson:"FLDescription" json:"Description"`
 	CostCtr                string    `bson:"CostCtr" json:"CostCtr"`
 	Location               string    `bson:"Location" json:"Location"`
 	PIPI                   string    `bson:"PIPI" json:"PIPI"`
@@ -44,10 +45,11 @@ type AnomaliesFunctionalLocation struct {
 	sync.RWMutex
 	orm.ModelBase          `bson:"-" json:"-"`
 	FunctionalLocationCode string    `bson:"FunctionalLocationCode" json:"FunctionalLocationCode"`
-	Str                    string    `bson:"FLDescription" json:"Description"`
+	Str                    string    `bson:"Str" json:"Str"`
+	Description            string    `bson:"FLDescription" json:"Description"`
 	CostCtr                string    `bson:"CostCtr" json:"CostCtr"`
 	Location               string    `bson:"Location" json:"Location"`
-	PIPI                   string    `bson:"FLDescription" json:"PIPI"`
+	PIPI                   string    `bson:"PIPI" json:"PIPI"`
 	PInt                   string    `bson:"PInt" json:"PInt"`
 	MainWorkCtr            string    `bson:"MainWorkCtr" json:"MainWorkCtr"`
 	CatProf                string    `bson:"CatProf" json:"CatProf"`
