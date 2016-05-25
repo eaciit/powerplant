@@ -10,7 +10,7 @@ import (
 type MaintenanceCostByHour struct {
 	sync.RWMutex
 	orm.ModelBase           `bson:"-" json:"-"`
-	Id                      string    `bson:"id" json:"id"`
+	Id                      string    `bson:"_id" json:"id"`
 	OrderTypeDesc           string    `bson:"OrderTypeDesc" json:"OrderTypeDesc"`
 	OrderType               string    `bson:"OrderType" json:"OrderType"`
 	MaintenanceOrder        string    `bson:"MaintenanceOrder" json:"MaintenanceOrder"`
