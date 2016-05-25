@@ -11,7 +11,7 @@ import (
 	_ "github.com/eaciit/dbox/dbc/mssql"
 	"github.com/eaciit/orm"
 	. "github.com/eaciit/powerplant/sec/consoleapp/controllers"
-	// . "github.com/eaciit/powerplant/sec/consoleapp/models"
+	. "github.com/eaciit/powerplant/sec/consoleapp/models"
 	tk "github.com/eaciit/toolkit"
 )
 
@@ -40,9 +40,10 @@ func main() {
 	base := new(BaseController)
 	base.MongoCtx = orm.New(mongo)
 	base.SqlCtx = orm.New(sql)
-
-	// convert(new(WOList), base)
-	// convert(new(AnomaliesWOList),base)
+	// convert(new(MasterUnitNoTurbineParent), base)	done
+	// convert(new(MasterFailureCode), base)			done
+	// convert(new(WOList), base)						done
+	// convert(new(AnomaliesWOList),base)				done
 	//// convert(new(Availability), base) //			done
 	// convert(new(Consolidated), base)
 	// convert(new(FuelCost), base)
@@ -50,9 +51,9 @@ func main() {
 	// convert(new(FunctionalLocation), base)
 	// convert(new(AnomaliesFunctionalLocation),base)
 	// convert(new(GenerationAppendix), base) //		done
-	// convert(new(MaintenanceCost), base)
-	// convert(new(MaintenanceCostFL), base)
-	// convert(new(MaintenanceCostByHour), base)
+	// convert(new(MaintenanceCost), base)				done
+	// convert(new(MaintenanceCostFL), base)			done
+	// convert(new(MaintenanceCostByHour), base)		done
 	//// convert(new(MaintenancePlan), base)
 	//// convert(new(MaintenanceWorkOrder), base)
 	// convert(new(MappedEquipmentType),base)
@@ -63,10 +64,10 @@ func main() {
 	// convert(new(NewEquipmentType), base) // 			done
 	// convert(new(NotificationFailure), base)
 	// convert(new(OperationalData), base) // 			done
-	// convert(new(PerformanceFactors), base)
+	// convert(new(PerformanceFactors), base)			done
 	// convert(new(PlannedMaintenance), base)
-	// convert(new(PowerPlantCoordinates), base)
-	//// convert(new(PowerPlantInfo),base)
+	// convert(new(PowerPlantCoordinates), base)		done
+	// convert(new(PowerPlantInfo), base)				done
 	// convert(new(PrevMaintenanceValueEquation), base)
 	//// convert(new(RPPCloseWO),base)
 	// convert(new(StartupPaymentAndPenalty), base) // 	done

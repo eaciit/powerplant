@@ -1,9 +1,8 @@
 package models
 
 import (
-	"sync"
-
 	"github.com/eaciit/orm"
+	"sync"
 )
 
 type PowerPlantInfo struct {

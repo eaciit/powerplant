@@ -9,11 +9,12 @@ import (
 
 type MaintenanceCostFL struct {
 	sync.RWMutex
-	orm.ModelBase          `bson:"-" json:"-"`
-	Id                     int64     `bson:"_id" json:"id"`
+	orm.ModelBase `bson:"-" json:"-"`
+	// Id                     int64     `bson:"_id" json:"id"`
 	OrderType              string    `bson:"OrderType" json:"OrderType"`
 	OrderTypeDesc          string    `bson:"OrderTypeDesc" json:"OrderTypeDesc"`
-	InternalLaborPlan      float64   `bson:"InternalLaborPlan" json:"InternalLaborPlan"`
+	FunctionalLocation     string    `bson:"FunctionalLocation" json:"FunctionalLocation"`
+	InternalLaborPlan      float64   `bson:"InternalLaborPLAN" json:"InternalLaborPlan"`
 	Period                 time.Time `bson:"Period" json:"Period"`
 	Plant                  string    `bson:"Plant" json:"Plant"`
 	InternalLaborActual    float64   `bson:"InternalLaborActual" json:"InternalLaborActual"`
