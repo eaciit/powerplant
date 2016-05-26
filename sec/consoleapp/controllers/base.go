@@ -238,10 +238,12 @@ func (b *BaseController) GetById(m orm.IModel, id interface{}, column_name ...st
 
 func getNewPointer(m orm.IModel) orm.IModel {
 	switch m.TableName() {
-	case "PlannedMaintenance":
+	/*case "PlannedMaintenance":
 		return new(PlannedMaintenance)
 	case "SummaryData":
-		return new(SummaryData)
+		return new(SummaryData)*/
+	case "NotificationFailure":
+		return new(NotificationFailure)
 	default:
 		return m
 	}

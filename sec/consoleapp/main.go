@@ -8,7 +8,7 @@ import (
 	_ "github.com/eaciit/dbox/dbc/mssql"
 	"github.com/eaciit/orm"
 	. "github.com/eaciit/powerplant/sec/consoleapp/controllers"
-	// . "github.com/eaciit/powerplant/sec/consoleapp/models"
+	. "github.com/eaciit/powerplant/sec/consoleapp/models"
 	tk "github.com/eaciit/toolkit"
 )
 
@@ -60,7 +60,7 @@ func main() {
 	// convert(new(MasterOrderType), base) // 				done
 	// convert(new(MasterPlant), base) // 					done
 	// convert(new(NewEquipmentType), base) // 				done
-	// convert(new(NotificationFailure), base)
+	convert(new(NotificationFailure), base)
 	// convert(new(NotificationFailureNoYear), base) // 	done
 	// convert(new(OperationalData), base) // 				done
 	// convert(new(PerformanceFactors), base) // 			done
