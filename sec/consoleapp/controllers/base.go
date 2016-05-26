@@ -199,13 +199,13 @@ func (b *BaseController) Insert(result []tk.M, m orm.IModel, wg *sync.WaitGroup)
 			bsonField := field.Tag.Get("bson")
 			jsonField := field.Tag.Get("json")
 			if jsonField != bsonField && field.Name != "RWMutex" && field.Name != "ModelBase" {
-				i.Set(field.Name, i.Get(bsonField))
+				i.Set(field.Name, GetMgoValue(i, bsonField))
 			}
 			if field.Type.Name() == "Time" {
 				if i.Get(bsonField) == nil {
 					i.Set(field.Name, time.Time{})
 				} else {
-					i.Set(field.Name, i.Get(bsonField).(time.Time).UTC())
+					i.Set(field.Name, GetMgoValue(i, bsonField).(time.Time).UTC())
 				}
 			}
 		}
