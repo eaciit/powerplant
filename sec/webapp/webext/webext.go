@@ -36,7 +36,7 @@ func init() {
 	// register controllers
 	app.Register(&LoginController{baseCont})
 	app.Register(&DashboardController{baseCont})
-	app.Register(&DataBrowserVEController{baseCont})
+	app.Register(&DataBrowserController{baseCont})
 	app.Register(&ValueEquationController{baseCont})
 	app.Register(&ValueEquationComparisonController{baseCont})
 	app.Register(&HistoricalValueEquationController{baseCont})
