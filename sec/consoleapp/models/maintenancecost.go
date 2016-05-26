@@ -9,15 +9,15 @@ import (
 
 type MaintenanceCost struct {
 	sync.RWMutex
-	orm.ModelBase `bson:"-" json:"-"`
-	// Id                      string    `bson:"_id" json:"id"`
+	orm.ModelBase           `bson:"-" json:"-"`
+	Id                      string    `bson:"_id" json:"id"`
 	EquipmentType           string    `bson:"EquipmentType" json:"EquipmentType"`
 	EquipmentTypeDesc       string    `bson:"EquipmentTypeDesc" json:"EquipmentTypeDesc"`
 	Equipment               string    `bson:"Equipment" json:"Equipment"`
 	EquipmentDesc           string    `bson:"EquipmentDesc" json:"EquipmentDesc"`
 	MaintenanceOrder        string    `bson:"MaintenanceOrder" json:"MaintenanceOrder"`
 	MaintenanceOrderDesc    string    `bson:"MaintenanceOrderDesc" json:"MaintenanceOrderDesc"`
-	MaintenanceActivityType string    `bson:"MaintenanceActivityType" json:"MaintenanceActivityType"`
+	MaintenanceActivityType string    `bson:"MaintActivityType" json:"MaintenanceActivityType"`
 	OrderType               string    `bson:"OrderType" json:"OrderType"`
 	OrderTypeDesc           string    `bson:"OrderTypeDesc" json:"OrderTypeDesc"`
 	InternalLaborPlan       float64   `bson:"InternalLaborPlan" json:"InternalLaborPlan"`

@@ -36,7 +36,6 @@ type NotificationFailureNoYear struct {
 	Activity             string    `bson:"Activity" json:"Activity"`
 	ActivityDesc         string    `bson:"ActivityDesc" json:"ActivityDesc"`
 	FailureCode          string    `bson:"FailureCode" json:"FailureCode"`
-	Year                 int       `bson:"Year" json:"Year"`
 }
 
 func (m *NotificationFailureNoYear) TableName() string {
