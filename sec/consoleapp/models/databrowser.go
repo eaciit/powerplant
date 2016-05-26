@@ -11,7 +11,7 @@ type DataBrowser struct {
 	sync.RWMutex
 	orm.ModelBase `bson:"-" json:"-"`
 	// Id int64 `bson:"Id" json:"Id"`
-	PeriodYear                             time.Time `bson:"PeriodYear" json:"PeriodYear"`
+	PeriodYear                             time.Time `bson:"Period.Year" json:"PeriodYear"`
 	FunctionalLocation                     string    `bson:"FunctionalLocation" json:"FunctionalLocation"`
 	FLDescription                          string    `bson:"FLDescription" json:"FLDescription"`
 	IsTurbine                              bool      `bson:"IsTurbine" json:"IsTurbine"`
@@ -21,7 +21,7 @@ type DataBrowser struct {
 	AssetType                              string    `bson:"AssetType" json:"AssetType"`
 	EquipmentType                          string    `bson:"EquipmentType" json:"EquipmentType"`
 	EquipmentTypeDescription               string    `bson:"EquipmentTypeDescription" json:"EquipmentTypeDescription"`
-	PlantId                                int64     `bson:"PlantId" json:"PlantId"`
+	PlantId                                int64     `bson:"Plant._id" json:"PlantId"`
 	TInfShortName                          string    `bson:"TurbineInfos." json:"TInfShortName"`
 	TInfManufacturer                       string    `bson:"TurbineInfos.Manufacturer" json:"TInfManufacturer"`
 	TInfModel                              string    `bson:"TurbineInfos.Model" json:"TInfModel"`
@@ -44,11 +44,11 @@ type DataBrowser struct {
 	TInfCapacityFactor                     float64   `bson:"TurbineInfos.CapacityFactor" json:"TInfCapacityFactor"`
 	TInfUpdateEnergyGeneration             float64   `bson:"TurbineInfos.UpdateEnergyGeneration" json:"TInfUpdateEnergyGeneration"`
 	TInfUpdateFuelConsumption              float64   `bson:"TurbineInfos.UpdateFuelConsumption" json:"TInfUpdateFuelConsumption"`
-	TurbineVibrations                      []Vibration
+	/*TurbineVibrations                      []Vibration
 	Maintenances                           []AssetMaintenance
 	FailureNotifications                   []NotificationFailureNoYear
 	MROElements                            []MaintenanceCost
-	Operationals                           []OperationalData
+	Operationals                           []OperationalData*/
 	// Outages [] ---> cannot determine yet from which table
 }
 

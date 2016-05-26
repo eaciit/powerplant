@@ -26,11 +26,11 @@ type SummaryData struct {
 	DieselUnitCapacity        float64 `bson:"DieselUnitCapacity" json:"DieselUnitCapacity"`
 	CombinedCycleUnit         int     `bson:"CombinedCycleUnit" json:"CombinedCycleUnit"`
 	CombinedCycleUnitCapacity float64 `bson:"CombinedCycleUnitCapacity" json:"CombinedCycleUnitCapacity"`
-	MaintenancePlan           []MaintenancePlan
-	MaintenanceWorkOrder      []MaintenanceWorkOrder
-	RPPCloseWO                []RPPCloseWO
-	OperationalData           []OperationalData
-	Availability              []Availability
+	/*MaintenancePlans          []MaintenancePlan
+	MaintenanceWorkOrders     []MaintenanceWorkOrder
+	RPPCloseWOs               []RPPCloseWO
+	OperationalDatas          []OperationalData
+	Availabilties             []Availability*/
 }
 
 func (m *SummaryData) TableName() string {
