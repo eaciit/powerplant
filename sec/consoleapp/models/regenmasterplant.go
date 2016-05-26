@@ -30,5 +30,5 @@ type RegenMasterPlant struct {
 }
 
 func (m *RegenMasterPlant) TableName() string {
-	return "RegenMasterPlant"
+	return "Regen_MasterPlant"
 }

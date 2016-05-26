@@ -8,7 +8,7 @@ import (
 	_ "github.com/eaciit/dbox/dbc/mssql"
 	"github.com/eaciit/orm"
 	. "github.com/eaciit/powerplant/sec/consoleapp/controllers"
-	// . "github.com/eaciit/powerplant/sec/consoleapp/models"
+	. "github.com/eaciit/powerplant/sec/consoleapp/models"
 	tk "github.com/eaciit/toolkit"
 )
 
@@ -74,30 +74,19 @@ func main() {
 	// convert(new(UnitCost), base) // 						done
 	// convert(new(Vibration), base) // 					done
 
-	// convert(new(SummaryData), base) // -------------------- error comma
+	// convert(new(SummaryData), base) // 					done
 	// convert(new(MORSummary), base) // 					done
 	// convert(new(MORCalculationFlatSummary), base) // --------------- gak bisa utk anaknya period.year
-	// convert(new(PreventiveCorrectiveSummary), base)
+	convert(new(PreventiveCorrectiveSummary), base)
 	// convert(new(WODurationSummary), base)
 	// convert(new(WOListSummary), base)
+	// convert(new(DataBrowser), base)
 
-	// convert(new(FailureAfterPreventiveSummary), base)
-	// convert(new(RegenMasaterPlant), base)
-	// s := Sample{base}
-	// s.GetSampleData()
-	// s.UpdateSampleData()
-	// s.GetSampleData()
-	// s.InsertSampleData()
-	// s.RemoveSampleData()
 	// convert(new(FailureAfterPreventiveSummary), base) // done
-	// convert(new(RegenMasterPlant), base)
-
+	// convert(new(RegenMasterPlant), base) // 				done
 	// convert(new(MasterFailureCode), base) // 			done
-	// convert(new(MasterFailureCode), base) // 			done
-
 	// convert(new(MasterUnitNoTurbineParent), base) // 	done
 	// convert(new(DataTempMaintenance), base) // 			done
-
 }
 
 func convert(m orm.IModel, base *BaseController) {
