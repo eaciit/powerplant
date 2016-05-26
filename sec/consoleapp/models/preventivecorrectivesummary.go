@@ -16,7 +16,7 @@ type PreventiveCorrectiveSummary struct {
 	EquipmentType            string  `bson:"EquipmentType" json:"EquipmentType"`
 	EquipmentTypeDescription string  `bson:"EquipmentTypeDescription" json:"EquipmentTypeDescription"`
 	ActivityType             string  `bson:"ActivityType" json:"ActivityType"`
-	PeriodYear               int     `bson:"PeriodYear" json:"PeriodYear"`
+	PeriodYear               int     `bson:"Period.Year" json:"PeriodYear"`
 	Plant                    string  `bson:"Plant" json:"Plant"`
 	Element                  string  `bson:"Element" json:"Element"`
 	Value                    float64 `bson:"Value" json:"Value"`
