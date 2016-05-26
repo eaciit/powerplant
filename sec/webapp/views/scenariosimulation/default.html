@@ -115,16 +115,6 @@ var ScenarioSimulation = {
                 </div>
             </div>
         </div>
-        <!-- <div class="col-md-12 align-right">
-            <button type="button" class="btn btn-primary btn-sm" data-bind="click:Refresh">
-              <span class="fa fa-refresh"></span>
-              Refresh
-            </button>
-            <button type="button" class="btn btn-primary btn-sm" data-bind="click:Save">
-              <span class="fa fa-plus-circle"></span>
-              Reset
-            </button>
-        </div> -->
       </div>
     </div>  
   </div>
@@ -380,7 +370,7 @@ ScenarioSimulation.GetDataSimulation = function(){
           if(res.Status=="OK"){    
             ScenarioSimulation.GenDataSimulation(res.Data);
           }else{
-              alert(res.message);
+              alert(res.Message);
           }
       },
    });
@@ -389,20 +379,14 @@ ScenarioSimulation.GetDataSimulation = function(){
 ScenarioSimulation.GetData = function(){
   var url = "/scenariosimulation/getdata"
     var parm = ScenarioSimulation.GetFilter();
-    $.ajax({
-      url: url,
-      type: 'post',
-      dataType: 'json',
-      data : parm,
-      success : function(res) {
-          if(res.Status=="OK"){    
+   ajaxPost(url, parm, function(data){
+      if(data.Status=="OK"){   
             ScenarioSimulation.isResultAvailable(true);
-            ScenarioSimulation.ProcessingData(res.Data);
-          }else{
-              alert(res.message);
-          }
-      },
-   });
+            ScenarioSimulation.ProcessingData(data.Data);
+      }else{
+          alert(data.Message);
+      }
+  });
 }
 ScenarioSimulation.GetFilter = function(){
   var parm = {
@@ -421,8 +405,42 @@ ScenarioSimulation.selectedPlant.subscribe(function(newValue){
 });
 ScenarioSimulation.Initiate = function(updatingFilter){
   ScenarioSimulation.Processing(true);
-  var url = "{{BaseUrl}}scenariosimulation/initiate"
-  ajaxPost
+  var url = "{{BaseUrl}}scenariosimulation/initiate";
+  $.ajax({
+      url: url,
+      type: 'post',
+      dataType: 'json',
+      data : {selectedPlant:ScenarioSimulation.selectedPlant()},
+      success : function(res) {
+          if(!res.IsError){
+            ScenarioSimulation.Processing(false);
+              if(!updatingFilter){
+                /*ScenarioSimulation.PlantList(Enumerable.From(res.Data.PlantList).Select(function(x){return x.Id}).ToArray());*/
+                var Plantname = [];
+                for (var i = 0 ; i < res.Data.PlantList.length ; i++){
+                    Plantname.push(res.Data.PlantList[i].Plant);
+                }
+                ScenarioSimulation.PlantList(Plantname);
+              }
+              var ds = res.Data.UnitList;
+              for(var i in ds){
+                ds[i].Index = parseFloat(ds[i].Id.substr(2));
+              }
+              var GTArr = Enumerable.From(ds).Where(function(x){return x.Id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+              var STArr = Enumerable.From(ds).Where(function(x){return x.Id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+              var arr = [];
+              for(var i in GTArr){
+                arr.push(GTArr[i]);
+              }
+              for(var i in STArr){
+                arr.push(STArr[i]);
+              }
+              ScenarioSimulation.UnitList(arr);
+          }else{
+              alert(res.Message);
+          }
+      },
+   });
 }
 ScenarioSimulation.Refresh = function(){
   ScenarioSimulation.GetData();
