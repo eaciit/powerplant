@@ -49,7 +49,7 @@ func main() {
 	// convert(new(FunctionalLocation), base) // 			done
 	// convert(new(AnomaliesFunctionalLocation), base) //	done
 	// convert(new(GenerationAppendix), base) //			done
-	// convert(new(MaintenanceCost), base) //				done
+	convert(new(MaintenanceCost), base) //				done
 	// convert(new(MaintenanceCostFL), base) //				done
 	// convert(new(MaintenanceCostByHour), base) //			done
 	// convert(new(MaintenancePlan), base) // 				done
@@ -60,7 +60,7 @@ func main() {
 	// convert(new(MasterOrderType), base) // 				done
 	// convert(new(MasterPlant), base) // 					done
 	// convert(new(NewEquipmentType), base) // 				done
-	convert(new(NotificationFailure), base)
+	// convert(new(NotificationFailure), base)
 	// convert(new(NotificationFailureNoYear), base) // 	done
 	// convert(new(OperationalData), base) // 				done
 	// convert(new(PerformanceFactors), base) // 			done
