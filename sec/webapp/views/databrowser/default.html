@@ -8,6 +8,9 @@
 </style>
 
 <script>
+  // model.BreadCrumbs.push(new BreadCrumb("Home", "Home", "/", "", ""));
+  // model.BreadCrumbs.push(new BreadCrumb("{{.PageId}}", "{{.HypothesisCategory}} Analysis - {{.HypothesisId}}", "#", "active", ""));
+
     var Hypothesis = {
     Processing:ko.observable(true),
     ProcessingMatch:ko.observable(true),
@@ -53,7 +56,6 @@
             if(!res.IsError){
                 Hypothesis.PlantList(res.Data.PlantList);
                 $('#txtPeriod').val(Hypothesis.Period());
-
                 for(var x in res.Data.EQTypeList){
                 res.Data.EQTypeList[x].EquipmentTypeDesc = res.Data.EQTypeList[x].EquipmentType+" - "+res.Data.EQTypeList[x].EquipmentTypeDesc;
               }
@@ -72,8 +74,7 @@
   }
 
   Hypothesis.Refresh = function(){
-    GenerateDataBrowser();
-
+  	GenerateDataBrowser();
   }
 
   Hypothesis.GetFilter  = function(){
