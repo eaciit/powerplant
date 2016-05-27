@@ -2,17 +2,17 @@ package controllers
 
 import (
 	"bufio"
+	"github.com/eaciit/dbox"
+	"github.com/eaciit/orm"
+	. "github.com/eaciit/powerplant/sec/consoleapp/models"
+	tk "github.com/eaciit/toolkit"
 	"log"
+	"math"
 	"os"
 	"reflect"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/eaciit/dbox"
-	"github.com/eaciit/orm"
-	. "github.com/eaciit/powerplant/sec/consoleapp/models"
-	tk "github.com/eaciit/toolkit"
 )
 
 var (
@@ -109,86 +109,165 @@ type BaseController struct {
 }*/
 
 func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
-	tStart := time.Now()
-
 	tk.Printf("\nConvertMGOToSQLServer: Converting %v \n", m.TableName())
 	tk.Println("ConvertMGOToSQLServer: Starting to convert...\n")
-
-	c, e := b.MongoCtx.Connection.NewQuery().From(m.TableName()).Cursor(nil)
-
+	date := time.Now()
+	csr, e := b.MongoCtx.Connection.NewQuery().From(m.TableName()).Cursor(nil)
+	defer csr.Close()
 	if e != nil {
 		return e
 	}
-
-	defer c.Close()
-
-	totalData := c.Count()
-	processIter := tk.ToInt(tk.ToFloat64(totalData/maxDataEachProcess, 0, tk.RoundingUp), tk.RoundingUp)
-
-	if maxDataEachProcess == 0 {
-		processIter = 0
+	result := []tk.M{}
+	e = csr.Fetch(&result, 0, false)
+	if e != nil {
+		return e
 	}
-
-	for iter := 0; iter < processIter+1; iter++ {
-
-		skip := iter * maxDataEachProcess
-		take := maxDataEachProcess
-
-		if maxDataEachProcess == 0 {
-			take = totalData
-		} else if iter == processIter {
-			take = totalData - skip
-		}
-
-		csr, e := b.MongoCtx.Connection.NewQuery().From(m.TableName()).Skip(skip).Take(take).Cursor(nil)
-
-		if e != nil {
-			return e
-		}
-
-		result := []tk.M{}
-		e = csr.Fetch(&result, 0, false)
-		csr.Close()
-
-		if e != nil {
-			return e
-		}
-
-		dtLen := len(result)
-
-		resPart := make([][]tk.M, worker)
-
-		if dtLen < worker {
-			resPart = make([][]tk.M, 1)
-			resPart[0] = result
-		} else {
-			workerTaskCount := tk.ToInt(tk.ToFloat64(dtLen/worker, 0, tk.RoundingAuto), tk.RoundingAuto)
-			count := 0
-
-			for i := 0; i < worker; i++ {
-				if i == worker-1 {
-					resPart[i] = result[count:]
-				} else {
-					resPart[i] = result[count : count+workerTaskCount]
-				}
-				count += workerTaskCount
+	query := b.SqlCtx.Connection.NewQuery().SetConfig("multiexec", true).From(m.TableName()).Save()
+	var wg sync.WaitGroup
+	take := 20000
+	diff := float64(len(result) / take)
+	wgTotal := math.Ceil(diff)
+	wgTotal++
+	wg.Add(int(wgTotal))
+	tk.Println("TOTAL : ", len(result))
+	for x := 0; x < int(wgTotal); x++ {
+		go func(swg *sync.WaitGroup, result []tk.M, skip int, max int) {
+			t := skip + take
+			if (skip + take) > max {
+				t = max
 			}
-		}
+			for _, i := range result[skip:t] {
+				valueType := reflect.TypeOf(m).Elem()
+				for f := 0; f < valueType.NumField(); f++ {
+					field := valueType.Field(f)
+					bsonField := field.Tag.Get("bson")
+					jsonField := field.Tag.Get("json")
+					if jsonField != bsonField && field.Name != "RWMutex" && field.Name != "ModelBase" {
+						i.Set(field.Name, GetMgoValue(i, bsonField))
+					}
+					switch field.Type.Name() {
+					case "string":
+						if GetMgoValue(i, bsonField) == nil {
+							i.Set(field.Name, "")
+						}
+						break
+					case "Time":
+						if GetMgoValue(i, bsonField) == nil {
+							i.Set(field.Name, time.Time{})
+						} else {
+							i.Set(field.Name, GetMgoValue(i, bsonField).(time.Time).UTC())
+						}
+						break
+					default:
+						break
+					}
+				}
+				d := getNewPointer(m)
+				e := tk.Serde(i, &d, "json")
 
-		wg := &sync.WaitGroup{}
-		wg.Add(len(resPart))
-
-		for _, val := range resPart {
-			go b.Insert(val, m, wg)
-		}
-
-		wg.Wait()
+				// query := b.SqlCtx.Connection.NewQuery().From(m.TableName()).Save()
+				e = query.Exec(tk.M{"data": d})
+				if e != nil {
+					tk.Println(m)
+					tk.Println("-------------------------------------")
+					tk.Println(d)
+					tk.Println("-------------------------------------")
+					tk.Println(e)
+					wg.Done()
+				}
+			}
+			swg.Done()
+		}(&wg, result, (x * take), len(result))
 	}
+	wg.Wait()
 
 	tk.Println("\nConvertMGOToSQLServer: Finish.")
-	tk.Printf("Completed Success in %v \n", time.Since(tStart))
+	tk.Println(time.Since(date))
 	return nil
 }
+
+// mas faisal
+// func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
+// 	tStart := time.Now()
+
+// 	tk.Printf("\nConvertMGOToSQLServer: Converting %v \n", m.TableName())
+// 	tk.Println("ConvertMGOToSQLServer: Starting to convert...\n")
+
+// 	c, e := b.MongoCtx.Connection.NewQuery().From(m.TableName()).Cursor(nil)
+
+// 	if e != nil {
+// 		return e
+// 	}
+
+// 	defer c.Close()
+
+// 	totalData := c.Count()
+// 	processIter := tk.ToInt(tk.ToFloat64(totalData/maxDataEachProcess, 0, tk.RoundingUp), tk.RoundingUp)
+
+// 	if maxDataEachProcess == 0 {
+// 		processIter = 0
+// 	}
+
+// 	for iter := 0; iter < processIter+1; iter++ {
+
+// 		skip := iter * maxDataEachProcess
+// 		take := maxDataEachProcess
+
+// 		if maxDataEachProcess == 0 {
+// 			take = totalData
+// 		} else if iter == processIter {
+// 			take = totalData - skip
+// 		}
+
+// 		csr, e := b.MongoCtx.Connection.NewQuery().From(m.TableName()).Skip(skip).Take(take).Cursor(nil)
+
+// 		if e != nil {
+// 			return e
+// 		}
+
+// 		result := []tk.M{}
+// 		e = csr.Fetch(&result, 0, false)
+// 		csr.Close()
+
+// 		if e != nil {
+// 			return e
+// 		}
+
+// 		dtLen := len(result)
+
+// 		resPart := make([][]tk.M, worker)
+
+// 		if dtLen < worker {
+// 			resPart = make([][]tk.M, 1)
+// 			resPart[0] = result
+// 		} else {
+// 			workerTaskCount := tk.ToInt(tk.ToFloat64(dtLen/worker, 0, tk.RoundingAuto), tk.RoundingAuto)
+// 			count := 0
+
+// 			for i := 0; i < worker; i++ {
+// 				if i == worker-1 {
+// 					resPart[i] = result[count:]
+// 				} else {
+// 					resPart[i] = result[count : count+workerTaskCount]
+// 				}
+// 				count += workerTaskCount
+// 			}
+// 		}
+
+// 		wg := &sync.WaitGroup{}
+// 		wg.Add(len(resPart))
+
+// 		for _, val := range resPart {
+// 			go b.Insert(val, m, wg)
+// 		}
+
+// 		wg.Wait()
+// 	}
+
+// 	tk.Println("\nConvertMGOToSQLServer: Finish.")
+// 	tk.Printf("Completed Success in %v \n", time.Since(tStart))
+// 	return nil
+// }
 
 func (b *BaseController) Insert(result []tk.M, m orm.IModel, wg *sync.WaitGroup) {
 	muinsert := &sync.Mutex{}
@@ -218,6 +297,7 @@ func (b *BaseController) Insert(result []tk.M, m orm.IModel, wg *sync.WaitGroup)
 		for index := 0; index < retry; index++ {
 			e = b.SqlCtx.Insert(newPointer)
 			if e == nil {
+				wg.Done()
 				break
 			} else {
 				// log.Printf("%T %+v", e, e)
@@ -229,6 +309,7 @@ func (b *BaseController) Insert(result []tk.M, m orm.IModel, wg *sync.WaitGroup)
 
 		if e != nil {
 			tk.Printf("\n----------- ERROR -------------- \n %v \n %#v \n\n %#v \n-------------------------  \n", e.Error(), i, newPointer)
+			wg.Done()
 		}
 
 	}
@@ -239,7 +320,12 @@ func GetMgoValue(d tk.M, fieldName string) interface{} {
 	if index < 0 {
 		return d.Get(fieldName)
 	} else {
-		return GetMgoValue(d.Get(fieldName[0:index]).(tk.M), fieldName[(index+1):len(fieldName)])
+		data := d.Get(fieldName[0:index])
+		if data != nil {
+			return GetMgoValue(data.(tk.M), fieldName[(index+1):len(fieldName)])
+		} else {
+			return nil
+		}
 	}
 }
 func (b *BaseController) GetById(m orm.IModel, id interface{}, column_name ...string) error {
@@ -264,6 +350,10 @@ func (b *BaseController) GetById(m orm.IModel, id interface{}, column_name ...st
 
 func getNewPointer(m orm.IModel) orm.IModel {
 	switch m.TableName() {
+	case "MaintenanceCostByHour":
+		return new(MaintenanceCostByHour)
+	case "MaintenanceCost":
+		return new(MaintenanceCost)
 	case "PlannedMaintenance":
 		return new(PlannedMaintenance)
 	case "SummaryData":
