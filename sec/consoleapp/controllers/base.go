@@ -23,7 +23,7 @@ var (
 
 	// mu                 = &sync.Mutex{}
 	retry              = 10
-	worker             = 100
+	worker             = 50
 	maxDataEachProcess = 500000
 )
 
@@ -168,8 +168,12 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 			for i := 0; i < worker; i++ {
 				if i == worker-1 {
 					resPart[i] = result[count:]
+					/*fmt.Printf("%v | %v \n", count, dtLen-1)
+					fmt.Printf("\n--------------\n %v \n -->\n %v \n--------------\n", result[count], result[dtLen])*/
 				} else {
 					resPart[i] = result[count : count+workerTaskCount]
+					/*fmt.Printf("%v | %v \n", count, count+workerTaskCount)
+					fmt.Printf("\n--------------\n %v \n -->\n %v \n--------------\n", result[count], result[count+workerTaskCount])*/
 				}
 				count += workerTaskCount
 			}
@@ -180,6 +184,7 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 
 		for _, val := range resPart {
 			go b.Insert(val, m, wg)
+			// fmt.Printf("\n--------------\n %v \n -->\n %v \n--------------\n", val[0], val[len(val)-1])
 		}
 
 		wg.Wait()
@@ -214,9 +219,10 @@ func (b *BaseController) Insert(result []tk.M, m orm.IModel, wg *sync.WaitGroup)
 
 		e := tk.Serde(i, newPointer, "json")
 
-		muinsert.Lock()
 		for index := 0; index < retry; index++ {
+			muinsert.Lock()
 			e = b.SqlCtx.Insert(newPointer)
+			muinsert.Unlock()
 			if e == nil {
 				break
 			} else {
@@ -225,10 +231,9 @@ func (b *BaseController) Insert(result []tk.M, m orm.IModel, wg *sync.WaitGroup)
 				b.SqlCtx.Connection.Connect()
 			}
 		}
-		muinsert.Unlock()
 
 		if e != nil {
-			tk.Printf("\n----------- ERROR -------------- \n %v \n %#v \n\n %#v \n-------------------------  \n", e.Error(), i, newPointer)
+			tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n\n %#v \n-------------------------  \n", e.Error(), i, newPointer)
 		}
 
 	}
@@ -270,6 +275,12 @@ func getNewPointer(m orm.IModel) orm.IModel {
 		return new(SummaryData)
 	case "DataBrowser":
 		return new(DataBrowser)
+	case "MORCalculationFlatSummary":
+		return new(MORCalculationFlatSummary)
+	case "PreventiveCorrectiveSummary":
+		return new(PreventiveCorrectiveSummary)
+	case "RegenMasterPlant":
+		return new(RegenMasterPlant)
 	default:
 		return m
 	}
