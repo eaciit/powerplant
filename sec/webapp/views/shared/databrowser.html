@@ -1,13 +1,12 @@
-
 <div data-bind="with:DataBrowser">
  <div class="row" data-bind="visible:Processing()">
           <div class="col-md-12 align-center">
-              {{template "shared/processing.tpl"}}
+              {{template "processing.html"}}
           </div>
       </div>
 <div class="row" data-bind="visible:!Processing()">
     <div class="col-md-2">Fields :</div>
-    <div class="col-md-8" > 
+    <div class="col-md-8" >
         <input  id="MSFields" class="min-top" data-bind="kendoMultiSelect:{value:SelectedFields,data:Fields,dataValueField:'field',dataTextField:'alias',placeholder:'Choose Fields..',filter: 'contains'}"></input>
     </div>
     <div class="col-md-2">
@@ -39,15 +38,15 @@
 
 <script type="text/javascript">
 
- 
+
 
 function FillField(){
     var fieldx =DBFie;
     var selectedx = SelectedFie;
 
-    if($("#HypothesisId").html()=="H16"){       
+    if($("#HypothesisId").html()=="H16"){
         DataBrowser().Fields([]);
-        DataBrowser().SelectedFields([]); 
+        DataBrowser().SelectedFields([]);
 
         for(var i in fieldx){
             DataBrowser().Fields().push(fieldx[i]);
@@ -69,7 +68,7 @@ function FillField(){
     else
     {
         DataBrowser().Fields(fieldx);
-        DataBrowser().SelectedFields(selectedx); 
+        DataBrowser().SelectedFields(selectedx);
     }
 }
 
@@ -79,7 +78,7 @@ function GenerateSumH16(dt,typelist){
     if(dt.length>0){
             setTimeout(function(){
 
-               
+
 
                 var strhtml = "<tr role='row'><td class='sum-header' colspan='"+ typelist.length +"' > Average </td></tr><tr>";
                     for(var i in typelist)
@@ -125,7 +124,7 @@ function GenerateSumH16(dt,typelist){
 </script>
 
 <script type="text/javascript">
-   
+
     var DataBrowser = ko.observable({
         Fields : ko.observableArray([]),
         SelectedFields :  ko.observableArray([]),
@@ -139,25 +138,20 @@ function GenerateSumH16(dt,typelist){
 
     DataBrowserSaveExcel = function(){
         //DataBrowser.Processing(true);
-        var url = "/databrowserve/saveexcel";
+        var url = "/databrowser/saveexcel";
         var parm = DataBrowser().SelectedFilter();
-        parm.headerList = Enumerable.From(DataBrowser().SelectedColumn()).Select(function(x){return x.title}).ToArray();
+        parm.HeaderList = Enumerable.From(DataBrowser().SelectedColumn()).Select(function(x){return x.title}).ToArray();
         parm.DisplayTypeList = DataBrowser().DisplayTypeList();
         parm.DisplayTypeCount = DataBrowser().DisplayTypeList().length;
-        $.ajax({
-          url: url,
-          type: 'post',
-          dataType: 'json',
-          data : parm,
-          success : function(res) {
-              if(res.Status=="OK"){   
-              //DataBrowser.Processing(false); 
+
+        ajaxPost(url, parm, function(res){
+            if(res.Status=="OK"){
+              //DataBrowser.Processing(false);
                 location.href = res.Data;
               }else{
                   alert(res.message);
               }
-          },
-       });
+        });
     }
 	function GenerateDataBrowser(){
         if(DataBrowser().Fields().length==0 || $("#HypothesisId").html() =="H16" ){
@@ -167,12 +161,12 @@ function GenerateSumH16(dt,typelist){
         var fields = DataBrowser().SelectedFields();
         var paramdouble = [];
         var allfields = [];
-        var schema = {};    
+        var schema = {};
         var columns = [];
         var typelist = [];
 
         var Filter =  $('#HypothesisId').html() =="H18"?{PeriodFrom:model.Filter().PeriodFrom,PeriodTo :model.Filter().PeriodFrom  }:  Hypothesis.GetFilter();
-        var param = {fields:allfields,fieldsdouble:paramdouble,hypoid:$('#HypothesisId').html()};
+        var param = {Fields:allfields,Fieldsdouble:paramdouble,Hypoid:"H3"};
 
         for (var property in Filter) {
             if (Filter.hasOwnProperty(property)) {
@@ -200,9 +194,9 @@ function GenerateSumH16(dt,typelist){
 
             //build Columns
             if(f.tipe=="string"){
-                var URLFilter = "/databrowserve/getfilter";
+                var URLFilter = "/databrowser/getfilter";
                 URLFilter += "?active_field="+f.field;
-                if (f.field == "Plant" || f.field == "Top10.WorkOrderType"){
+                if (f.field == "Plant.PlantName" /*|| f.field == "Maintenance.WorkOrderType"*/){
                     var cols = {
                     "field":f.field,
                     "title":f.alias,
@@ -227,7 +221,7 @@ function GenerateSumH16(dt,typelist){
                         }
                     },
                     };
-                }else{
+                }else {
                     var cols = {
                     "field":f.field,
                     "title":f.alias,
@@ -235,8 +229,8 @@ function GenerateSumH16(dt,typelist){
                     width:150,
                 };
                 }
-                
-                
+
+
                 columns.push(cols);
             }else if(f.tipe == "double"){
                 columns.push({
@@ -251,7 +245,7 @@ function GenerateSumH16(dt,typelist){
             columns.push({
                 "field":f.field,
                 "title":f.alias,
-                template: "#= moment("+f.field+").utc().format('DD MMM YYYY') #", 
+                template: "#= moment("+f.field+").utc().format('DD MMM YYYY') #",
                 attributes: { "style": "text-align:center" },
                 filterable:false,
                 width:100,
@@ -266,28 +260,68 @@ function GenerateSumH16(dt,typelist){
         }
 
      var hypo = $("#HypothesisId").html();
-    var url = "/databrowserve/getgriddb";
-
+    var url = "/databrowser/getgriddb";
     DataBrowser().SelectedFilter(param);
     DataBrowser().SelectedColumn(columns);
     DataBrowser().DisplayTypeList(typelist);
-    
+
+    if(hypo =="H16")
+    {
+        $("#databrowsergrid").html("");
+        $('#databrowsergrid').kendoGrid({
+            dataSource:{
+                data : DataGrid,
+                pageSize : 10
+             },
+            resizable: true,
+            scrollable:true,
+            sortable: {
+                mode: "multiple",
+                allowUnsort: true
+            },
+            filterable: true,
+            pageable: {
+                refresh: false,
+                pageSizes: false
+            },
+            dataBound:function(e){
+                var dt = DataGridSum;
+                GenerateSumH16(dt,typelist);
+            },
+            columns:columns,
+
+        });
+
+     //DataBrowser().Processing(false);
+    }
+    else{
       if(DataBrowser().isFristLoading()){
         DataBrowser().Processing(true);
       }
-      
+
       $("#databrowsergrid").html("");
       $('#databrowsergrid').kendoGrid({
          dataSource: {
             transport: {
-                    read: {
+                    read: function(option){
+                        param.Filter = option.data.filter;
+                        param.Page = option.data.page;
+                        param.PageSize = option.data.pageSize;
+                        param.Skip = option.data.skip;
+                        param.Sort = option.data.sort;
+                        param.Take = option.data.take;
+
+                        $.ajax({
                        url: url,
                        dataType: "json",
-                       data: param,
+                       data: ko.mapping.toJSON(param),
                        type: "POST",
+                       contentType: "application/json; charset=utf-8",
                        complete: function (datas) {
                         DataBrowser().Processing(false);
                         var data = JSON.parse(datas.responseText);
+                        console.log(data);
+                        option.success(data);
                         var dt = data.Data.Summary;
                         if(dt.length>0){
                                 setTimeout(function(){
@@ -324,7 +358,9 @@ function GenerateSumH16(dt,typelist){
                                      $('#databrowsergrid').find('tbody').append(strhtml);
                                 },300);
                             }
+
                        }
+                       })
                     }
                 },
                 schema: {
@@ -334,7 +370,7 @@ function GenerateSumH16(dt,typelist){
                         fields: schema
                     }
                 },
-                
+
                 pageSize: 10,
                 serverPaging: true, // enable server paging
                 serverSorting: true,
@@ -360,5 +396,8 @@ function GenerateSumH16(dt,typelist){
             }
     });
 }
-  
+
+	}
+
+
 </script>
