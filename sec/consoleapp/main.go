@@ -45,7 +45,7 @@ func main() {
 	//// convert(new(Availability), base) //				done
 	// convert(new(Consolidated), base) // 					done
 	// convert(new(FuelCost), base) //						done
-	////// convert(new(FuelTransport), base) // 			done
+	// convert(new(FuelTransport), base) // 				done
 	// convert(new(FunctionalLocation), base) // 			done
 	// convert(new(AnomaliesFunctionalLocation), base) //	done
 	// convert(new(GenerationAppendix), base) //			done
@@ -60,7 +60,7 @@ func main() {
 	// convert(new(MasterOrderType), base) // 				done
 	// convert(new(MasterPlant), base) // 					done
 	// convert(new(NewEquipmentType), base) // 				done
-	convert(new(NotificationFailure), base)
+	// convert(new(NotificationFailure), base) // 			done
 	// convert(new(NotificationFailureNoYear), base) // 	done
 	// convert(new(OperationalData), base) // 				done
 	// convert(new(PerformanceFactors), base) // 			done
@@ -70,7 +70,7 @@ func main() {
 	// convert(new(PrevMaintenanceValueEquation), base) // 	done
 	// convert(new(RPPCloseWO), base) // 					done
 	// convert(new(StartupPaymentAndPenalty), base) // 		done
-	// convert(new(SyntheticPM),base) // 					done
+	convert(new(SyntheticPM), base) // 					done
 	// convert(new(UnitCost), base) // 						done
 	// convert(new(Vibration), base) // 					done
 
@@ -78,9 +78,9 @@ func main() {
 	// convert(new(MORSummary), base) // 					done
 	// convert(new(MORCalculationFlatSummary), base)   // 	done
 	// convert(new(PreventiveCorrectiveSummary), base) //	done
-	// convert(new(WODurationSummary), base)
+	convert(new(WODurationSummary), base)
 	// convert(new(WOListSummary), base)
-	// -- convert(new(DataBrowser), base)
+	// convert(new(DataBrowser), base)
 
 	// convert(new(FailureAfterPreventiveSummary), base) // done
 	// convert(new(RegenMasterPlant), base) // 				done
