@@ -2,11 +2,12 @@ package controllers
 
 import (
 	"bufio"
+	"log"
+
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/orm"
 	. "github.com/eaciit/powerplant/sec/consoleapp/models"
 	tk "github.com/eaciit/toolkit"
-	"log"
 	// "math"
 	"os"
 	"reflect"
@@ -176,12 +177,8 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 			for i := 0; i < worker; i++ {
 				if i == worker-1 {
 					resPart[i] = result[count:]
-					/*fmt.Printf("%v | %v \n", count, dtLen-1)
-					fmt.Printf("\n--------------\n %v \n -->\n %v \n--------------\n", result[count], result[dtLen])*/
 				} else {
 					resPart[i] = result[count : count+workerTaskCount]
-					/*fmt.Printf("%v | %v \n", count, count+workerTaskCount)
-					fmt.Printf("\n--------------\n %v \n -->\n %v \n--------------\n", result[count], result[count+workerTaskCount])*/
 				}
 				count += workerTaskCount
 			}
@@ -192,7 +189,6 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 
 		for _, val := range resPart {
 			go b.Insert(val, m, wg)
-			// fmt.Printf("\n--------------\n %v \n -->\n %v \n--------------\n", val[0], val[len(val)-1])
 		}
 
 		wg.Wait()
@@ -250,8 +246,6 @@ func (b *BaseController) Insert(result []tk.M, m orm.IModel, wg *sync.WaitGroup)
 				wg.Done()
 				break
 			} else {
-				// log.Printf("%T %+v", e, e)
-				// tk.Println("retry : ", index+1)
 				b.SqlCtx.Connection.Connect()
 			}
 		}
