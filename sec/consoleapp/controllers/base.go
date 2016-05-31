@@ -190,7 +190,7 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 		wg.Wait()
 	}
 
-	cr, e := b.MongoCtx.Connection.NewQuery().From(m.TableName()).Cursor(nil)
+	cr, e := b.SqlCtx.Connection.NewQuery().From(m.TableName()).Cursor(nil)
 	ctn := cr.Count()
 	cr.Close()
 
