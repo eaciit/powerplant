@@ -92,6 +92,7 @@ func main() {
 	migrate.BaseController = base
 
 	// migrate.DoCostSheet() // 							done
+	migrate.DoGeneralInfo()
 }
 
 func convert(m orm.IModel, base *BaseController) {
