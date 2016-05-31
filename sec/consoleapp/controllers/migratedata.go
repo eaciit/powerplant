@@ -1,16 +1,14 @@
 package controllers
 
 import (
+	_ "github.com/eaciit/dbox/dbc/mongo"
+	_ "github.com/eaciit/dbox/dbc/mssql"
+	"github.com/eaciit/orm"
+	. "github.com/eaciit/powerplant/sec/consoleapp/models"
+	tk "github.com/eaciit/toolkit"
 	"reflect"
 	"sync"
 	"time"
-
-	"github.com/eaciit/orm"
-
-	_ "github.com/eaciit/dbox/dbc/mongo"
-	_ "github.com/eaciit/dbox/dbc/mssql"
-	. "github.com/eaciit/powerplant/sec/consoleapp/models"
-	tk "github.com/eaciit/toolkit"
 )
 
 type MigrateData struct {
@@ -79,7 +77,50 @@ func (m *MigrateData) DoCostSheet() error {
 	return nil
 }
 
-func (m *MigrateData) DoPowerPlantOutages() {
+func (m *MigrateData) DoPowerPlantOutages() error {
+	tStart := time.Now()
+	tk.Println("Starting DoPowerPlantOutages..")
+	mod := new(PowerPlantOutages)
+
+	c, e := m.BaseController.MongoCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+
+	if e != nil {
+		return e
+	}
+
+	defer c.Close()
+
+	result := []tk.M{}
+	e = c.Fetch(&result, 0, false)
+
+	for _, val := range result {
+		_, e := m.InsertOut(val, new(PowerPlantOutages))
+		if e != nil {
+			tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
+			return e
+		}
+		id := val.GetString("_id")
+		details := val.Get("Details").(interface{}).([]interface{})
+		tk.Printf("%#v \n\n", id)
+
+		for _, detail := range details {
+			det := detail.(tk.M)
+			det.Set("PowerPlantOutages", id)
+
+			_, e = m.InsertOut(det, new(PowerPlantOutagesDetails))
+			if e != nil {
+				tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), det)
+				return e
+			}
+		}
+	}
+
+	cr, e := m.BaseController.SqlCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+	ctn := cr.Count()
+	cr.Close()
+
+	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
+	return nil
 
 }
 

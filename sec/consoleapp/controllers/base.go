@@ -318,6 +318,7 @@ func getNewPointer(m orm.IModel) orm.IModel {
 		return new(WOListSummary)
 	case "SyntheticPM":
 		return new(SyntheticPM)
+
 	default:
 		return m
 	}
