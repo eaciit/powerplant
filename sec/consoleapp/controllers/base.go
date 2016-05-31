@@ -190,8 +190,12 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 		wg.Wait()
 	}
 
+	cr, e := b.MongoCtx.Connection.NewQuery().From(m.TableName()).Cursor(nil)
+	ctn := cr.Count()
+	cr.Close()
+
 	tk.Println("\nConvertMGOToSQLServer: Finish.")
-	tk.Printf("Completed Success in %v \n", time.Since(tStart))
+	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
 	return nil
 }
 
@@ -304,6 +308,8 @@ func getNewPointer(m orm.IModel) orm.IModel {
 		return new(WODurationSummary)
 	case "WOListSummary":
 		return new(WOListSummary)
+	case "SyntheticPM":
+		return new(SyntheticPM)
 	default:
 		return m
 	}
