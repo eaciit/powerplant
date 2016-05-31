@@ -1,15 +1,29 @@
 package models
 
 import (
-	"github.com/eaciit/orm"
 	"sync"
 	"time"
+
+	"github.com/eaciit/orm"
 )
+
+type PowerPlantOutages struct {
+	sync.RWMutex
+	orm.ModelBase `bson:"-" json:"-"`
+	Id            string                     `bson:"_id" json:"Id"`
+	Plant         string                     `bson:"Plant" json:"Plant"`
+	Year          int                        `bson:"Year" json:"Year"`
+	Details       []PowerPlantOutagesDetails `bson:"Details" json:"Details"`
+}
+
+func (p *PowerPlantOutages) TableName() string {
+	return "PowerPlantOutages"
+}
 
 type PowerPlantOutagesDetails struct {
 	sync.RWMutex
 	orm.ModelBase `bson:"-" json:"-"`
-	Id            int64     `bson:"Id" json:"Id"`
+	// Id            int64     `bson:"Id" json:"Id"`
 	POId          string    `bson:"POId" json:"POId"`
 	UnitNo        string    `bson:"UnitNo" json:"UnitNo"`
 	DepCap        string    `bson:"DepCap" json:"DepCap"`
@@ -27,17 +41,4 @@ type PowerPlantOutagesDetails struct {
 
 func (d *PowerPlantOutagesDetails) TableName() string {
 	return "PowerPlantOutagesDetails"
-}
-
-type PowerPlantOutages struct {
-	sync.RWMutex
-	orm.ModelBase `bson:"-" json:"-"`
-	Id            string                     `bson:"_id" json:"Id"`
-	Plant         string                     `bson:"Plant" json:"Plant"`
-	Year          int                        `bson:"Year" json:"Year"`
-	Details       []PowerPlantOutagesDetails `bson:"Details" json:"Details"`
-}
-
-func (p *PowerPlantOutages) TableName() string {
-	return "PowerPlantOutages"
 }

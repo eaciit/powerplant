@@ -48,7 +48,7 @@ func main() {
 	// convert(new(FunctionalLocation), base) // 			done
 	// convert(new(AnomaliesFunctionalLocation), base) //	done
 	// convert(new(GenerationAppendix), base) //			done
-	convert(new(MaintenanceCost), base) //				done
+	// convert(new(MaintenanceCost), base) //				done
 	// convert(new(MaintenanceCostFL), base) //				done
 	// convert(new(MaintenanceCostByHour), base) //			done
 	// convert(new(MaintenancePlan), base) // 				done
@@ -88,12 +88,12 @@ func main() {
 	// convert(new(SummaryData), base) // 					done
 	// convert(new(DataBrowser), base)
 
-
 	migrate := new(MigrateData)
 	migrate.BaseController = base
 
 	// migrate.DoCostSheet() // 							done
-	migrate.DoGeneralInfo()
+	// migrate.DoGeneralInfo() // 							done
+	migrate.DoPowerPlantOutages()
 }
 
 func convert(m orm.IModel, base *BaseController) {
