@@ -125,7 +125,7 @@ func (m *MigrateData) DoPowerPlantOutages() error {
 }
 
 func (m *MigrateData) DoGeneralInfo() error {
-	/*tStart := time.Now()
+	tStart := time.Now()
 	tk.Println("Starting DoGeneralInfo..")
 	mod := new(GeneralInfo)
 
@@ -141,23 +141,66 @@ func (m *MigrateData) DoGeneralInfo() error {
 	e = c.Fetch(&result, 0, false)
 
 	for _, val := range result {
-		_, e := m.InsertOut(val, new(CostSheet))
+		_, e := m.InsertOut(val, new(GeneralInfo))
 		if e != nil {
 			tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
 			return e
 		}
 		id := val.GetString("_id")
-		details := val.Get("Details").(interface{}).([]interface{})
 		tk.Printf("%#v \n\n", id)
 
-		for _, detail := range details {
-			det := detail.(tk.M)
-			det.Set("CostSheet", id)
+		if nil != val.Get("InstalledMWh") {
+			installedMWH := val.Get("InstalledMWh").(interface{}).([]interface{})
+			for _, detail := range installedMWH {
+				det := detail.(tk.M)
+				det.Set("GenID", id)
+				det.Set("Type", "InstalledMWh")
+				_, e = m.InsertOut(det, new(GeneralInfoDetails))
+				if e != nil {
+					tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), det)
+					return e
+				}
+			}
+		}
 
-			_, e = m.InsertOut(det, new(CostSheetDetails))
-			if e != nil {
-				tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), det)
-				return e
+		if nil != val.Get("ActualEnergyGeneration") {
+			actualEnergyGeneration := val.Get("ActualEnergyGeneration").(interface{}).([]interface{})
+			for _, detail := range actualEnergyGeneration {
+				det := detail.(tk.M)
+				det.Set("GenID", id)
+				det.Set("Type", "ActualEnergyGeneration")
+				_, e = m.InsertOut(det, new(GeneralInfoDetails))
+				if e != nil {
+					tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), det)
+					return e
+				}
+			}
+		}
+
+		if nil != val.Get("ActualFuelConsumption") {
+			actualFuelConsumption := val.Get("ActualFuelConsumption").(interface{}).([]interface{})
+			for _, detail := range actualFuelConsumption {
+				det := detail.(tk.M)
+				det.Set("GenID", id)
+				_, e = m.InsertOut(det, new(GeneralInfoActualFuelConsumption))
+				if e != nil {
+					tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), det)
+					return e
+				}
+			}
+		}
+
+		if nil != val.Get("CapacityFactor") {
+			capacityFactor := val.Get("CapacityFactor").(interface{}).([]interface{})
+			for _, detail := range capacityFactor {
+				det := detail.(tk.M)
+				det.Set("GenID", id)
+				det.Set("Type", "CapacityFactor")
+				_, e = m.InsertOut(det, new(GeneralInfoDetails))
+				if e != nil {
+					tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), det)
+					return e
+				}
 			}
 		}
 	}
@@ -166,7 +209,7 @@ func (m *MigrateData) DoGeneralInfo() error {
 	ctn := cr.Count()
 	cr.Close()
 
-	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)*/
+	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
 	return nil
 }
 
