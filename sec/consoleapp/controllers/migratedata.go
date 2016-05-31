@@ -3,7 +3,7 @@ package controllers
 import (
 	_ "github.com/eaciit/dbox/dbc/mongo"
 	_ "github.com/eaciit/dbox/dbc/mssql"
-	// . "github.com/eaciit/powerplant/sec/consoleapp/models"
+	//. "github.com/eaciit/powerplant/sec/consoleapp/models"
 )
 
 type MigrateData struct {

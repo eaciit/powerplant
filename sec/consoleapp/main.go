@@ -58,11 +58,7 @@ func main() {
 	// convert(new(MasterOrderType), base) // 				done
 	// convert(new(MasterPlant), base) // 					done
 	// convert(new(NewEquipmentType), base) // 				done
-<<<<<<< HEAD
-	convert(new(NotificationFailure), base)
-=======
 	// convert(new(NotificationFailure), base) // 			done
->>>>>>> refs/remotes/origin/master
 	// convert(new(NotificationFailureNoYear), base) // 	done
 	// convert(new(OperationalData), base) // 				done
 	// convert(new(PerformanceFactors), base) // 			done
@@ -90,6 +86,7 @@ func main() {
 
 	// convert(new(SummaryData), base) // 					done
 	// convert(new(DataBrowser), base)
+
 }
 
 func convert(m orm.IModel, base *BaseController) {

@@ -290,15 +290,6 @@ func (b *BaseController) GetById(m orm.IModel, id interface{}, column_name ...st
 
 func getNewPointer(m orm.IModel) orm.IModel {
 	switch m.TableName() {
-	case "PlannedMaintenance":
-		return new(PlannedMaintenance)
-	case "SummaryData":
-		return new(SummaryData)
-	case "DataBrowser":
-		return new(DataBrowser)
-<<<<<<< HEAD
-
-=======
 	case "MORCalculationFlatSummary":
 		return new(MORCalculationFlatSummary)
 	case "PreventiveCorrectiveSummary":
@@ -313,7 +304,7 @@ func getNewPointer(m orm.IModel) orm.IModel {
 		return new(WOListSummary)
 	case "SyntheticPM":
 		return new(SyntheticPM)
->>>>>>> refs/remotes/origin/master
+
 	default:
 		return m
 	}
