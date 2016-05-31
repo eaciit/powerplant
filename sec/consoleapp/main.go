@@ -36,6 +36,7 @@ func main() {
 
 	defer base.MongoCtx.Close()
 	defer base.SqlCtx.Close()
+
 	// convert(new(MasterUnitNoTurbineParent), base) //		done
 	// convert(new(MasterFailureCode), base) //				done
 	// convert(new(WOList), base) // 						done
@@ -86,6 +87,11 @@ func main() {
 
 	// convert(new(SummaryData), base) // 					done
 	// convert(new(DataBrowser), base)
+
+	migrate := new(MigrateData)
+	migrate.BaseController = base
+
+	// migrate.DoCostSheet() // 							done
 }
 
 func convert(m orm.IModel, base *BaseController) {
