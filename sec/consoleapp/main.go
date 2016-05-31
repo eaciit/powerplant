@@ -88,13 +88,11 @@ func main() {
 	// convert(new(SummaryData), base) // 					done
 	// convert(new(DataBrowser), base)
 
-<<<<<<< HEAD
-=======
+
 	migrate := new(MigrateData)
 	migrate.BaseController = base
 
 	// migrate.DoCostSheet() // 							done
->>>>>>> refs/remotes/origin/master
 }
 
 func convert(m orm.IModel, base *BaseController) {
