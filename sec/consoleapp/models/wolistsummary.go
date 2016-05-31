@@ -11,7 +11,7 @@ type WOListSummary struct {
 	sync.RWMutex
 	orm.ModelBase `bson:"-" json:"-"`
 	// Id                      int64     `bson:"Id" json:"Id"`
-	PeriodYear              int       `bson:"PeriodYear" json:"PeriodYear"`
+	PeriodYear              int       `bson:"Period.Year" json:"PeriodYear"`
 	OrderType               string    `bson:"OrderType" json:"OrderType"`
 	MainenanceOrderCode     string    `bson:"MainenanceOrderCode" json:"MainenanceOrderCode"`
 	NotificationCode        string    `bson:"NotificationCode" json:"NotificationCode"`

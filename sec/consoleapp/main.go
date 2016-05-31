@@ -2,13 +2,12 @@ package main
 
 import (
 	"os"
-	"runtime"
 
 	_ "github.com/eaciit/dbox/dbc/mongo"
 	_ "github.com/eaciit/dbox/dbc/mssql"
 	"github.com/eaciit/orm"
 	. "github.com/eaciit/powerplant/sec/consoleapp/controllers"
-	. "github.com/eaciit/powerplant/sec/consoleapp/models"
+	// . "github.com/eaciit/powerplant/sec/consoleapp/models"
 	tk "github.com/eaciit/toolkit"
 )
 
@@ -20,7 +19,6 @@ var (
 )
 
 func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
 	tk.Println("Starting the app..")
 	mongo, e := PrepareConnection("mongo")
 	if e != nil {
@@ -36,16 +34,16 @@ func main() {
 	base.MongoCtx = orm.New(mongo)
 	base.SqlCtx = orm.New(sql)
 
-	defer mongo.Close()
-	defer sql.Close()
-	// convert(new(MasterUnitNoTurbineParent), base)		done
-	// convert(new(MasterFailureCode), base)				done
+	defer base.MongoCtx.Close()
+	defer base.SqlCtx.Close()
+	// convert(new(MasterUnitNoTurbineParent), base) //		done
+	// convert(new(MasterFailureCode), base) //				done
 	// convert(new(WOList), base) // 						done
 	// convert(new(AnomaliesWOList), base) //				done
-	//// convert(new(Availability), base) //				done
+	// convert(new(Availability), base) //					done
 	// convert(new(Consolidated), base) // 					done
 	// convert(new(FuelCost), base) //						done
-	////// convert(new(FuelTransport), base) // 			done
+	// convert(new(FuelTransport), base) // 				done
 	// convert(new(FunctionalLocation), base) // 			done
 	// convert(new(AnomaliesFunctionalLocation), base) //	done
 	// convert(new(GenerationAppendix), base) //			done
@@ -60,33 +58,38 @@ func main() {
 	// convert(new(MasterOrderType), base) // 				done
 	// convert(new(MasterPlant), base) // 					done
 	// convert(new(NewEquipmentType), base) // 				done
+<<<<<<< HEAD
 	convert(new(NotificationFailure), base)
+=======
+	// convert(new(NotificationFailure), base) // 			done
+>>>>>>> refs/remotes/origin/master
 	// convert(new(NotificationFailureNoYear), base) // 	done
 	// convert(new(OperationalData), base) // 				done
 	// convert(new(PerformanceFactors), base) // 			done
-	// convert(new(PlannedMaintenance), base)	// 			done
+	// convert(new(PlannedMaintenance), base) // 			done
 	// convert(new(PowerPlantCoordinates), base) // 		done
 	// convert(new(PowerPlantInfo),base) // 				done
 	// convert(new(PrevMaintenanceValueEquation), base) // 	done
 	// convert(new(RPPCloseWO), base) // 					done
 	// convert(new(StartupPaymentAndPenalty), base) // 		done
-	// convert(new(SyntheticPM),base) // 					done
+	// convert(new(SyntheticPM), base) // 					done
 	// convert(new(UnitCost), base) // 						done
 	// convert(new(Vibration), base) // 					done
 
-	// convert(new(SummaryData), base) // 					done
 	// convert(new(MORSummary), base) // 					done
-	// convert(new(MORCalculationFlatSummary), base) // --------------- gak bisa utk anaknya period.year
-	convert(new(PreventiveCorrectiveSummary), base)
-	// convert(new(WODurationSummary), base)
-	// convert(new(WOListSummary), base)
-	// convert(new(DataBrowser), base)
+	// convert(new(MORCalculationFlatSummary), base)   // 	done
+	// convert(new(PreventiveCorrectiveSummary), base) //	done
+	// convert(new(WODurationSummary), base) // 			done
+	// convert(new(WOListSummary), base) // 				done
 
-	// convert(new(FailureAfterPreventiveSummary), base) // done
+	// convert(new(FailureAfterPreventiveSummary), base)// 	done
 	// convert(new(RegenMasterPlant), base) // 				done
 	// convert(new(MasterFailureCode), base) // 			done
 	// convert(new(MasterUnitNoTurbineParent), base) // 	done
 	// convert(new(DataTempMaintenance), base) // 			done
+
+	// convert(new(SummaryData), base) // 					done
+	// convert(new(DataBrowser), base)
 }
 
 func convert(m orm.IModel, base *BaseController) {

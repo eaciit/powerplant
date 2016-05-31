@@ -23,8 +23,8 @@ var (
 
 	// mu                 = &sync.Mutex{}
 	retry              = 10
-	worker             = 100
-	maxDataEachProcess = 500000
+	worker             = 20
+	maxDataEachProcess = 200000
 )
 
 type IBaseController interface {
@@ -168,8 +168,12 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 			for i := 0; i < worker; i++ {
 				if i == worker-1 {
 					resPart[i] = result[count:]
+					/*fmt.Printf("%v | %v \n", count, dtLen-1)
+					fmt.Printf("\n--------------\n %v \n -->\n %v \n--------------\n", result[count], result[dtLen])*/
 				} else {
 					resPart[i] = result[count : count+workerTaskCount]
+					/*fmt.Printf("%v | %v \n", count, count+workerTaskCount)
+					fmt.Printf("\n--------------\n %v \n -->\n %v \n--------------\n", result[count], result[count+workerTaskCount])*/
 				}
 				count += workerTaskCount
 			}
@@ -180,13 +184,18 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 
 		for _, val := range resPart {
 			go b.Insert(val, m, wg)
+			// fmt.Printf("\n--------------\n %v \n -->\n %v \n--------------\n", val[0], val[len(val)-1])
 		}
 
 		wg.Wait()
 	}
 
+	cr, e := b.MongoCtx.Connection.NewQuery().From(m.TableName()).Cursor(nil)
+	ctn := cr.Count()
+	cr.Close()
+
 	tk.Println("\nConvertMGOToSQLServer: Finish.")
-	tk.Printf("Completed Success in %v \n", time.Since(tStart))
+	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
 	return nil
 }
 
@@ -198,25 +207,37 @@ func (b *BaseController) Insert(result []tk.M, m orm.IModel, wg *sync.WaitGroup)
 			field := valueType.Field(f)
 			bsonField := field.Tag.Get("bson")
 			jsonField := field.Tag.Get("json")
+
 			if jsonField != bsonField && field.Name != "RWMutex" && field.Name != "ModelBase" {
-				i.Set(field.Name, i.Get(bsonField))
+				i.Set(field.Name, GetMgoValue(i, bsonField))
 			}
-			if field.Type.Name() == "Time" {
-				if i.Get(bsonField) == nil {
+			switch field.Type.Name() {
+			case "string":
+				if GetMgoValue(i, bsonField) == nil {
+					i.Set(field.Name, "")
+				}
+				break
+			case "Time":
+				if GetMgoValue(i, bsonField) == nil {
 					i.Set(field.Name, time.Time{})
 				} else {
-					i.Set(field.Name, i.Get(bsonField).(time.Time).UTC())
+					i.Set(field.Name, GetMgoValue(i, bsonField).(time.Time).UTC())
 				}
+				break
+			default:
+				break
 			}
+
 		}
 
 		newPointer := getNewPointer(m)
-
 		e := tk.Serde(i, newPointer, "json")
-
-		muinsert.Lock()
+		var newId int64
 		for index := 0; index < retry; index++ {
-			e = b.SqlCtx.Insert(newPointer)
+			muinsert.Lock()
+			newId, e = b.SqlCtx.InsertOut(newPointer)
+			_ = newId
+			muinsert.Unlock()
 			if e == nil {
 				break
 			} else {
@@ -225,10 +246,9 @@ func (b *BaseController) Insert(result []tk.M, m orm.IModel, wg *sync.WaitGroup)
 				b.SqlCtx.Connection.Connect()
 			}
 		}
-		muinsert.Unlock()
 
 		if e != nil {
-			tk.Printf("\n----------- ERROR -------------- \n %v \n %#v \n\n %#v \n-------------------------  \n", e.Error(), i, newPointer)
+			tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n\n %#v \n-------------------------  \n", e.Error(), i, newPointer)
 		}
 
 	}
@@ -239,9 +259,15 @@ func GetMgoValue(d tk.M, fieldName string) interface{} {
 	if index < 0 {
 		return d.Get(fieldName)
 	} else {
-		return GetMgoValue(d.Get(fieldName[0:index]).(tk.M), fieldName[(index+1):len(fieldName)])
+		data := d.Get(fieldName[0:index])
+		if data != nil {
+			return GetMgoValue(data.(tk.M), fieldName[(index+1):len(fieldName)])
+		} else {
+			return nil
+		}
 	}
 }
+
 func (b *BaseController) GetById(m orm.IModel, id interface{}, column_name ...string) error {
 	var e error
 	c := b.SqlCtx.Connection
@@ -270,7 +296,24 @@ func getNewPointer(m orm.IModel) orm.IModel {
 		return new(SummaryData)
 	case "DataBrowser":
 		return new(DataBrowser)
+<<<<<<< HEAD
 
+=======
+	case "MORCalculationFlatSummary":
+		return new(MORCalculationFlatSummary)
+	case "PreventiveCorrectiveSummary":
+		return new(PreventiveCorrectiveSummary)
+	case "RegenMasterPlant":
+		return new(RegenMasterPlant)
+	case "NotificationFailure":
+		return new(NotificationFailure)
+	case "WODurationSummary":
+		return new(WODurationSummary)
+	case "WOListSummary":
+		return new(WOListSummary)
+	case "SyntheticPM":
+		return new(SyntheticPM)
+>>>>>>> refs/remotes/origin/master
 	default:
 		return m
 	}

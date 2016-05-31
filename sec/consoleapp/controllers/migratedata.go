@@ -6,6 +6,58 @@ import (
 	// . "github.com/eaciit/powerplant/sec/consoleapp/models"
 )
 
+type MigrateData struct {
+	*BaseController
+}
+
+func (m *MigrateData) DoDataBrowser() {
+	/*tStart := time.Now()
+
+	tk.Println("Starting DoDataBrowser..")
+	mongo, e := PrepareConnection("mongo")
+	if e != nil {
+		tk.Println(e)
+	}
+
+	sql, e := PrepareConnection("mssql")
+	if e != nil {
+		tk.Println(e)
+	}
+
+	base := new(BaseController)
+	base.MongoCtx = orm.New(mongo)
+	base.SqlCtx = orm.New(sql)
+
+	defer base.MongoCtx.Close()
+	defer base.SqlCtx.Close()
+
+	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)*/
+}
+
+func (m *MigrateData) DoValueEquation() {
+
+}
+
+func (m *MigrateData) DoValueEquationDashboard() {
+
+}
+
+func (m *MigrateData) DoValueEquationDataQuality() {
+
+}
+
+func (m *MigrateData) DoCostSheet() {
+
+}
+
+func (m *MigrateData) DoPowerPlantOutages() {
+
+}
+
+func (m *MigrateData) DoGeneralInfo() {
+
+}
+
 /*
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
