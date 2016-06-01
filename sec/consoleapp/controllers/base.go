@@ -24,7 +24,7 @@ var (
 	// mu                 = &sync.Mutex{}
 	retry              = 10
 	worker             = 100
-	maxDataEachProcess = 500000
+	maxDataEachProcess = 200000
 )
 
 type IBaseController interface {
@@ -242,6 +242,7 @@ func GetMgoValue(d tk.M, fieldName string) interface{} {
 		return GetMgoValue(d.Get(fieldName[0:index]).(tk.M), fieldName[(index+1):len(fieldName)])
 	}
 }
+
 func (b *BaseController) GetById(m orm.IModel, id interface{}, column_name ...string) error {
 	var e error
 	c := b.SqlCtx.Connection
@@ -270,6 +271,8 @@ func getNewPointer(m orm.IModel) orm.IModel {
 		return new(SummaryData)
 	case "DataBrowser":
 		return new(DataBrowser)
+	case "WODurationSummary":
+		return new(WODurationSummary)
 	default:
 		return m
 	}

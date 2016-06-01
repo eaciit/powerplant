@@ -77,8 +77,8 @@ func main() {
 	// convert(new(SummaryData), base) // 					done
 	// convert(new(MORSummary), base) // 					done
 	// convert(new(MORCalculationFlatSummary), base) // --------------- gak bisa utk anaknya period.year
-	convert(new(PreventiveCorrectiveSummary), base)
-	// convert(new(WODurationSummary), base)
+	//convert(new(PreventiveCorrectiveSummary), base)
+	convert(new(WODurationSummary), base)
 	// convert(new(WOListSummary), base)
 	// convert(new(DataBrowser), base)
 
