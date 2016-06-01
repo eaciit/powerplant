@@ -24,8 +24,8 @@ var (
 
 	// mu                 = &sync.Mutex{}
 	retry              = 10
-	worker             = 20
-	maxDataEachProcess = 200000
+	worker             = 1
+	maxDataEachProcess = 1000
 )
 
 type IBaseController interface {
@@ -188,7 +188,8 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 		wg.Add(len(resPart))
 
 		for _, val := range resPart {
-			go b.Insert(val, m, wg)
+			// go b.Insert(val, m, wg)
+			go b.InsertBulk(val, m, wg)
 		}
 
 		wg.Wait()
@@ -201,6 +202,60 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 	tk.Println("\nConvertMGOToSQLServer: Finish.")
 	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
 	return nil
+}
+
+func (b *BaseController) InsertBulk(result []tk.M, m orm.IModel, wg *sync.WaitGroup) {
+	var datas []orm.IModel
+
+	for _, i := range result {
+		valueType := reflect.TypeOf(m).Elem()
+		for f := 0; f < valueType.NumField(); f++ {
+			field := valueType.Field(f)
+			bsonField := field.Tag.Get("bson")
+			jsonField := field.Tag.Get("json")
+
+			if jsonField != bsonField && field.Name != "RWMutex" && field.Name != "ModelBase" {
+				i.Set(field.Name, GetMgoValue(i, bsonField))
+			}
+			switch field.Type.Name() {
+			case "string":
+				if GetMgoValue(i, bsonField) == nil {
+					i.Set(field.Name, "")
+				}
+				break
+			case "Time":
+				if GetMgoValue(i, bsonField) == nil {
+					i.Set(field.Name, time.Time{})
+				} else {
+					i.Set(field.Name, GetMgoValue(i, bsonField).(time.Time).UTC())
+				}
+				break
+			default:
+				break
+			}
+
+		}
+
+		newPointer := getNewPointer(m)
+		e := tk.Serde(i, newPointer, "json")
+		datas = append(datas, newPointer)
+
+		if e != nil {
+			tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n\n %#v \n-------------------------  \n", e.Error(), i, newPointer)
+			wg.Done()
+		}
+
+	}
+
+	tk.Println("done loop, begin saving")
+
+	if nil != result {
+		tk.Println("start saving")
+		b.SqlCtx.InsertBulk(datas)
+		tk.Println("done saving")
+	}
+
+	wg.Done()
 }
 
 func (b *BaseController) Insert(result []tk.M, m orm.IModel, wg *sync.WaitGroup) {
