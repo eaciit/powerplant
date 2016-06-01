@@ -8,8 +8,8 @@ import (
 
 type SummaryData struct {
 	sync.RWMutex
-	orm.ModelBase `bson:"-" json:"-"`
-	// Id                        int64   `bson:"Id" json:"Id"`
+	orm.ModelBase             `bson:"-" json:"-"`
+	Id                        int64   `bson:"Id" json:"Id"`
 	FunctionalLocation        string  `bson:"FunctionalLocation" json:"FunctionalLocation"`
 	FLDescription             string  `bson:"FLDescription" json:"FLDescription"`
 	SortField                 string  `bson:"SortField" json:"SortField"`
@@ -26,11 +26,11 @@ type SummaryData struct {
 	DieselUnitCapacity        float64 `bson:"DieselUnitCapacity" json:"DieselUnitCapacity"`
 	CombinedCycleUnit         int     `bson:"CombinedCycleUnit" json:"CombinedCycleUnit"`
 	CombinedCycleUnitCapacity float64 `bson:"CombinedCycleUnitCapacity" json:"CombinedCycleUnitCapacity"`
-	/*MaintenancePlans          []MaintenancePlan
+	MaintenancePlans          []MaintenancePlan
 	MaintenanceWorkOrders     []MaintenanceWorkOrder
 	RPPCloseWOs               []RPPCloseWO
 	OperationalDatas          []OperationalData
-	Availabilties             []Availability*/
+	Availabilties             []Availability
 }
 
 func (m *SummaryData) TableName() string {

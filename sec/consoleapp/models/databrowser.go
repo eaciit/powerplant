@@ -11,7 +11,7 @@ type DataBrowser struct {
 	sync.RWMutex
 	orm.ModelBase `bson:"-" json:"-"`
 	// Id int64 `bson:"Id" json:"Id"`
-	PeriodYear                             time.Time `bson:"Period.Year" json:"PeriodYear"`
+	PeriodYear                             int       `bson:"Period.Year" json:"PeriodYear"`
 	FunctionalLocation                     string    `bson:"FunctionalLocation" json:"FunctionalLocation"`
 	FLDescription                          string    `bson:"FLDescription" json:"FLDescription"`
 	IsTurbine                              bool      `bson:"IsTurbine" json:"IsTurbine"`
@@ -21,7 +21,7 @@ type DataBrowser struct {
 	AssetType                              string    `bson:"AssetType" json:"AssetType"`
 	EquipmentType                          string    `bson:"EquipmentType" json:"EquipmentType"`
 	EquipmentTypeDescription               string    `bson:"EquipmentTypeDescription" json:"EquipmentTypeDescription"`
-	PlantId                                int64     `bson:"Plant._id" json:"PlantId"`
+	PlantCode                              string    `bson:"Plant.PlantCode" json:"PlantCode"`
 	TInfShortName                          string    `bson:"TurbineInfos." json:"TInfShortName"`
 	TInfManufacturer                       string    `bson:"TurbineInfos.Manufacturer" json:"TInfManufacturer"`
 	TInfModel                              string    `bson:"TurbineInfos.Model" json:"TInfModel"`
@@ -33,7 +33,7 @@ type DataBrowser struct {
 	TInfBackupFuel                         string    `bson:"TurbineInfos.BackupFuel" json:"TInfBackupFuel"`
 	TInfHeatRate                           float64   `bson:"TurbineInfos.HeatRate" json:"TInfHeatRate"`
 	TInfEfficiency                         float64   `bson:"TurbineInfos.Efficiency" json:"TInfEfficiency"`
-	TInfCommisioningDate                   int       `bson:"TurbineInfos.CommisioningDate" json:"TInfCommisioningDate"`
+	TInfCommisioningDate                   time.Time `bson:"TurbineInfos.CommisioningDate" json:"TInfCommisioningDate"`
 	TInfRetirementPlan                     string    `bson:"TurbineInfos.RetirementPlan" json:"TInfRetirementPlan"`
 	TInfInstalledMWH                       float64   `bson:"TurbineInfos.InstalledMWH" json:"TInfInstalledMWH"`
 	TInfActualEnergyGeneration             float64   `bson:"TurbineInfos.ActualEnergyGeneration" json:"TInfActualEnergyGeneration"`
@@ -49,6 +49,7 @@ type DataBrowser struct {
 	FailureNotifications                   []NotificationFailureNoYear
 	MROElements                            []MaintenanceCost
 	Operationals                           []OperationalData*/
+	// Plant Plant
 	// Outages [] ---> cannot determine yet from which table
 }
 
