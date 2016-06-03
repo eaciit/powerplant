@@ -46,48 +46,57 @@ func (m *MigrateData) DoValueEquation() error {
 		id := sid.(bson.ObjectId).Hex()
 		val.Set("_id", id)
 
-		_, e := m.InsertOut(val, new(ValueEquation))
-		if e != nil {
-			tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
-			return e
-		}
-
 		periods := val.Get("Period").(tk.M)
-		periods.Set("Id", id)
-		_, e = m.InsertOut(periods, new(ValueEquationPeriod))
-		if e != nil {
-			tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), periods)
-			return e
+		val.Set("PeriodYear", periods["Year"])
+		val.Set("PeriodMonth", periods["Month"])
+		val.Set("PeriodDates", periods["Dates"])
+		tk.Printf("\n----------- RES -------------- \n %v \n\n %#v \n-------------------------  \n", val)
+
+		for {
+			_, e := m.InsertOut(val, new(ValueEquation))
+			if e == nil {
+				break
+			} else {
+				m.SqlCtx.Connection.Connect()
+			}
 		}
 
 		for _, fuel := range fuels {
 			f := fuel.(tk.M)
 			f.Set("VEId", id)
-			_, e = m.InsertOut(f, new(ValueEquationFuel))
-			if e != nil {
-				tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), f)
-				return e
+			for {
+				_, e = m.InsertOut(f, new(ValueEquationFuel))
+				if e == nil {
+					break
+				} else {
+					m.SqlCtx.Connection.Connect()
+				}
 			}
 		}
 
 		for _, detail := range details {
 			d := detail.(tk.M)
 			d.Set("VEId", id)
-			_, e = m.InsertOut(d, new(ValueEquationDetails))
-			if e != nil {
-				tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), d)
-				return e
+			for {
+				_, e = m.InsertOut(d, new(ValueEquationDetails))
+				if e == nil {
+					break
+				} else {
+					m.SqlCtx.Connection.Connect()
+				}
 			}
 		}
 
 		for _, top10 := range top10s {
 			t := top10.(tk.M)
 			t.Set("VEId", id)
-			_, e = m.InsertOut(t, new(ValueEquationTop10))
-			tk.Println(t.Get("VEId"))
-			if e != nil {
-				tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), t)
-				return e
+			for {
+				_, e = m.InsertOut(t, new(ValueEquationTop10))
+				if e == nil {
+					break
+				} else {
+					m.SqlCtx.Connection.Connect()
+				}
 			}
 		}
 
