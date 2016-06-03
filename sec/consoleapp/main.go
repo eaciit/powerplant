@@ -86,7 +86,7 @@ func main() {
 	// convert(new(DataTempMaintenance), base) // 			done
 
 	// convert(new(SummaryData), base) // 					done
-	convert(new(DataBrowser), base)
+	// convert(new(DataBrowser), base) // 					done
 
 	migrate := new(MigrateData)
 	migrate.BaseController = base
