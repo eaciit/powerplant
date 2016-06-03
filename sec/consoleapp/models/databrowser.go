@@ -44,11 +44,13 @@ type DataBrowser struct {
 	TInfCapacityFactor                     float64   `bson:"TurbineInfos.CapacityFactor" json:"TInfCapacityFactor"`
 	TInfUpdateEnergyGeneration             float64   `bson:"TurbineInfos.UpdateEnergyGeneration" json:"TInfUpdateEnergyGeneration"`
 	TInfUpdateFuelConsumption              float64   `bson:"TurbineInfos.UpdateFuelConsumption" json:"TInfUpdateFuelConsumption"`
-	/*TurbineVibrations                      []Vibration
-	Maintenances                           []AssetMaintenance
-	FailureNotifications                   []NotificationFailureNoYear
-	MROElements                            []MaintenanceCost
-	Operationals                           []OperationalData*/
+	TurbineVibrations                      []Vibration
+
+	Maintenances         []AssetMaintenance
+	FailureNotifications []NotificationFailureNoYear
+	MROElements          []MaintenanceCost
+
+	Operationals []OperationalData
 	// Plant Plant
 	// Outages [] ---> cannot determine yet from which table
 }
