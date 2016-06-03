@@ -93,7 +93,8 @@ func main() {
 
 	// migrate.DoCostSheet() // 							done
 	// migrate.DoGeneralInfo() // 							done
-	migrate.DoPowerPlantOutages()
+	migrate.DoValueEquation()
+
 }
 
 func convert(m orm.IModel, base *BaseController) {
