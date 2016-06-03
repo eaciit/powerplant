@@ -88,13 +88,15 @@ func main() {
 	// convert(new(SummaryData), base) // 					done
 	convert(new(DataBrowser), base)
 
-	/*migrate := new(MigrateData)
+	migrate := new(MigrateData)
 	migrate.BaseController = base
 
 	// migrate.DoCostSheet() // 							done
 	// migrate.DoGeneralInfo() // 							done
-	migrate.DoPowerPlantOutages() //						done
-	// migrate.DoDataBrowser()*/
+	// migrate.DoValueEquation() //							done
+	// migrate.DoPowerPlantOutages() //						done
+	// migrate.DoDataBrowser()
+
 }
 
 func convert(m orm.IModel, base *BaseController) {
