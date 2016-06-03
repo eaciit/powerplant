@@ -198,12 +198,8 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 		wg.Wait()
 	}
 
-	cr, e := b.SqlCtx.Connection.NewQuery().From(m.TableName()).Cursor(nil)
-	ctn := cr.Count()
-	cr.Close()
-
 	tk.Println("\nConvertMGOToSQLServer: Finish.")
-	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
+	tk.Printf("Completed Success in %v \n", time.Since(tStart))
 	return nil
 }
 
