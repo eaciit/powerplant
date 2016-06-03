@@ -24,8 +24,11 @@ var (
 
 	// mu                 = &sync.Mutex{}
 	retry              = 10
-	worker             = 1
-	maxDataEachProcess = 1000
+	worker             = 100
+	maxDataEachProcess = 100000
+	idx                = 0
+	mu                 = &sync.Mutex{}
+	muinsert           = &sync.Mutex{}
 )
 
 type IBaseController interface {
@@ -206,7 +209,6 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 
 func (b *BaseController) InsertBulk(result []tk.M, m orm.IModel, wg *sync.WaitGroup) {
 	var datas []orm.IModel
-
 	for _, i := range result {
 		valueType := reflect.TypeOf(m).Elem()
 		for f := 0; f < valueType.NumField(); f++ {
@@ -247,19 +249,27 @@ func (b *BaseController) InsertBulk(result []tk.M, m orm.IModel, wg *sync.WaitGr
 
 	}
 
-	tk.Println("done loop, begin saving")
-
-	if nil != result {
-		tk.Println("start saving")
-		b.SqlCtx.InsertBulk(datas)
-		tk.Println("done saving")
+	if nil != datas {
+		muinsert.Lock()
+		for {
+			e := b.SqlCtx.InsertBulk(datas)
+			if e == nil {
+				ctn := len(result)
+				idx += ctn
+				tk.Printf("saved: %v data(s)\n", idx)
+				break
+			} else {
+				b.SqlCtx.Connection.Connect()
+			}
+		}
+		muinsert.Unlock()
 	}
 
 	wg.Done()
 }
 
 func (b *BaseController) Insert(result []tk.M, m orm.IModel, wg *sync.WaitGroup) {
-	muinsert := &sync.Mutex{}
+	// muinsert := &sync.Mutex{}
 	for _, i := range result {
 		valueType := reflect.TypeOf(m).Elem()
 		for f := 0; f < valueType.NumField(); f++ {
