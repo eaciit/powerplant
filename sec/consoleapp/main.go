@@ -93,6 +93,9 @@ func main() {
 
 	// migrate.DoCostSheet() // 							done
 	// migrate.DoGeneralInfo() // 							done
+	// migrate.DoPowerPlantOutages()	//					done
+	// migrate.DoValueEquationDataQuality()	//				done
+	migrate.DoValueEquationDashboard()
 	//migrate.DoPowerPlantOutages()
 	//migrate.DoGenerateVibration()
 	// migrate.DoValueEquation() //							done

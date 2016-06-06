@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/eaciit/dbox"
 	_ "github.com/eaciit/dbox/dbc/mongo"
 	_ "github.com/eaciit/dbox/dbc/mssql"
 	"github.com/eaciit/orm"
@@ -153,12 +154,241 @@ func (m *MigrateData) DoValueEquation() error {
 	return nil
 }
 
-func (m *MigrateData) DoValueEquationDashboard() {
+func (m *MigrateData) DoValueEquationDashboard() error {
+	tStart := time.Now()
+	tk.Println("Starting DoValueEquationDashboard..")
+	mod := new(ValueEquationDashboard)
 
+	c, e := m.BaseController.MongoCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+
+	if e != nil {
+		return e
+	}
+
+	defer c.Close()
+
+	result := []tk.M{}
+	e = c.Fetch(&result, 0, false)
+	for _, val := range result {
+
+		// _, e := m.InsertOut(val, new(ValueEquationDashboard))
+		// if e != nil {
+		// 	tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
+		// 	return e
+		// }
+		filter := []*dbox.Filter{}
+		filter = append(filter, dbox.Eq("Dates", GetMgoValue(val, "Period.Dates").(time.Time).UTC()))
+		filter = append(filter, dbox.Eq("Plant", GetMgoValue(val, "Plant")))
+		filter = append(filter, dbox.Eq("Unit", GetMgoValue(val, "Unit")))
+
+		csr, e := m.SqlCtx.Connection.NewQuery().From(mod.TableName()).Where(filter...).Cursor(nil)
+		csr.Close()
+		if e != nil {
+			return e
+		}
+		result := []tk.M{}
+		e = csr.Fetch(&result, 0, false)
+		if e != nil {
+			return e
+		}
+		if len(result) > 0 {
+			Id := result[0].Get("id")
+
+			// Fuel := val.Get("Fuel").([]interface{})
+			// for _, x := range Fuel {
+			// 	doc := x.(tk.M).Set("VEId", Id)
+			// 	_, e = m.InsertOut(doc, new(VEDFuel))
+			// 	if e != nil {
+			// 		tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
+			// 		return e
+			// 	}
+			// }
+
+			// Detail := val.Get("Detail")
+			// if Detail != nil {
+			// 	for _, x := range Detail.([]interface{}) {
+			// 		doc := x.(tk.M).Set("VEId", Id)
+			// 		_, e = m.InsertOut(doc, new(VEDDetail))
+			// 		if e != nil {
+			// 			tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
+			// 			return e
+			// 		}
+			// 	}
+			// }
+
+			Top10 := val.Get("Top10")
+			if Top10 != nil {
+				for _, x := range Top10.([]interface{}) {
+					doc := x.(tk.M).Set("VEId", Id)
+					for index := 0; index < retry; index++ {
+						_, e = m.InsertOut(doc, new(VEDTop10))
+						if e == nil {
+							break
+						} else {
+							m.SqlCtx.Connection.Connect()
+						}
+					}
+				}
+			}
+
+		}
+
+	}
+
+	cr, e := m.BaseController.SqlCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+	ctn := cr.Count()
+	cr.Close()
+
+	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
+	return nil
 }
 
-func (m *MigrateData) DoValueEquationDataQuality() {
+func (m *MigrateData) DoValueEquationDataQuality() error {
+	tStart := time.Now()
+	tk.Println("Starting ValueEquationDataQuality..")
+	mod := new(ValueEquationDataQuality)
 
+	c, e := m.BaseController.MongoCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+
+	if e != nil {
+		return e
+	}
+
+	defer c.Close()
+
+	result := []tk.M{}
+	e = c.Fetch(&result, 0, false)
+
+	for _, val := range result {
+
+		// _, e := m.InsertOut(val, new(ValueEquationDataQuality))
+		// if e != nil {
+		// 	tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
+		// 	return e
+		// }
+		filter := []*dbox.Filter{}
+		filter = append(filter, dbox.Eq("Dates", GetMgoValue(val, "Period.Dates").(time.Time).UTC()))
+		filter = append(filter, dbox.Eq("Plant", GetMgoValue(val, "Plant")))
+		filter = append(filter, dbox.Eq("Unit", GetMgoValue(val, "Unit")))
+		// tk.M{}.Set("where", dbox.And(filter...)
+		csr, e := m.SqlCtx.Connection.NewQuery().From(mod.TableName()).Where(filter...).Cursor(nil)
+		csr.Close()
+		if e != nil {
+			return e
+		}
+		result := []tk.M{}
+		e = csr.Fetch(&result, 0, false)
+		if e != nil {
+			return e
+		}
+		if len(result) > 0 {
+			Id := result[0].Get("id")
+
+			CapacityPaymentDocuments := val.Get("CapacityPaymentDocuments").([]interface{})
+			for _, x := range CapacityPaymentDocuments {
+				doc := x.(tk.M).Set("VEId", Id)
+				_, e = m.InsertOut(doc, new(VEDQCapacityPaymentDocuments))
+				if e != nil {
+					tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
+					return e
+				}
+			}
+
+			EnergyPaymentDocuments := val.Get("EnergyPaymentDocuments").([]interface{})
+			for _, x := range EnergyPaymentDocuments {
+				doc := x.(tk.M).Set("VEId", Id)
+				_, e = m.InsertOut(doc, new(VEDQEnergyPaymentDocuments))
+				if e != nil {
+					tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
+					return e
+				}
+			}
+
+			StartupPaymentDocuments := val.Get("StartupPaymentDocuments").([]interface{})
+			for _, x := range StartupPaymentDocuments {
+				doc := x.(tk.M).Set("VEId", Id)
+				_, e = m.InsertOut(doc, new(VEDQStartupPaymentDocuments))
+				if e != nil {
+					tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
+					return e
+				}
+			}
+
+			PenaltyDocuments := val.Get("PenaltyDocuments").([]interface{})
+			for _, x := range PenaltyDocuments {
+				doc := x.(tk.M).Set("VEId", Id)
+				_, e = m.InsertOut(doc, new(VEDQPenaltyDocuments))
+				if e != nil {
+					tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
+					return e
+				}
+			}
+
+			PrimaryFuel1stDocuments := val.Get("PrimaryFuel1stDocuments").([]interface{})
+			for _, x := range PrimaryFuel1stDocuments {
+				doc := x.(tk.M).Set("VEId", Id)
+				_, e = m.InsertOut(doc, new(VEDQPrimaryFuel1stDocuments))
+				if e != nil {
+					tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
+					return e
+				}
+			}
+
+			PrimaryFuel2ndDocuments := val.Get("PrimaryFuel2ndDocuments").([]interface{})
+			for _, x := range PrimaryFuel2ndDocuments {
+				doc := x.(tk.M).Set("VEId", Id)
+				_, e = m.InsertOut(doc, new(VEDQPrimaryFuel2ndDocuments))
+				if e != nil {
+					tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
+					return e
+				}
+			}
+
+			BackupFuelDocuments := val.Get("BackupFuelDocuments").([]interface{})
+			for _, x := range BackupFuelDocuments {
+				doc := x.(tk.M).Set("VEId", Id)
+				_, e = m.InsertOut(doc, new(VEDQBackupFuelDocuments))
+				if e != nil {
+					tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
+					return e
+				}
+			}
+
+			MaintenanceCostDocuments := val.Get("MaintenanceCostDocuments")
+			if MaintenanceCostDocuments != nil {
+				for _, x := range MaintenanceCostDocuments.([]interface{}) {
+					doc := x.(tk.M).Set("VEId", Id)
+					_, e = m.InsertOut(doc, new(VEDQMaintenanceCostDocuments))
+					tk.Println(doc)
+					if e != nil {
+						tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
+						return e
+					}
+				}
+			}
+
+			MaintenanceDurationDocuments := val.Get("MaintenanceDurationDocuments")
+			if MaintenanceDurationDocuments != nil {
+				for _, x := range MaintenanceDurationDocuments.([]interface{}) {
+					doc := x.(tk.M).Set("VEId", Id)
+					_, e = m.InsertOut(doc, new(VEDQMaintenanceDurationDocuments))
+					if e != nil {
+						tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
+						return e
+					}
+				}
+			}
+
+		}
+
+	}
+
+	cr, e := m.BaseController.SqlCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+	ctn := cr.Count()
+	cr.Close()
+
+	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
+	return nil
 }
 
 func (m *MigrateData) DoCostSheet() error {
