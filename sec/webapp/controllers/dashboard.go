@@ -89,11 +89,12 @@ func (c *DashboardController) GetData(k *knot.WebContext) interface{} {
 
 	type ReturnValue struct {
 		PlantList         []PlantData
-		PlantCapacityList []PlantCapacity
+		PlantCapacityList []tk.M
 	}
 
 	var (
-		Result ReturnValue
+		Result       ReturnValue
+		query, pipes []tk.M
 	)
 
 	filter := tk.M{}
@@ -113,15 +114,16 @@ func (c *DashboardController) GetData(k *knot.WebContext) interface{} {
 	//selectedPeriod := d.StartDate
 	selectedPeriod := time.Now().Year() - 1
 
-	var filter1 []*dbox.Filter
-
-	filter1 = append(filter1, dbox.Eq("Period.Year", selectedPeriod))
+	query = append(query, tk.M{"Period.Year": tk.M{"$eq": selectedPeriod}})
+	pipes = append(pipes, tk.M{"$match": tk.M{"$and": query}})
+	pipes = append(pipes, tk.M{"$group": tk.M{
+		"_id":           "$PlantDetail.PlantCode",
+		"TotalCapacity": tk.M{"$sum": "$TurbineInfos.InstalledCapacity"},
+	}})
 
 	cursor, _ := c.DB().Connection.NewQuery().
 		From("ValueEquation_Dashboard").
-		Where(filter1...).
-		Group("PlantDetail.PlantCode").
-		Aggr(dbox.AggrSum, 1, "count").
+		Command("pipe", pipes).
 		Cursor(nil)
 
 	defer cursor.Close()
@@ -157,7 +159,7 @@ func (c *DashboardController) GetNumberOfTurbines(k *knot.WebContext) interface{
 		filter = append(filter, dbox.Ne("TurbineInfos.UnitType", nil))
 
 		if len(d.Plant) != 0 {
-			filter = append(filter, dbox.In("Plant", d.Plant))
+			filter = append(filter, dbox.Eq("Plant", d.Plant[0]))
 		}
 
 		result := make([]tk.M, 0)
@@ -186,6 +188,7 @@ func (c *DashboardController) GetPowerVsFuelConsumtion(k *knot.WebContext) inter
 		StartDate string
 		EndDate   string
 		Period    int
+		Plant     []string
 	}{}
 
 	e := k.GetPayload(&d)
@@ -201,9 +204,9 @@ func (c *DashboardController) GetPowerVsFuelConsumtion(k *knot.WebContext) inter
 		selectedPeriod := d.Period
 		filter = append(filter, dbox.Eq("Period.Year", selectedPeriod))
 
-		/*if len(d.Plant) != 0 {
-			filter = append(filter, dbox.In("Plant", d.Plant))
-		}*/
+		if len(d.Plant) > 0 {
+			filter = append(filter, dbox.In("Plant", d.Plant[0]))
+		}
 
 		result := make([]tk.M, 0)
 
@@ -213,10 +216,12 @@ func (c *DashboardController) GetPowerVsFuelConsumtion(k *knot.WebContext) inter
 			"Power":          tk.M{"$sum": "$NetGeneration"},
 		}})
 
+		sort := []string{"_id"}
+
 		cursor, e := c.DB().Connection.NewQuery().
 			Command("pipe", pipes).
 			Where(filter...).
-			Order("1").
+			Order(sort...).
 			From("ValueEquation_Dashboard").
 			Cursor(nil)
 
@@ -250,8 +255,8 @@ func (c *DashboardController) GetNumberOfWorkOrder(k *knot.WebContext) interface
 			filter []*dbox.Filter
 		)
 
-		if len(d.Plant) != 0 {
-			filter = append(filter, dbox.In("Plant", d.Plant))
+		if len(d.Plant) > 0 {
+			filter = append(filter, dbox.Eq("Plant", d.Plant[0]))
 		}
 
 		pipes = append(pipes, tk.M{"$unwind": "$Top10"})
@@ -264,9 +269,10 @@ func (c *DashboardController) GetNumberOfWorkOrder(k *knot.WebContext) interface
 		result := make([]tk.M, 0)
 
 		cursor, e := c.DB().Connection.NewQuery().
+			From("ValueEquation_Dashboard").
 			Command("pipe", pipes).
 			Where(filter...).
-			From("ValueEquation_Dashboard").
+			Order("Plant").
 			Cursor(nil)
 
 		defer cursor.Close()

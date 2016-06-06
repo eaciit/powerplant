@@ -18,6 +18,7 @@ Dashboard.GetNumberOfTurbines  = function(){
   });
 }
 Dashboard.GenNumberOfTurbines = function(dataSource){
+  console.log(dataSource);
   $.each(dataSource, function(index, value){
     dataSource[index].count = value.count;
     $.each(value._id, function(index1, value1){
