@@ -22,7 +22,7 @@ type DataBrowser struct {
 	EquipmentType                          string    `bson:"EquipmentType" json:"EquipmentType"`
 	EquipmentTypeDescription               string    `bson:"EquipmentTypeDescription" json:"EquipmentTypeDescription"`
 	PlantCode                              string    `bson:"Plant.PlantCode" json:"PlantCode"`
-	TInfShortName                          string    `bson:"TurbineInfos." json:"TInfShortName"`
+	TInfShortName                          string    `bson:"TurbineInfos.ShortName" json:"TInfShortName"`
 	TInfManufacturer                       string    `bson:"TurbineInfos.Manufacturer" json:"TInfManufacturer"`
 	TInfModel                              string    `bson:"TurbineInfos.Model" json:"TInfModel"`
 	TInfUnitType                           string    `bson:"TurbineInfos.UnitType" json:"TInfUnitType"`
@@ -34,7 +34,7 @@ type DataBrowser struct {
 	TInfHeatRate                           float64   `bson:"TurbineInfos.HeatRate" json:"TInfHeatRate"`
 	TInfEfficiency                         float64   `bson:"TurbineInfos.Efficiency" json:"TInfEfficiency"`
 	TInfCommisioningDate                   time.Time `bson:"TurbineInfos.CommisioningDate" json:"TInfCommisioningDate"`
-	TInfRetirementPlan                     string    `bson:"TurbineInfos.RetirementPlan" json:"TInfRetirementPlan"`
+	TInfRetirementPlan                     time.Time `bson:"TurbineInfos.RetirementPlan" json:"TInfRetirementPlan"`
 	TInfInstalledMWH                       float64   `bson:"TurbineInfos.InstalledMWH" json:"TInfInstalledMWH"`
 	TInfActualEnergyGeneration             float64   `bson:"TurbineInfos.ActualEnergyGeneration" json:"TInfActualEnergyGeneration"`
 	TInfActualFuelConsumption_GASMMSCF     float64   `bson:"TurbineInfos.ActualFuelConsumption_GASMMSCF" json:"TInfActualFuelConsumption_GASMMSCF"`
@@ -44,11 +44,13 @@ type DataBrowser struct {
 	TInfCapacityFactor                     float64   `bson:"TurbineInfos.CapacityFactor" json:"TInfCapacityFactor"`
 	TInfUpdateEnergyGeneration             float64   `bson:"TurbineInfos.UpdateEnergyGeneration" json:"TInfUpdateEnergyGeneration"`
 	TInfUpdateFuelConsumption              float64   `bson:"TurbineInfos.UpdateFuelConsumption" json:"TInfUpdateFuelConsumption"`
-	/*TurbineVibrations                      []Vibration
-	Maintenances                           []AssetMaintenance
-	FailureNotifications                   []NotificationFailureNoYear
-	MROElements                            []MaintenanceCost
-	Operationals                           []OperationalData*/
+	TurbineVibrations                      []Vibration
+
+	Maintenances         []AssetMaintenance
+	FailureNotifications []NotificationFailureNoYear
+	MROElements          []MaintenanceCost
+
+	Operationals []OperationalData
 	// Plant Plant
 	// Outages [] ---> cannot determine yet from which table
 }
