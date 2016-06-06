@@ -102,8 +102,93 @@ func (m *MigrateData) DoValueEquation() error {
 	return nil
 }
 
-func (m *MigrateData) DoValueEquationDashboard() {
+func (m *MigrateData) DoValueEquationDashboard() error {
+	tStart := time.Now()
+	tk.Println("Starting DoValueEquationDashboard..")
+	mod := new(ValueEquationDashboard)
 
+	c, e := m.BaseController.MongoCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+
+	if e != nil {
+		return e
+	}
+
+	defer c.Close()
+
+	result := []tk.M{}
+	e = c.Fetch(&result, 0, false)
+	for _, val := range result {
+
+		// _, e := m.InsertOut(val, new(ValueEquationDashboard))
+		// if e != nil {
+		// 	tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
+		// 	return e
+		// }
+		filter := []*dbox.Filter{}
+		filter = append(filter, dbox.Eq("Dates", GetMgoValue(val, "Period.Dates").(time.Time).UTC()))
+		filter = append(filter, dbox.Eq("Plant", GetMgoValue(val, "Plant")))
+		filter = append(filter, dbox.Eq("Unit", GetMgoValue(val, "Unit")))
+
+		csr, e := m.SqlCtx.Connection.NewQuery().From(mod.TableName()).Where(filter...).Cursor(nil)
+		csr.Close()
+		if e != nil {
+			return e
+		}
+		result := []tk.M{}
+		e = csr.Fetch(&result, 0, false)
+		if e != nil {
+			return e
+		}
+		if len(result) > 0 {
+			Id := result[0].Get("id")
+
+			// Fuel := val.Get("Fuel").([]interface{})
+			// for _, x := range Fuel {
+			// 	doc := x.(tk.M).Set("VEId", Id)
+			// 	_, e = m.InsertOut(doc, new(VEDFuel))
+			// 	if e != nil {
+			// 		tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
+			// 		return e
+			// 	}
+			// }
+
+			// Detail := val.Get("Detail")
+			// if Detail != nil {
+			// 	for _, x := range Detail.([]interface{}) {
+			// 		doc := x.(tk.M).Set("VEId", Id)
+			// 		_, e = m.InsertOut(doc, new(VEDDetail))
+			// 		if e != nil {
+			// 			tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
+			// 			return e
+			// 		}
+			// 	}
+			// }
+
+			Top10 := val.Get("Top10")
+			if Top10 != nil {
+				for _, x := range Top10.([]interface{}) {
+					doc := x.(tk.M).Set("VEId", Id)
+					for index := 0; index < retry; index++ {
+						_, e = m.InsertOut(doc, new(VEDTop10))
+						if e == nil {
+							break
+						} else {
+							m.SqlCtx.Connection.Connect()
+						}
+					}
+				}
+			}
+
+		}
+
+	}
+
+	cr, e := m.BaseController.SqlCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+	ctn := cr.Count()
+	cr.Close()
+
+	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
+	return nil
 }
 
 func (m *MigrateData) DoValueEquationDataQuality() error {
