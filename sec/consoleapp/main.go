@@ -96,10 +96,11 @@ func main() {
 	// migrate.DoPowerPlantOutages()	//					done
 	// migrate.DoValueEquationDataQuality()	//				done
 	migrate.DoValueEquationDashboard()
+	//migrate.DoPowerPlantOutages()
+	//migrate.DoGenerateVibration()
 	// migrate.DoValueEquation() //							done
 	// migrate.DoPowerPlantOutages() //						done
 	// migrate.DoDataBrowser()
-
 }
 
 func convert(m orm.IModel, base *BaseController) {

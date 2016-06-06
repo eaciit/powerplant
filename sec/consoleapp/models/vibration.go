@@ -16,18 +16,72 @@ type Vibration struct {
 	AlarmLimit    float64 `bson:"AlarmLimit" json:"AlarmLimit"`
 	TripLimit     float64 `bson:"TripLimit" json:"TripLimit"`
 	UnitNo        string  `bson:"UnitNo" json:"UnitNo"`
-	LoadMW        float64 `bson:"LoadMW" json:"LoadMW"`
+	LoadMW        float64 `bson:"Load" json:"Load"`
 	Mvar          float64 `bson:"Mvar" json:"Mvar"`
 	StatorTemp    float64 `bson:"StatorTemp" json:"StatorTemp"`
 	FieldTemp     float64 `bson:"FieldTemp" json:"FieldTemp"`
-	BB1           float64 `bson:"BB1" json:"BB1"`
-	BB2           float64 `bson:"BB2" json:"BB2"`
-	BB3           float64 `bson:"BB3" json:"BB3"`
-	BB4           float64 `bson:"BB4" json:"BB4"`
-	BB5           float64 `bson:"BB5" json:"BB5"`
 	MaxVib        float64 `bson:"MaxVib" json:"MaxVib"`
 	Remark        string  `bson:"Remark" json:"Remark"`
 	Year          int     `bson:"Year" json:"Year"`
+	B1            []Bearing1
+	B2            []Bearing2
+	B3            []Bearing3
+	B4            []Bearing4
+	B5            []Bearing5
+}
+
+type BearingDetail struct {
+	sync.RWMutex
+	orm.ModelBase `bson:"-" json:"-"`
+	// Id            int64   `bson:"Id" json:"Id"`
+	VibrationId string  `bson:"VibrationId" json:"VibrationId"`
+	Type        string  `bson:"Type" json:"Type"`
+	Value       float64 `bson:"Value" json:"Value"`
+	Name        string  `bson:"Name" json:"Name"`
+}
+
+func (m *BearingDetail) TableName() string {
+	return "BearingDetail"
+}
+
+type Bearing1 struct {
+	sync.RWMutex
+	orm.ModelBase `bson:"-" json:"-"`
+	// Id              int64   `bson:"Id" json:"Id"`
+	Value string `bson:"Value" json:"Value"`
+	Name  string `bson:"Name" json:"Name"`
+}
+
+type Bearing2 struct {
+	sync.RWMutex
+	orm.ModelBase `bson:"-" json:"-"`
+	// Id              int64   `bson:"Id" json:"Id"`
+	Value string `bson:"Value" json:"Value"`
+	Name  string `bson:"Name" json:"Name"`
+}
+
+type Bearing3 struct {
+	sync.RWMutex
+	orm.ModelBase `bson:"-" json:"-"`
+	// Id              int64   `bson:"Id" json:"Id"`
+	Value string `bson:"Value" json:"Value"`
+	Name  string `bson:"Name" json:"Name"`
+}
+
+type Bearing4 struct {
+	sync.RWMutex
+	orm.ModelBase `bson:"-" json:"-"`
+	// Id              int64   `bson:"Id" json:"Id"`
+	Value string `bson:"Value" json:"Value"`
+	Name  string `bson:"Name" json:"Name"`
+}
+
+type Bearing5 struct {
+	sync.RWMutex
+	orm.ModelBase `bson:"-" json:"-"`
+	// Id              int64   `bson:"Id" json:"Id"`
+	Value string `bson:"Value" json:"Value"`
+	Name  string `bson:"Name" json:"Name"`
 }
 
 func (m *Vibration) TableName() string {
