@@ -8,6 +8,7 @@ import (
 	tk "github.com/eaciit/toolkit"
 	"gopkg.in/mgo.v2/bson"
 	"reflect"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -293,6 +294,69 @@ func (m *MigrateData) DoGeneralInfo() error {
 	return nil
 }
 
+func (m *MigrateData) DoGenerateVibration() error {
+	tStart := time.Now()
+	tk.Println("Starting DoGenerateVibration..")
+	mod := new(Vibration)
+
+	c, e := m.BaseController.MongoCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+
+	if e != nil {
+		return e
+	}
+
+	defer c.Close()
+
+	result := []tk.M{}
+	e = c.Fetch(&result, 0, false)
+
+	for _, val := range result {
+		for {
+			_, e := m.InsertOut(val, new(Vibration))
+			if e == nil {
+				break
+			} else {
+				m.SqlCtx.Connection.Connect()
+			}
+		}
+
+		id := val.GetString("_id")
+
+		for idx := 0; idx < 6; idx++ {
+			idConv := strconv.Itoa(idx)
+
+			bearingString := "Bearing" + idConv
+
+			bear := val.Get(bearingString)
+			if bear != nil {
+				bear1 := bear.(interface{}).([]interface{})
+
+				for _, bearing := range bear1 {
+					bea := bearing.(tk.M)
+
+					bea.Set("VibrationId", id)
+					bea.Set("Type", bearingString)
+					for {
+						_, e = m.InsertOut(bea, new(BearingDetail))
+						if e == nil {
+							break
+						} else {
+							m.SqlCtx.Connection.Connect()
+						}
+					}
+				}
+			}
+		}
+	}
+
+	cr, e := m.BaseController.SqlCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+	ctn := cr.Count()
+	cr.Close()
+
+	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
+	return nil
+}
+
 func (m *MigrateData) InsertOut(in tk.M, mod orm.IModel) (out int64, e error) {
 	muinsert := &sync.Mutex{}
 
@@ -333,5 +397,5 @@ func (m *MigrateData) InsertOut(in tk.M, mod orm.IModel) (out int64, e error) {
 	out, e = m.BaseController.SqlCtx.InsertOut(mod)
 	muinsert.Unlock()
 
-	return
+	return out, e
 }
