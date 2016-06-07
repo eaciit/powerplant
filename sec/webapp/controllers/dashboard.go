@@ -216,12 +216,13 @@ func (c *DashboardController) GetPowerVsFuelConsumtion(k *knot.WebContext) inter
 			"Power":          tk.M{"$sum": "$NetGeneration"},
 		}})
 
-		sort := []string{"_id"}
+		pipes = append(pipes, tk.M{"$sort": tk.M{
+			"_id": 1,
+		}})
 
 		cursor, e := c.DB().Connection.NewQuery().
 			Command("pipe", pipes).
 			Where(filter...).
-			Order(sort...).
 			From("ValueEquation_Dashboard").
 			Cursor(nil)
 
