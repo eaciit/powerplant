@@ -6,6 +6,9 @@
 # Folders
 _obj
 _test
+sec/consoleapp/debug
+sec/consoleapp/conf
+sec/webapp/conf
 
 # Architecture specific extensions/prefixes
 *.[568vq]

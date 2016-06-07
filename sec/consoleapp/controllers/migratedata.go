@@ -1,17 +1,18 @@
 package controllers
 
 import (
-	"github.com/eaciit/dbox"
-	_ "github.com/eaciit/dbox/dbc/mongo"
-	_ "github.com/eaciit/dbox/dbc/mssql"
-	"github.com/eaciit/orm"
-	. "github.com/eaciit/powerplant/sec/consoleapp/models"
-	tk "github.com/eaciit/toolkit"
-	"gopkg.in/mgo.v2/bson"
 	"reflect"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/eaciit/dbox"
+	_ "github.com/eaciit/dbox/dbc/mongo"
+	_ "github.com/eaciit/dbox/dbc/mssql"
+	"github.com/eaciit/orm"
+	. "github.com/eaciit/powerplant/sec/library/models"
+	tk "github.com/eaciit/toolkit"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type MigrateData struct {
@@ -628,6 +629,39 @@ func (m *MigrateData) DoGenerateVibration() error {
 				}
 			}
 		}
+	}
+
+	cr, e := m.BaseController.SqlCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+	ctn := cr.Count()
+	cr.Close()
+
+	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
+	return nil
+}
+
+func (m *MigrateData) GenerateMasterUnit() error {
+	tStart := time.Now()
+	tk.Println("Starting GenerateMasterUnit..")
+	mod := new(MasterUnit)
+
+	c, e := m.BaseController.MongoCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+	defer c.Close()
+	if e != nil {
+		return e
+	}
+
+	result := []tk.M{}
+	e = c.Fetch(&result, 0, false)
+
+	for _, val := range result {
+		unit := tk.M{}
+		unit.Set("Unit", val["_id"])
+
+		_, e := m.InsertOut(unit, new(MasterUnit))
+		if e != nil {
+			tk.Println(e.Error())
+		}
+
 	}
 
 	cr, e := m.BaseController.SqlCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)

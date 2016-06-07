@@ -7,7 +7,7 @@ import (
 	_ "github.com/eaciit/dbox/dbc/mssql"
 	"github.com/eaciit/orm"
 	. "github.com/eaciit/powerplant/sec/consoleapp/controllers"
-	. "github.com/eaciit/powerplant/sec/consoleapp/models"
+	// . "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
 )
 
@@ -37,7 +37,6 @@ func main() {
 	defer base.MongoCtx.Close()
 	defer base.SqlCtx.Close()
 
-	// convert(new(MasterUnitNoTurbineParent), base) //		done
 	// convert(new(MasterFailureCode), base) //				done
 	// convert(new(WOList), base) // 						done
 	// convert(new(AnomaliesWOList), base) //				done
@@ -90,17 +89,21 @@ func main() {
 
 	migrate := new(MigrateData)
 	migrate.BaseController = base
+	migrate.GenerateMasterUnit()
 
 	// migrate.DoCostSheet() // 							done
 	// migrate.DoGeneralInfo() // 							done
 	// migrate.DoPowerPlantOutages()	//					done
 	// migrate.DoValueEquationDataQuality()	//				done
-	migrate.DoValueEquationDashboard()
-	//migrate.DoPowerPlantOutages()
-	//migrate.DoGenerateVibration()
+
+	// migrate.DoScenarioSimulation() 		//				done
+	// migrate.DoValueEquationDashboard()					done
+	// migrate.DoPowerPlantOutages() // 					done
+	// migrate.DoGenerateVibration()						done
+
 	// migrate.DoValueEquation() //							done
 	// migrate.DoPowerPlantOutages() //						done
-	// migrate.DoDataBrowser()
+	// migrate.DoDataBrowser()								done
 }
 
 func convert(m orm.IModel, base *BaseController) {
