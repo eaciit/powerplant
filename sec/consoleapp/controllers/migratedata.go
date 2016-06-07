@@ -1,17 +1,18 @@
 package controllers
 
 import (
-	"github.com/eaciit/dbox"
-	_ "github.com/eaciit/dbox/dbc/mongo"
-	_ "github.com/eaciit/dbox/dbc/mssql"
-	"github.com/eaciit/orm"
-	. "github.com/eaciit/powerplant/sec/consoleapp/models"
-	tk "github.com/eaciit/toolkit"
-	"gopkg.in/mgo.v2/bson"
 	"reflect"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/eaciit/dbox"
+	_ "github.com/eaciit/dbox/dbc/mongo"
+	_ "github.com/eaciit/dbox/dbc/mssql"
+	"github.com/eaciit/orm"
+	. "github.com/eaciit/powerplant/sec/library/models"
+	tk "github.com/eaciit/toolkit"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type MigrateData struct {
