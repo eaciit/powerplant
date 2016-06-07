@@ -23,13 +23,3 @@ type PlantData struct {
 func (c *PlantData) TableName() string {
 	return "PowerPlantCoordinates"
 }
-
-type PlantCapacity struct {
-	ModelBase     `bson:"base"`
-	PlantCode     string  `bson:"_id"`
-	TotalCapacity float64 `bson:"TotalCapacity"`
-}
-
-func (c *PlantCapacity) TableName() string {
-	return "DataBrowser"
-}
