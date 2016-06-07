@@ -6,7 +6,7 @@ import (
 
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/orm"
-	. "github.com/eaciit/powerplant/sec/consoleapp/models"
+	. "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
 	// "math"
 	"os"
