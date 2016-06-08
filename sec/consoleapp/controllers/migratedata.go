@@ -639,6 +639,107 @@ func (m *MigrateData) DoGenerateVibration() error {
 	return nil
 }
 
+func (m *MigrateData) DoGenerateDataBrowserSelectedFields() error {
+	tStart := time.Now()
+	tk.Println("Starting DoGenerateDataBrowserSelectedFields..")
+	mod := new(DataBrowserSelectedFields)
+
+	c, e := m.BaseController.MongoCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+
+	if e != nil {
+		return e
+	}
+
+	defer c.Close()
+
+	result := []tk.M{}
+	e = c.Fetch(&result, 0, false)
+
+	for _, val := range result {
+		selectedFields := val.Get("SelectedFields")
+		if nil != selectedFields {
+			fields := selectedFields.(interface{}).([]interface{})
+			for _, field := range fields {
+				for {
+					val.Set("SelectedFields", field)
+					_, e := m.InsertOut(val, new(DataBrowserSelectedFields))
+
+					if e == nil {
+						break
+					} else {
+						m.SqlCtx.Connection.Connect()
+					}
+				}
+			}
+		}
+	}
+
+	cr, e := m.BaseController.SqlCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+	ctn := cr.Count()
+	cr.Close()
+
+	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
+	return nil
+}
+
+func (m *MigrateData) DoGenerateDataBrowserFields() error {
+	tStart := time.Now()
+	tk.Println("Starting DoGenerateDataBrowserFields..")
+	mod := new(DataBrowserFields)
+
+	c, e := m.BaseController.MongoCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+
+	if e != nil {
+		return e
+	}
+
+	defer c.Close()
+
+	result := []tk.M{}
+	e = c.Fetch(&result, 0, false)
+
+	/*type Tmp struct {
+		alias string
+		field string
+		tipe  string
+	}*/
+
+	for _, val := range result {
+		selectedFields := val.Get("Fields")
+		if nil != selectedFields {
+			fields := selectedFields.(interface{}).([]interface{})
+			for _, field := range fields {
+				for {
+					v := reflect.ValueOf(field)
+					x := v.Interface()
+					details := x.(tk.M)
+
+					newVal := tk.M{}
+					newVal.Set("FieldsReference", val.Get("_id"))
+					newVal.Set("Alias", details["alias"])
+					newVal.Set("Field", details["field"])
+					newVal.Set("Type", details["tipe"])
+
+					_, e := m.InsertOut(newVal, new(DataBrowserFields))
+					if e == nil {
+						break
+					} else {
+						tk.Println(e.Error())
+						m.SqlCtx.Connection.Connect()
+					}
+				}
+			}
+		}
+	}
+
+	cr, e := m.BaseController.SqlCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+	ctn := cr.Count()
+	cr.Close()
+
+	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
+	return nil
+}
+
 func (m *MigrateData) InsertOut(in tk.M, mod orm.IModel) (out int64, e error) {
 	muinsert := &sync.Mutex{}
 

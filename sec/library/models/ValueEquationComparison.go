@@ -1,6 +1,6 @@
 package models
 
-/*import (
+import (
 	"strconv"
 	"time"
 
@@ -97,4 +97,3 @@ func (m *ValueEquationComparison) GetUnitList(ctx *orm.DataContext, k *knot.WebC
 	result.Set("UnitData", UnitData)
 	return result, e
 }
-*/

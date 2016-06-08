@@ -1,9 +1,10 @@
 package models
 
-/*import (
+import (
+	"sync"
+
 	"github.com/eaciit/orm"
 	tk "github.com/eaciit/toolkit"
-	"gopkg.in/mgo.v2/bson"
 )
 
 type Master struct {
@@ -15,23 +16,17 @@ func (m *Master) GetMasterPlant() tk.M {
 
 // MasterUnitPlant
 type MasterUnitPlant struct {
+	sync.RWMutex
 	orm.ModelBase `bson:"-",json:"-"`
-	Id            bson.ObjectId ` bson:"_id" , json:"_id" `
-	Plant         string
-	Unit          string
+	Plant         string `bson:"Plant",json:"Plant"`
+	Unit          string `bson:"Unit",json:"Unit"`
 }
 
 func NewMasterUnitPlant() *MasterUnitPlant {
 	m := new(MasterUnitPlant)
-	m.Id = bson.NewObjectId()
 	return m
-}
-
-func (e *MasterUnitPlant) RecordID() interface{} {
-	return e.Id
 }
 
 func (m *MasterUnitPlant) TableName() string {
 	return "MasterUnitPlant"
 }
-*/

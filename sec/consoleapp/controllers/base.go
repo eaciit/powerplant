@@ -255,6 +255,7 @@ func (b *BaseController) InsertBulk(result []tk.M, m orm.IModel, wg *sync.WaitGr
 				tk.Printf("saved: %v data(s)\n", idx)
 				break
 			} else {
+				// tk.Printf("%v \n", e.Error())
 				b.SqlCtx.Connection.Connect()
 			}
 		}
@@ -381,6 +382,10 @@ func getNewPointer(m orm.IModel) orm.IModel {
 		return new(SyntheticPM)
 	case "Vibration":
 		return new(Vibration)
+	case "MasterActivityType":
+		return new(MasterActivityType)
+	case "MasterUnitPlant":
+		return new(MasterUnitPlant)
 	default:
 		return m
 	}

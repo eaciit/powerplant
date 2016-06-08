@@ -3,7 +3,8 @@ package controllers
 import (
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/knot/knot.v1"
-	. "github.com/eaciit/powerplant/sec/webapp/models"
+	//. "github.com/eaciit/powerplant/sec/webapp/models"
+	. "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
 )
 
@@ -15,8 +16,8 @@ func (c *HypothesisController) Initiate(k *knot.WebContext) interface{} {
 	k.Config.OutputType = knot.OutputJson
 
 	type ReturnValue struct {
-		PlantList        []PlantModel
-		PlantListH2      []PlantModel
+		PlantList        []MasterPlant
+		PlantListH2      []MasterPlant
 		EQTypeList       []MasterEquipmentType
 		MROElementList   []MasterMROElement
 		OrderTypeList    []MasterOrderType
@@ -27,16 +28,27 @@ func (c *HypothesisController) Initiate(k *knot.WebContext) interface{} {
 
 	var (
 		Result ReturnValue
+		e      error
 	)
+
+	r := new(tk.Result)
 
 	d := struct {
 		selectedPlant []string
 	}{}
 
-	e := k.GetPayload(&d)
+	e = k.GetPayload(&d)
 
-	curr, _ := c.DB().Find(&PlantModel{}, nil)
+	if e != nil {
+		r.Data = Result
+		r.Message = e.Error()
+		return r
+	}
+
+	curr, _ := c.DB().Find(&MasterPlant{}, nil)
+
 	defer curr.Close()
+
 	e = curr.Fetch(&Result.PlantList, 0, false)
 
 	filter := tk.M{}
@@ -44,7 +56,7 @@ func (c *HypothesisController) Initiate(k *knot.WebContext) interface{} {
 	filter.Set("where", dbox.Nin("Plant", "Qurayyah CC", "PP9"))
 
 	curr = nil
-	curr, e = c.DB().Find(&PlantModel{}, filter)
+	curr, e = c.DB().Find(&MasterPlant{}, filter)
 	e = curr.Fetch(&Result.PlantListH2, 0, false)
 
 	curr = nil
@@ -80,8 +92,14 @@ func (c *HypothesisController) Initiate(k *knot.WebContext) interface{} {
 	}})
 
 	curr = nil
+	/*curr, e = c.DB().Connection.NewQuery().
+	From("MasterUnitPlant").
+	Where(filter1...).
+	Group("Unit").
+	Cursor(nil)*/
+
 	curr, e = c.DB().Connection.NewQuery().
-		From("MasterUnitPlant").
+		From(new(MasterUnitPlant).TableName()).
 		Where(filter1...).
 		Group("Unit").
 		Cursor(nil)
@@ -89,5 +107,9 @@ func (c *HypothesisController) Initiate(k *knot.WebContext) interface{} {
 	e = curr.Fetch(&Result.UnitList, 0, true)
 	_ = e
 
-	return ResultInfo(Result, e)
+	r.Data = Result
+	r.Message = e.Error()
+
+	// return ResultInfo(Result, e)
+	return r
 }

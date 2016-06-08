@@ -8,6 +8,7 @@ import (
 
 	"github.com/eaciit/dbox"
 	_ "github.com/eaciit/dbox/dbc/mongo"
+	_ "github.com/eaciit/dbox/dbc/mssql"
 	"github.com/eaciit/knot/knot.v1"
 	"github.com/eaciit/orm"
 	. "github.com/eaciit/powerplant/sec/webapp/controllers"

@@ -1,12 +1,12 @@
 package models
 
-/*import (
+import (
 	"github.com/eaciit/orm"
 )
 
 type MasterActivityType struct {
 	orm.ModelBase `bson:"-",json:"-"`
-	Id            string ` bson:"_id" , json:"_id" `
+	Id            string ` bson:"_id" , json:"Id" `
 }
 
 func (e *MasterActivityType) RecordID() interface{} {
@@ -16,4 +16,3 @@ func (e *MasterActivityType) RecordID() interface{} {
 func (m *MasterActivityType) TableName() string {
 	return "MasterActivityType"
 }
-*/

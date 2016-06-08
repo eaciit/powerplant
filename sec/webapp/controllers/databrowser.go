@@ -6,10 +6,11 @@ import (
 	tk "github.com/eaciit/toolkit"
 	//"gopkg.in/mgo.v2/bson"
 	"fmt"
-	"github.com/tealeg/xlsx"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/tealeg/xlsx"
 )
 
 type DataBrowserController struct {
@@ -21,9 +22,8 @@ type Result struct {
 	HypothesisCategory string
 	HypothesisId       string
 	PageTitle          string
-
-	DBFields       interface{}
-	SelectedFields interface{}
+	DBFields           interface{}
+	SelectedFields     interface{}
 }
 
 func (this *DataBrowserController) Default(k *knot.WebContext) interface{} {
@@ -38,19 +38,33 @@ func (this *DataBrowserController) Default(k *knot.WebContext) interface{} {
 
 	result1 := &Result{}
 
+	tk.Println(len(result))
+
 	if len(result) == 0 {
 		result1.DBFields = ""
 		result1.SelectedFields = ""
 	} else {
-
 		DBFields := make([]tk.M, 0)
 
 		cursor = nil
-		cursor, _ = this.DB().Connection.NewQuery().From("DataBrowserFields").Where(dbox.Eq("_id", result[0].Get("FieldsReference"))).Cursor(nil)
-		cursor.Fetch(&DBFields, 0, true)
+		cursor, _ = this.DB().Connection.NewQuery().From("DataBrowserFields").Where(dbox.Eq("FieldsReference", result[0].GetString("FieldsReference"))).Cursor(nil)
 
-		result1.DBFields = DBFields[0].Get("Fields")
-		result1.SelectedFields = result[0].Get("SelectedFields")
+		cursor.Fetch(&DBFields, 0, true)
+		defer cursor.Close()
+
+		var fields []string
+		var selectedFields []string
+
+		for _, str := range DBFields {
+			fields = append(fields, str.GetString("Field"))
+		}
+
+		for _, str := range result {
+			selectedFields = append(selectedFields, str.GetString("SelectedFields"))
+		}
+
+		result1.DBFields = fields
+		result1.SelectedFields = selectedFields
 	}
 
 	result1.PageId = "DataBrowser"
