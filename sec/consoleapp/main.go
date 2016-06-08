@@ -91,14 +91,18 @@ func main() {
 
 	/*migrate := new(MigrateData)
 	migrate.BaseController = base
+	migrate.GenerateMasterUnit()
 
 	// migrate.DoCostSheet() // 							done
 	// migrate.DoGeneralInfo() // 							done
 	// migrate.DoPowerPlantOutages()	//					done
 	// migrate.DoValueEquationDataQuality()	//				done
+
+	// migrate.DoScenarioSimulation() 		//				done
 	// migrate.DoValueEquationDashboard()					done
 	// migrate.DoPowerPlantOutages() // 					done
 	// migrate.DoGenerateVibration()						done
+
 	// migrate.DoValueEquation() //							done
 	// migrate.DoPowerPlantOutages() //						done
 	// migrate.DoDataBrowser()								done
