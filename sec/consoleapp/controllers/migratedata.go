@@ -737,6 +737,111 @@ func (m *MigrateData) DoScenarioSimulation() error {
 	return nil
 }
 
+func (m *MigrateData) DoGenerateAssetClass() error {
+	tStart := time.Now()
+	tk.Println("Starting DoGenerateAssetClass..")
+	mod := new(SampleAssetClass)
+
+	c, e := m.BaseController.MongoCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+
+	if e != nil {
+		return e
+	}
+
+	defer c.Close()
+
+	result := []tk.M{}
+	e = c.Fetch(&result, 0, false)
+
+	for _, val := range result {
+		for {
+			_, e := m.InsertOut(val, new(SampleAssetClass))
+			if e == nil {
+				break
+			} else {
+				m.SqlCtx.Connection.Connect()
+			}
+		}
+	}
+
+	cr, e := m.BaseController.SqlCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+	ctn := cr.Count()
+	cr.Close()
+
+	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
+	return nil
+}
+
+func (m *MigrateData) DoGenerateAssetType() error {
+	tStart := time.Now()
+	tk.Println("Starting DoGenerateAssetType..")
+	mod := new(SampleAssetType)
+
+	c, e := m.BaseController.MongoCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+
+	if e != nil {
+		return e
+	}
+
+	defer c.Close()
+
+	result := []tk.M{}
+	e = c.Fetch(&result, 0, false)
+
+	for _, val := range result {
+		for {
+			_, e := m.InsertOut(val, new(SampleAssetType))
+			if e == nil {
+				break
+			} else {
+				m.SqlCtx.Connection.Connect()
+			}
+		}
+	}
+
+	cr, e := m.BaseController.SqlCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+	ctn := cr.Count()
+	cr.Close()
+
+	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
+	return nil
+}
+
+func (m *MigrateData) DoGenerateAssetLevel() error {
+	tStart := time.Now()
+	tk.Println("Starting DoGenerateAssetLevel..")
+	mod := new(SampleAssetLevel)
+
+	c, e := m.BaseController.MongoCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+
+	if e != nil {
+		return e
+	}
+
+	defer c.Close()
+
+	result := []tk.M{}
+	e = c.Fetch(&result, 0, false)
+
+	for _, val := range result {
+		for {
+			_, e := m.InsertOut(val, new(SampleAssetLevel))
+			if e == nil {
+				break
+			} else {
+				m.SqlCtx.Connection.Connect()
+			}
+		}
+	}
+
+	cr, e := m.BaseController.SqlCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+	ctn := cr.Count()
+	cr.Close()
+
+	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
+	return nil
+}
+
 func (m *MigrateData) InsertOut(in tk.M, mod orm.IModel) (out int64, e error) {
 	muinsert := &sync.Mutex{}
 

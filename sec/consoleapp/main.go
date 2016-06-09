@@ -7,7 +7,7 @@ import (
 	_ "github.com/eaciit/dbox/dbc/mssql"
 	"github.com/eaciit/orm"
 	. "github.com/eaciit/powerplant/sec/consoleapp/controllers"
-	. "github.com/eaciit/powerplant/sec/consoleapp/models"
+	//. "github.com/eaciit/powerplant/sec/consoleapp/models"
 	tk "github.com/eaciit/toolkit"
 )
 
@@ -95,12 +95,15 @@ func main() {
 	// migrate.DoGeneralInfo() // 							done
 	// migrate.DoPowerPlantOutages()	//					done
 	// migrate.DoValueEquationDataQuality()	//				done
-	migrate.DoValueEquationDashboard()
+	//migrate.DoValueEquationDashboard()
 	//migrate.DoPowerPlantOutages()
-	//migrate.DoGenerateVibration()
+	//migrate.DoGenerateVibration()							done
 	// migrate.DoValueEquation() //							done
 	// migrate.DoPowerPlantOutages() //						done
 	// migrate.DoDataBrowser()
+	//migrate.DoGenerateAssetClass()
+	//migrate.DoGenerateAssetType()
+	//migrate.DoGenerateAssetLevel()
 }
 
 func convert(m orm.IModel, base *BaseController) {
