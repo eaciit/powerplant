@@ -11,17 +11,18 @@ type DataBrowser struct {
 	sync.RWMutex
 	orm.ModelBase `bson:"-" json:"-"`
 	// Id int64 `bson:"Id" json:"Id"`
-	PeriodYear                             int       `bson:"Period.Year" json:"PeriodYear"`
-	FunctionalLocation                     string    `bson:"FunctionalLocation" json:"FunctionalLocation"`
-	FLDescription                          string    `bson:"FLDescription" json:"FLDescription"`
-	IsTurbine                              bool      `bson:"IsTurbine" json:"IsTurbine"`
-	IsSystem                               bool      `bson:"IsSystem" json:"IsSystem"`
-	TurbineParent                          string    `bson:"TurbineParent" json:"TurbineParent"`
-	SystemParent                           string    `bson:"SystemParent" json:"SystemParent"`
-	AssetType                              string    `bson:"AssetType" json:"AssetType"`
-	EquipmentType                          string    `bson:"EquipmentType" json:"EquipmentType"`
-	EquipmentTypeDescription               string    `bson:"EquipmentTypeDescription" json:"EquipmentTypeDescription"`
-	PlantCode                              string    `bson:"Plant.PlantCode" json:"PlantCode"`
+	PeriodYear                             int    `bson:"Period.Year" json:"PeriodYear"`
+	FunctionalLocation                     string `bson:"FunctionalLocation" json:"FunctionalLocation"`
+	FLDescription                          string `bson:"FLDescription" json:"FLDescription"`
+	IsTurbine                              bool   `bson:"IsTurbine" json:"IsTurbine"`
+	IsSystem                               bool   `bson:"IsSystem" json:"IsSystem"`
+	TurbineParent                          string `bson:"TurbineParent" json:"TurbineParent"`
+	SystemParent                           string `bson:"SystemParent" json:"SystemParent"`
+	AssetType                              string `bson:"AssetType" json:"AssetType"`
+	EquipmentType                          string `bson:"EquipmentType" json:"EquipmentType"`
+	EquipmentTypeDescription               string `bson:"EquipmentTypeDescription" json:"EquipmentTypeDescription"`
+	PlantCode                              string `bson:"Plant.PlantCode" json:"PlantCode"`
+	Plant                                  PowerPlantCoordinates
 	TInfShortName                          string    `bson:"TurbineInfos.ShortName" json:"TInfShortName"`
 	TInfManufacturer                       string    `bson:"TurbineInfos.Manufacturer" json:"TInfManufacturer"`
 	TInfModel                              string    `bson:"TurbineInfos.Model" json:"TInfModel"`

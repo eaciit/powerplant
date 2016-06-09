@@ -38,7 +38,7 @@ func main() {
 	defer base.SqlCtx.Close()
 
 	// convert(new(MasterFailureCode), base) //				done
-	// convert(new(WOList), base) // 						done
+	convert(new(WOList), base) // 						done
 	// convert(new(AnomaliesWOList), base) //				done
 	// convert(new(Availability), base) //					done
 	// convert(new(Consolidated), base) // 					done

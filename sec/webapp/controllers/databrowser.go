@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/knot/knot.v1"
+	. "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
 	//"gopkg.in/mgo.v2/bson"
 	"fmt"
@@ -32,13 +33,11 @@ func (this *DataBrowserController) Default(k *knot.WebContext) interface{} {
 	k.Config.OutputType = knot.OutputTemplate
 
 	result := make([]tk.M, 0)
-	cursor, _ := this.DB().Connection.NewQuery().From("DataBrowserSelectedFields").Where(dbox.Eq("Hypothesis", "H3")).Cursor(nil)
+	cursor, _ := this.DB().Connection.NewQuery().From(new(DataBrowserSelectedFields).TableName()).Where(dbox.Eq("Hypothesis", "H3")).Cursor(nil)
 
 	_ = cursor.Fetch(&result, 0, true)
 
 	result1 := &Result{}
-
-	tk.Println(len(result))
 
 	if len(result) == 0 {
 		result1.DBFields = ""
@@ -47,23 +46,19 @@ func (this *DataBrowserController) Default(k *knot.WebContext) interface{} {
 		DBFields := make([]tk.M, 0)
 
 		cursor = nil
-		cursor, _ = this.DB().Connection.NewQuery().From("DataBrowserFields").Where(dbox.Eq("FieldsReference", result[0].GetString("FieldsReference"))).Cursor(nil)
+		cursor, _ = this.DB().Connection.NewQuery().From(new(DataBrowserFields).TableName()).Where(dbox.Eq("FieldsReference", result[0].GetString("fieldsreference"))).Cursor(nil)
 
 		cursor.Fetch(&DBFields, 0, true)
+
 		defer cursor.Close()
 
-		var fields []string
 		var selectedFields []string
 
-		for _, str := range DBFields {
-			fields = append(fields, str.GetString("Field"))
-		}
-
 		for _, str := range result {
-			selectedFields = append(selectedFields, str.GetString("SelectedFields"))
+			selectedFields = append(selectedFields, str.GetString("selectedfields"))
 		}
 
-		result1.DBFields = fields
+		result1.DBFields = DBFields
 		result1.SelectedFields = selectedFields
 	}
 
@@ -116,42 +111,74 @@ func (this *DataBrowserController) GetGridDb(k *knot.WebContext) interface{} {
 		pbuildgrid := tk.M{}
 		pbuild := tk.M{}
 
+		var (
+			filter      []*dbox.Filter
+			filterPlant []*dbox.Filter
+			plantCodes  []string
+		)
+
 		if d.Period == "" {
-			query = append(query, tk.M{"Period.Year": tk.M{"$eq": 2014}})
+			// query = append(query, tk.M{"Period.Year": tk.M{"$eq": 2014}})
+
+			filter = append(filter, dbox.Eq("PeriodYear", "2014"))
 		} else {
 			selectedPeriod, _ := strconv.Atoi(d.Period)
-			query = append(query, tk.M{"Period.Year": tk.M{"$eq": selectedPeriod}})
+			// query = append(query, tk.M{"Period.Year": tk.M{"$eq": selectedPeriod}})
+
+			filter = append(filter, dbox.Eq("PeriodYear", selectedPeriod))
 		}
 
 		if len(d.EQType) > 0 {
-			query = append(query, tk.M{"EquipmentType": tk.M{"$in": d.EQType}})
+			// query = append(query, tk.M{"EquipmentType": tk.M{"$in": d.EQType}})
+
+			filter = append(filter, dbox.In("EquipmentType", d.EQType))
 		} else {
-			query = append(query, tk.M{"EquipmentType": tk.M{"$ne": "xxx"}})
+			// query = append(query, tk.M{"EquipmentType": tk.M{"$ne": "xxx"}})
+
+			filter = append(filter, dbox.Ne("EquipmentType", "xxx"))
 		}
 
 		if len(d.Plant) > 0 {
-			query = append(query, tk.M{"Plant.PlantName": tk.M{"$in": d.Plant}})
+			// query = append(query, tk.M{"Plant.PlantName": tk.M{"$in": d.Plant}})
+
+			filterPlant = append(filterPlant, dbox.In("PlantName", d.Plant))
 		} else {
-			query = append(query, tk.M{"Plant.PlantName": tk.M{"$ne": ""}})
+			// query = append(query, tk.M{"Plant.PlantName": tk.M{"$ne": ""}})
+
+			filterPlant = append(filterPlant, dbox.Ne("PlantName", ""))
 		}
 
-		if hypoid == "H2" {
+		curr, e := this.DB().Connection.NewQuery().
+			Select("PlantCode").
+			From(new(PowerPlantCoordinates).TableName()).
+			Where(filterPlant...).
+			Cursor(nil)
+		defer curr.Close()
+		e = curr.Fetch(&plantCodes, 0, true)
+
+		if len(plantCodes) > 0 {
+			filter = append(filter, dbox.In("PlantCode", plantCodes))
+		}
+
+		/*if hypoid == "H2" {
 			query = append(query, tk.M{"Maintenance": tk.M{"$ne": nil}})
 			query = append(query, tk.M{"AssetType": tk.M{"$eq": "Steam"}})
-		} else if hypoid == "H3" || hypoid == "H6" || hypoid == "H15" || hypoid == "H18" || hypoid == "H1" || hypoid == "H7" || hypoid == "H4" {
-			query = append(query, tk.M{"Maintenance": tk.M{"$ne": nil}})
-		} else if hypoid == "H8" || hypoid == "H10" {
+		} else if hypoid == "H3" || hypoid == "H6" || hypoid == "H15" || hypoid == "H18" || hypoid == "H1" || hypoid == "H7" || hypoid == "H4" {*/
+		query = append(query, tk.M{"Maintenance": tk.M{"$ne": nil}})
+		/*} else if hypoid == "H8" || hypoid == "H10" {
 			query = append(query, tk.M{"MROElement": tk.M{"$ne": nil}})
 		} else if hypoid == "H17" {
 			query = append(query, tk.M{"FailureNotification": tk.M{"$ne": nil}})
 		} else if hypoid == "H16" {
 			query = append(query, tk.M{"TurbineVibrations": tk.M{"$ne": nil}})
-		}
+		}*/
 
 		if query != nil && len(query) > 0 {
 			pipesgrid = append(pipesgrid, tk.M{"$match": tk.M{"$and": query}})
 			pipes = append(pipes, tk.M{"$match": tk.M{"$and": query}})
 			pipescount = append(pipescount, tk.M{"$match": tk.M{"$and": query}})
+
+			filter = dbox.And(filter...)
 		}
 
 		fields := d.Fields
@@ -166,22 +193,22 @@ func (this *DataBrowserController) GetGridDb(k *knot.WebContext) interface{} {
 			pbuild.Set(strings.Replace(fi, ".", "", -1)+"avg", tk.M{"$avg": "$" + fi})
 		}
 
-		if hypoid == "H2" || hypoid == "H3" || hypoid == "H6" || hypoid == "H15" || hypoid == "H18" || hypoid == "H1" || hypoid == "H4" {
+		/*if hypoid == "H2" || hypoid == "H3" || hypoid == "H6" || hypoid == "H15" || hypoid == "H18" || hypoid == "H1" || hypoid == "H4" {*/
 
-			pipesgrid = append(pipesgrid, tk.M{"$unwind": "$Maintenance"})
+		pipesgrid = append(pipesgrid, tk.M{"$unwind": "$Maintenance"})
 
-			pipescount = append(pipescount, tk.M{"$unwind": "$Maintenance"})
+		pipescount = append(pipescount, tk.M{"$unwind": "$Maintenance"})
 
-			pipes = append(pipes, tk.M{"$unwind": "$Maintenance"})
+		pipes = append(pipes, tk.M{"$unwind": "$Maintenance"})
 
-			//where after unwind
-			if len(d.OrderType) > 0 {
-				pipes = append(pipes, tk.M{"$match": tk.M{"Maintenance.WorkOrderType": tk.M{"$in": d.OrderType}}})
-				pipesgrid = append(pipesgrid, tk.M{"$match": tk.M{"Maintenance.WorkOrderType": tk.M{"$in": d.OrderType}}})
-				pipescount = append(pipescount, tk.M{"$match": tk.M{"Maintenance.WorkOrderType": tk.M{"$in": d.OrderType}}})
-			}
+		//where after unwind
+		if len(d.OrderType) > 0 {
+			pipes = append(pipes, tk.M{"$match": tk.M{"Maintenance.WorkOrderType": tk.M{"$in": d.OrderType}}})
+			pipesgrid = append(pipesgrid, tk.M{"$match": tk.M{"Maintenance.WorkOrderType": tk.M{"$in": d.OrderType}}})
+			pipescount = append(pipescount, tk.M{"$match": tk.M{"Maintenance.WorkOrderType": tk.M{"$in": d.OrderType}}})
+		}
 
-		} else if hypoid == "H8" || hypoid == "H10" {
+		/*} else if hypoid == "H8" || hypoid == "H10" {
 
 			pipesgrid = append(pipesgrid, tk.M{"$unwind": "$MROElement"})
 
@@ -215,9 +242,9 @@ func (this *DataBrowserController) GetGridDb(k *knot.WebContext) interface{} {
 			ppr.Set("Plant", 1)
 			ppr.Set("TurbineVibrations", 1)
 
-			pipesgrid = append(pipesgrid, tk.M{"$project": ppr})
+			pipesgrid = append(pipesgrid, tk.M{"$project": ppr})*/
 
-			/*if r.FormValue("From") != "" && r.FormValue("To") != "" {
+		`/*if r.FormValue("From") != "" && r.FormValue("To") != "" {
 				FromPeriod := r.FormValue("From")
 				ToPeriod := r.FormValue("To")
 				var DFrom time.Time
@@ -258,11 +285,11 @@ func (this *DataBrowserController) GetGridDb(k *knot.WebContext) interface{} {
 				pipescount = append(pipescount, bson.M{"$match": bson.M{"TurbineVibrations.UnitNo": bson.M{"$in": newi}}})
 				pipes = append(pipes, bson.M{"$match": bson.M{"TurbineVibrations.UnitNo": bson.M{"$in": newi}}})
 
-			}*/
+			}*/`
 
-		}
+		// }
 
-		/*var filterindex = 0
+		`/*var filterindex = 0
 		var filterclause = ""
 		for r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") != "" {
 			var filteroperator = r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][operator]")
@@ -301,7 +328,7 @@ func (this *DataBrowserController) GetGridDb(k *knot.WebContext) interface{} {
 			}
 
 			filterindex += 1
-		}*/
+		}*/`
 
 		pipescount = pipesgrid
 		pipes = pipesgrid
@@ -327,7 +354,7 @@ func (this *DataBrowserController) GetGridDb(k *knot.WebContext) interface{} {
 			ret.Set("Summary", k.Session(hypoid+"summary", nil))
 		}
 
-		//sortfield := r.FormValue("sort[0][field]")
+		`//sortfield := r.FormValue("sort[0][field]")
 		//dir := r.FormValue("sort[0][dir]")
 		/*if sortfield == "" {
 			sortfield = "Plant.PlantName"
@@ -355,7 +382,7 @@ func (this *DataBrowserController) GetGridDb(k *knot.WebContext) interface{} {
 
 		if sortclause == "" {
 			pipesgrid = append(pipesgrid, bson.M{"$sort": bson.M{sortfield: sort}})
-		}*/
+		}*/`
 
 		pipesgrid = append(pipesgrid, tk.M{"$skip": skip})
 		pipesgrid = append(pipesgrid, tk.M{"$limit": take})

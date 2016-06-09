@@ -1,14 +1,8 @@
 package controllers
 
 import (
-	"strconv"
-	"time"
-
-	"github.com/eaciit/dbox"
 	"github.com/eaciit/knot/knot.v1"
-	. "github.com/eaciit/powerplant/sec/library/models"
-	tk "github.com/eaciit/toolkit"
-	"gopkg.in/mgo.v2/bson"
+	// . "github.com/eaciit/powerplant/sec/webapp/models"
 )
 
 type ScenarioSimulationController struct {
@@ -42,17 +36,17 @@ func (s *ScenarioSimulationController) Default(k *knot.WebContext) interface{} {
 	return infos
 }
 
-func (s *ScenarioSimulationController) Initiate(k *knot.WebContext) interface{} {
+/*func (s *ScenarioSimulation) Initiate(k *knot.WebContext) interface{} {
 	k.Config.OutputType = knot.OutputJson
-	csr, e := s.DB().Find(new(MasterPlant), tk.M{}.Set("skip", 0).Set("limit", 0))
-	PlantList := make([]MasterPlant, 0)
+	csr, e := s.DB().Find(new(PlantModel), tk.M{}.Set("skip", 0).Set("limit", 0))
+	PlantList := make([]PlantModel, 0)
 	e = csr.Fetch(&PlantList, 0, false)
 	if e != nil {
 		return e.Error()
 	}
 
-	csr, e = s.DB().Find(new(MasterUnit), tk.M{}.Set("skip", 0).Set("limit", 0))
-	UnitList := make([]MasterUnit, 0)
+	csr, e = s.DB().Find(new(UnitModel), tk.M{}.Set("skip", 0).Set("limit", 0))
+	UnitList := make([]UnitModel, 0)
 	e = csr.Fetch(&UnitList, 0, false)
 	if e != nil {
 		return e.Error()
@@ -66,7 +60,7 @@ func (s *ScenarioSimulationController) Initiate(k *knot.WebContext) interface{} 
 	return ResultInfo(result, e)
 }
 
-func (s *ScenarioSimulationController) GetData(k *knot.WebContext) interface{} {
+func (s *ScenarioSimulation) GetData(k *knot.WebContext) interface{} {
 	k.Config.OutputType = knot.OutputJson
 	status := ""
 	msg := ""
@@ -122,7 +116,7 @@ func (s *ScenarioSimulationController) GetData(k *knot.WebContext) interface{} {
 	return result
 }
 
-func (s *ScenarioSimulationController) GetDataSimulation(k *knot.WebContext) interface{} {
+func (s *ScenarioSimulation) GetDataSimulation(k *knot.WebContext) interface{} {
 	k.Config.OutputType = knot.OutputJson
 
 	data := []tk.M{}
@@ -149,7 +143,7 @@ func (s *ScenarioSimulationController) GetDataSimulation(k *knot.WebContext) int
 	return result
 }
 
-func (s *ScenarioSimulationController) RemoveData(k *knot.WebContext) interface{} {
+func (s *ScenarioSimulation) RemoveData(k *knot.WebContext) interface{} {
 	k.Config.OutputType = knot.OutputJson
 
 	status := ""
@@ -185,7 +179,7 @@ func (s *ScenarioSimulationController) RemoveData(k *knot.WebContext) interface{
 	return result
 }
 
-func (s *ScenarioSimulationController) SaveData(k *knot.WebContext) interface{} {
+func (s *ScenarioSimulation) SaveData(k *knot.WebContext) interface{} {
 	k.Config.OutputType = knot.OutputJson
 
 	status := ""
@@ -284,3 +278,4 @@ func (s *ScenarioSimulationController) SaveData(k *knot.WebContext) interface{} 
 
 	return result
 }
+*/

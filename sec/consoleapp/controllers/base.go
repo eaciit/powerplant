@@ -192,7 +192,7 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 
 		for _, val := range resPart {
 			// go b.Insert(val, m, wg)
-			go b.InsertBulk(val, m, wg)
+			go b.InsertBulk(val, m, wg, tStart)
 		}
 
 		wg.Wait()
@@ -203,7 +203,7 @@ func (b *BaseController) ConvertMGOToSQLServer(m orm.IModel) error {
 	return nil
 }
 
-func (b *BaseController) InsertBulk(result []tk.M, m orm.IModel, wg *sync.WaitGroup) {
+func (b *BaseController) InsertBulk(result []tk.M, m orm.IModel, wg *sync.WaitGroup, tStart time.Time) {
 	var datas []orm.IModel
 	for _, i := range result {
 		valueType := reflect.TypeOf(m).Elem()
@@ -252,10 +252,10 @@ func (b *BaseController) InsertBulk(result []tk.M, m orm.IModel, wg *sync.WaitGr
 			if e == nil {
 				ctn := len(result)
 				idx += ctn
-				tk.Printf("saved: %v data(s)\n", idx)
+				tk.Printf("saved: %v data(s) | time: %v \n", idx, time.Since(tStart))
 				break
 			} else {
-				// tk.Printf("%v \n", e.Error())
+				tk.Printf("%v \n", e.Error())
 				b.SqlCtx.Connection.Connect()
 			}
 		}
@@ -378,6 +378,8 @@ func getNewPointer(m orm.IModel) orm.IModel {
 		return new(WODurationSummary)
 	case "WOListSummary":
 		return new(WOListSummary)
+	case "WOList":
+		return new(WOList)
 	case "SyntheticPM":
 		return new(SyntheticPM)
 	case "Vibration":

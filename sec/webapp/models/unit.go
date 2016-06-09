@@ -1,6 +1,6 @@
 package models
 
-import (
+/*import (
 	"github.com/eaciit/orm"
 	// "gopkg.in/mgo.v2/bson"
 )
@@ -24,3 +24,4 @@ func (e *UnitModel) RecordID() interface{} {
 func (m *UnitModel) TableName() string {
 	return "MasterUnit"
 }
+*/

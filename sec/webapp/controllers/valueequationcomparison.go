@@ -1,16 +1,12 @@
 package controllers
 
-import (
-	"github.com/eaciit/knot/knot.v1"
-	. "github.com/eaciit/powerplant/sec/webapp/models"
-	tk "github.com/eaciit/toolkit"
-)
+// . "github.com/eaciit/powerplant/sec/webapp/models"
 
 type ValueEquationComparisonController struct {
 	*BaseController
 }
 
-func (c *ValueEquationComparisonController) Default(k *knot.WebContext) interface{} {
+/*func (c *ValueEquationComparisonController) Default(k *knot.WebContext) interface{} {
 	c.LoadPartial(k)
 	k.Config.OutputType = knot.OutputTemplate
 
@@ -32,3 +28,4 @@ func (c *ValueEquationComparisonController) GetUnitList(k *knot.WebContext) inte
 	result, e := vec.GetUnitList(c.Ctx, k)
 	return ResultInfo(result, e)
 }
+*/
