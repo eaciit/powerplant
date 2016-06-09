@@ -13,7 +13,7 @@ Dashboard.GetPowerVsFuelConsumtion  = function(){
   ajaxPost(url, parm, function(res){
     if(res.Data.Status == "OK"){
       Dashboard.ProcessComplete();
-      Dashboard.GenPowerVsFuelConsumtion(res.Data);
+      Dashboard.GenPowerVsFuelConsumtion(res.Data.Data);
     }else{
       alert(res.Data.message);
     }
@@ -21,7 +21,6 @@ Dashboard.GetPowerVsFuelConsumtion  = function(){
 }
 
 Dashboard.GenPowerVsFuelConsumtion = function(dataSource){
-  console.log(dataSource);
    var MaxFuelConsumtion = 0;
    var MaxPower = 0;
    var MinFuelConsumtion = 0;

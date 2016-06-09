@@ -654,7 +654,7 @@
                     var plantCapacity = res.Data.Data.PlantCapacityList;
                     for(var r in result){
                         for(var pc in plantCapacity){
-                            if(result[r].PlantCode == plantCapacity[pc].PlantCode){
+                            if(result[r].PlantCode == plantCapacity[pc]._id){
                                 result[r].TotalCapacity = plantCapacity[pc].TotalCapacity;
                                 break;
                             }
