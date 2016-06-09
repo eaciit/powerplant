@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/eaciit/dbox"
-	_ "github.com/eaciit/dbox/dbc/mongo"
+	_ "github.com/eaciit/dbox/dbc/mssql"
 	"github.com/eaciit/knot/knot.v1"
 	"github.com/eaciit/orm"
 	. "github.com/eaciit/powerplant/sec/webapp/controllers"
@@ -57,7 +57,7 @@ func init() {
 func PrepareConnection() (dbox.IConnection, error) {
 	config := ReadConfig()
 	ci := &dbox.ConnectionInfo{config["host"], config["database"], config["username"], config["password"], nil}
-	c, e := dbox.NewConnection("mongo", ci)
+	c, e := dbox.NewConnection("mssql", ci)
 
 	if e != nil {
 		return nil, e

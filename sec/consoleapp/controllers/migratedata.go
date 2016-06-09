@@ -18,6 +18,38 @@ type MigrateData struct {
 	*BaseController
 }
 
+func (m *MigrateData) DoMasterUnit() error {
+	tStart := time.Now()
+	tk.Println("Starting MasterUnit..")
+	mod := new(MasterUnit)
+
+	c, e := m.BaseController.MongoCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+
+	if e != nil {
+		return e
+	}
+
+	defer c.Close()
+
+	result := []tk.M{}
+	e = c.Fetch(&result, 0, false)
+	for _, val := range result {
+		val.Set("Unit", val.Get("_id").(string))
+		_, e := m.InsertOut(val, new(MasterUnit))
+		if e != nil {
+			tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
+			return e
+		}
+
+	}
+
+	cr, e := m.BaseController.SqlCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+	ctn := cr.Count()
+	cr.Close()
+
+	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
+	return nil
+}
 func (m *MigrateData) DoDataBrowser() {
 	/*tStart := time.Now()
 	tk.Println("Starting DoDataBrowser..")
@@ -159,7 +191,7 @@ func (m *MigrateData) DoValueEquationDashboard() error {
 	tk.Println("Starting DoValueEquationDashboard..")
 	mod := new(ValueEquationDashboard)
 
-	c, e := m.BaseController.MongoCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+	c, e := m.BaseController.MongoCtx.Connection.NewQuery().From(mod.TableName()).Skip(549).Cursor(nil)
 
 	if e != nil {
 		return e
@@ -220,13 +252,12 @@ func (m *MigrateData) DoValueEquationDashboard() error {
 			if Top10 != nil {
 				for _, x := range Top10.([]interface{}) {
 					doc := x.(tk.M).Set("VEId", Id)
-					for index := 0; index < retry; index++ {
+					for {
 						_, e = m.InsertOut(doc, new(VEDTop10))
 						if e == nil {
 							break
-						} else {
-							m.SqlCtx.Connection.Connect()
 						}
+						m.SqlCtx.Connection.Connect()
 					}
 				}
 			}

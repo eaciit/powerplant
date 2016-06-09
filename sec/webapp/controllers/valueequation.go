@@ -36,6 +36,7 @@ func (c *ValueEquationController) Default(k *knot.WebContext) interface{} {
 
 func (c *ValueEquationController) Initiate(k *knot.WebContext) interface{} {
 	k.Config.OutputType = knot.OutputJson
+	var e error
 	csr, e := c.Ctx.Find(new(PlantModel), tk.M{}.Set("skip", 0).Set("limit", 0))
 	defer csr.Close()
 	PlantList := make([]PlantModel, 0)
