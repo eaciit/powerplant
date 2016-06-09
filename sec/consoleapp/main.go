@@ -95,15 +95,15 @@ func main() {
 	// migrate.DoGeneralInfo() // 							done
 	// migrate.DoPowerPlantOutages()	//					done
 	// migrate.DoValueEquationDataQuality()	//				done
-
-	// migrate.DoScenarioSimulation() 		//				done
-	// migrate.DoValueEquationDashboard()					done
-	// migrate.DoPowerPlantOutages() // 					done
-	// migrate.DoGenerateVibration()						done
-
+	//migrate.DoValueEquationDashboard()
+	//migrate.DoPowerPlantOutages()
+	//migrate.DoGenerateVibration()							done
 	// migrate.DoValueEquation() //							done
 	// migrate.DoPowerPlantOutages() //						done
-	// migrate.DoDataBrowser()								done
+	// migrate.DoDataBrowser()
+	//migrate.DoGenerateAssetClass()
+	//migrate.DoGenerateAssetType()
+	//migrate.DoGenerateAssetLevel()
 }
 
 func convert(m orm.IModel, base *BaseController) {
