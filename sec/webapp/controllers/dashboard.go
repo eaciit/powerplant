@@ -7,10 +7,18 @@ import (
 	"github.com/eaciit/knot/knot.v1"
 	. "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
+	"strings"
 )
 
 type DashboardController struct {
 	*BaseController
+}
+
+func (c *DashboardController) CheckNotError(e error) error {
+	if e != nil && (!strings.EqualFold(e.Error(), "no more data to fetched!")) {
+		return e
+	}
+	return nil
 }
 
 func (c *DashboardController) Default(k *knot.WebContext) interface{} {
@@ -171,6 +179,7 @@ func (c *DashboardController) GetNumberOfTurbines(k *knot.WebContext) interface{
 		defer cursor.Close()
 		e = cursor.Fetch(&result, 0, true)
 
+		e = c.CheckNotError(e)
 		return result, e
 	}, nil)
 
@@ -219,6 +228,9 @@ func (c *DashboardController) GetPowerVsFuelConsumtion(k *knot.WebContext) inter
 		defer cursor.Close()
 
 		e = cursor.Fetch(&result, 0, true)
+
+		e = c.CheckNotError(e)
+
 		return result, e
 	}, nil)
 
@@ -241,23 +253,31 @@ func (c *DashboardController) GetNumberOfWorkOrder(k *knot.WebContext) interface
 
 	r.Run(func(in interface{}) (interface{}, error) {
 
-		var (
-			filter []*dbox.Filter
-		)
+		filter := ""
+		sintax := ""
 
 		if len(d.Plant) > 0 {
-			filter = append(filter, dbox.Eq("Plant", d.Plant[0]))
+			filter = d.Plant[0]
 		}
 
 		result := make([]tk.M, 0)
 
+		if filter == "" {
+			sintax = "select dbo.ValueEquation_Dashboard.Year as period, dbo.VEDTop10.WorkOrderType, count(*) as count, sum(dbo.VEDTop10.MaintenanceCost) as cost from dbo.ValueEquation_Dashboard inner join dbo.VEDTop10 on dbo.ValueEquation_Dashboard.Id = dbo.VEDTop10.VEId group by dbo.ValueEquation_Dashboard.Year, dbo.VEDTop10.WorkOrderType"
+		} else {
+			sintax = "select dbo.ValueEquation_Dashboard.Year as period, dbo.VEDTop10.WorkOrderType, count(*) as count, sum(dbo.VEDTop10.MaintenanceCost) as cost from dbo.ValueEquation_Dashboard inner join dbo.VEDTop10 on dbo.ValueEquation_Dashboard.Id = dbo.VEDTop10.VEId where dbo.ValueEquation_Dashboard.Plant = '" + filter + "' group by dbo.ValueEquation_Dashboard.Year, dbo.VEDTop10.WorkOrderType"
+		}
+
 		cursor, e := c.DB().Connection.NewQuery().
 			Command("freequery", tk.M{}.
-				Set("syntax", "select dbo.ValueEquation_Dashboard.Year as period, dbo.VEDTop10.WorkOrderType, count(*) as count, sum(dbo.VEDTop10.MaintenanceCost) as cost from dbo.ValueEquation_Dashboard inner join dbo.VEDTop10 on dbo.ValueEquation_Dashboard.Id = dbo.VEDTop10.VEId group by dbo.ValueEquation_Dashboard.Year, dbo.VEDTop10.WorkOrderType")).
+				Set("syntax", sintax)).
 			Cursor(nil)
 
+		_ = filter
 		defer cursor.Close()
 		e = cursor.Fetch(&result, 0, true)
+
+		e = c.CheckNotError(e)
 
 		return result, e
 	}, nil)
