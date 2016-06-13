@@ -472,12 +472,14 @@ func (m *HistoricalValueEquation) GetDataQuality(ctx *orm.DataContext, k *knot.W
 		} else {
 			query = append(query, dbox.Eq("Plant", m.Selected[0]))
 		}
-
+		temp := []ValueEquationDataQuality{}
 		csr, e := ctx.Find(new(ValueEquationDataQuality), tk.M{}.Set("where", dbox.And(query...)))
-		e = csr.Fetch(&result, 0, false)
+		e = csr.Fetch(&temp, 0, false)
 		csr.Close()
 		if e != nil {
 			return nil, e
+		} else {
+			return temp, e
 		}
 	} else {
 		csr, e := c.NewQuery().

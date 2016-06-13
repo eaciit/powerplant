@@ -21,6 +21,7 @@ type ValueEquationDashboard struct {
 	PlantType                          string    `bson:"PlantDetail.PlantType" json:"PlantType"`
 	Province                           string    `bson:"PlantDetail.Province" json:"Province"`
 	Region                             string    `bson:"PlantDetail.Region" json:"Region"`
+	City                               string    `bson:"PlantDetail.City" json:"City"`
 	FuelTypes_Crude                    bool      `bson:"PlantDetail.FuelTypes_Crude" json:"FuelTypes_Crude"`
 	FuelTypes_Heavy                    bool      `bson:"PlantDetail.FuelTypes_Heavy" json:"FuelTypes_Heavy"`
 	FuelTypes_Diesel                   bool      `bson:"PlantDetail.FuelTypes_Diesel" json:"FuelTypes_Diesel"`

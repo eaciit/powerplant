@@ -67,6 +67,7 @@ func (c *ValueEquationController) GetUnitList(k *knot.WebContext) interface{} {
 	d := struct {
 		SelectedPlant string
 	}{}
+	e := k.GetPayload(&d)
 	csr, e := c.Ctx.Find(new(MasterUnitPlant), tk.M{}.Set("where", dbox.Eq("Plant", d.SelectedPlant)))
 	defer csr.Close()
 	UnitPlantList := make([]MasterUnitPlant, 0)

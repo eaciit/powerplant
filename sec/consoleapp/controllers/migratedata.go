@@ -191,7 +191,7 @@ func (m *MigrateData) DoValueEquationDashboard() error {
 	tk.Println("Starting DoValueEquationDashboard..")
 	mod := new(ValueEquationDashboard)
 
-	c, e := m.BaseController.MongoCtx.Connection.NewQuery().From(mod.TableName()).Skip(549).Cursor(nil)
+	c, e := m.BaseController.MongoCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
 
 	if e != nil {
 		return e
@@ -226,14 +226,17 @@ func (m *MigrateData) DoValueEquationDashboard() error {
 		if len(result) > 0 {
 			Id := result[0].Get("id")
 
-			// Fuel := val.Get("Fuel").([]interface{})
-			// for _, x := range Fuel {
-			// 	doc := x.(tk.M).Set("VEId", Id)
-			// 	_, e = m.InsertOut(doc, new(VEDFuel))
-			// 	if e != nil {
-			// 		tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
-			// 		return e
+			// if val.Get("Fuel") != nil {
+			// 	Fuel := val.Get("Fuel").([]interface{})
+			// 	for _, x := range Fuel {
+			// 		doc := x.(tk.M).Set("VEId", Id)
+			// 		_, e = m.InsertOut(doc, new(VEDFuel))
+			// 		if e != nil {
+			// 			tk.Printf("\n----------- ERROR -------------- \n %v \n\n %#v \n-------------------------  \n", e.Error(), val)
+			// 			return e
+			// 		}
 			// 	}
+
 			// }
 
 			// Detail := val.Get("Detail")
