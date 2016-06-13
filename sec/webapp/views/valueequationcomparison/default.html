@@ -148,7 +148,7 @@ var ValueEquationComparison = {
                           <div class="row">
                             <label class="col-md-5 filter-label">Plant</label>
                             <div class="col-md-7">
-                                <input type="text" data-bind="kendoMultiSelect:{value:selectedPlant,data:ValueEquationComparison.PlantList,dataValueField:'Plant',dataTextField:'Plant',placeholder:'All'},attr:{onchange:'ValueEquationComparison.GetUnitList('+$index()+')'}" />
+                                <input type="text" class="Plant" data-bind="kendoMultiSelect:{value:selectedPlant,data:ValueEquationComparison.PlantList,dataValueField:'Plant',dataTextField:'Plant',placeholder:'All'},attr:{onchange:'ValueEquationComparison.GetUnitList('+$index()+')'}" />
                                 <label class="LPlant hidden" data-bind="text:selectedPlant"></label>
                             </div>
                           </div>
@@ -261,10 +261,10 @@ ValueEquationComparison.GetUnitList = function(index){
     if(!res.IsError){
         var ds = res.Data.UnitData;
         for(var i in ds){
-          ds[i].Index = parseFloat(ds[i].Id.substr(2));
+          ds[i].Index = parseFloat(ds[i].Unit.substr(2));
         }
-        var GTArr = Enumerable.From(ds).Where(function(x){return x.Id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
-        var STArr = Enumerable.From(ds).Where(function(x){return x.Id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+        var GTArr = Enumerable.From(ds).Where(function(x){return x.Unit.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+        var STArr = Enumerable.From(ds).Where(function(x){return x.Unit.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
         var arr = [];
         for(var i in GTArr){
           arr.push(GTArr[i]);
@@ -334,10 +334,10 @@ ValueEquationComparison.Initiate = function(){
         ValueEquationComparison.PlantList(res.Data.PlantList);
         var ds = res.Data.UnitList;
         for(var i in ds){
-          ds[i].Index = parseFloat(ds[i].Id.substr(2));
+          ds[i].Index = parseFloat(ds[i].Unit.substr(2));
         }
-        var GTArr = Enumerable.From(ds).Where(function(x){return x.Id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
-        var STArr = Enumerable.From(ds).Where(function(x){return x.Id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+        var GTArr = Enumerable.From(ds).Where(function(x){return x.Unit.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+        var STArr = Enumerable.From(ds).Where(function(x){return x.Unit.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
         var arr = [];
         for(var i in GTArr){
           arr.push(GTArr[i]);

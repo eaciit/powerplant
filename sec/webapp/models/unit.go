@@ -7,8 +7,8 @@ import (
 
 type UnitModel struct {
 	orm.ModelBase `bson:"-",json:"-"`
-	Id            string ` bson:"_id" , json:"_id" `
-	Unit  string
+	Id            int    `bson:"Id"  json:"Id" `
+	Unit          string `bson:"Unit"  json:"Unit" `
 }
 
 func NewUnitModel() *UnitModel {

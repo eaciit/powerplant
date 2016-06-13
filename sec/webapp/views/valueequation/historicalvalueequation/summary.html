@@ -74,7 +74,7 @@
 				  </thead>
 				  <tbody data-bind="foreach:DetailDataSource">
 				    <tr>
-				    	<th data-bind="text:_id"></td>
+				    	<th data-bind="text:ID"></td>
 						<td data-bind="text:kendo.toString(Revenue,'N0'),attr:{style:HVESummary.isMaxOrMinRevenue(Revenue)}" class="align-right sar-currency"></td>
 						<td class="align-center">-</td>
 						<td data-bind="text:kendo.toString(MaintenanceCost,'N0'),attr:{style:HVESummary.isMaxOrMinMaintenanceCost(MaintenanceCost)}" class="align-right sar-currency"></td>
@@ -171,10 +171,10 @@
 				var dataSource = res.Data.DataDetail;
 				if(HVESummary.scope()=="Plant"){
 					for(var i in dataSource){
-						dataSource[i].Index = parseFloat(dataSource[i]._id.substr(2));
+						dataSource[i].Index = parseFloat(dataSource[i].ID.substr(2));
 					}
-					var GTArr = Enumerable.From(dataSource).Where(function(x){return x._id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
-					var STArr = Enumerable.From(dataSource).Where(function(x){return x._id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+					var GTArr = Enumerable.From(dataSource).Where(function(x){return x.ID.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+					var STArr = Enumerable.From(dataSource).Where(function(x){return x.ID.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
 					var arr = [];
 					for(var i in GTArr){
 					arr.push(GTArr[i]);
@@ -182,7 +182,7 @@
 					for(var i in STArr){
 					arr.push(STArr[i]);
 					}
-					var UnmappedArr = Enumerable.From(dataSource).Where(function(x){return x._id =="Unmapped Data"}).OrderBy(function(x){return x.Index}).ToArray();
+					var UnmappedArr = Enumerable.From(dataSource).Where(function(x){return x.ID =="Unmapped Data"}).OrderBy(function(x){return x.Index}).ToArray();
 					for(var i in UnmappedArr){
 					arr.push(UnmappedArr[i]);
 					}
@@ -365,7 +365,7 @@
             },
         ],
 		categoryAxis: {
-		  field: "_id",
+		  field: "Plant",
 		  majorGridLines: {
 		      visible: false
 		  },

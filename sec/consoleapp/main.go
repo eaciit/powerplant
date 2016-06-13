@@ -95,15 +95,19 @@ func main() {
 	// migrate.DoGeneralInfo() // 							done
 	// migrate.DoPowerPlantOutages()	//					done
 	// migrate.DoValueEquationDataQuality()	//				done
-	//migrate.DoValueEquationDashboard()
+	// migrate.DoValueEquationDashboard()
 	//migrate.DoPowerPlantOutages()
 	//migrate.DoGenerateVibration()							done
 	// migrate.DoValueEquation() //							done
 	// migrate.DoPowerPlantOutages() //						done
 	// migrate.DoDataBrowser()
+	// migrate.DoMasterUnit()
 	//migrate.DoGenerateAssetClass()
 	//migrate.DoGenerateAssetType()
 	//migrate.DoGenerateAssetLevel()
+
+	check := DataChecker{base}
+	check.CheckDetailData()
 }
 
 func convert(m orm.IModel, base *BaseController) {
