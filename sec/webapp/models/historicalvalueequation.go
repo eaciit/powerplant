@@ -72,7 +72,9 @@ func (m *HistoricalValueEquation) GetSummaryData(ctx *orm.DataContext, k *knot.W
 		return nil, e
 	}
 
-	e = csr.Fetch(&DataChart, 0, false)
+	if csr != nil {
+		e = csr.Fetch(&DataChart, 0, false)
+	}
 	if e != nil {
 		return nil, e
 	}
@@ -94,7 +96,9 @@ func (m *HistoricalValueEquation) GetSummaryData(ctx *orm.DataContext, k *knot.W
 			Aggr(dbox.AggrSum, "MaintenanceCost", "MaintenanceCost").
 			Aggr(dbox.AggrSum, "OperatingCost", "OperatingCost").
 			From(ve.TableName()).Group(groupBy).Cursor(nil)
-		e = csr.Fetch(&DataDetail, 0, false)
+		if csr != nil {
+			e = csr.Fetch(&DataDetail, 0, false)
+		}
 		csr.Close()
 		if e != nil {
 			return nil, e
@@ -167,7 +171,9 @@ func (m *HistoricalValueEquation) GetMaintenanceData(ctx *orm.DataContext, k *kn
 	if e != nil {
 		return nil, e
 	}
-	e = csr.Fetch(&DataMainEx, 0, false)
+	if csr != nil {
+		e = csr.Fetch(&DataMainEx, 0, false)
+	}
 	csr.Close()
 	if e != nil {
 		return nil, e
@@ -186,7 +192,9 @@ func (m *HistoricalValueEquation) GetMaintenanceData(ctx *orm.DataContext, k *kn
 	if e != nil {
 		return nil, e
 	}
-	e = csr.Fetch(&Temp, 0, false)
+	if csr != nil {
+		e = csr.Fetch(&Temp, 0, false)
+	}
 	csr.Close()
 	if e != nil {
 		return nil, e
@@ -209,7 +217,9 @@ func (m *HistoricalValueEquation) GetMaintenanceData(ctx *orm.DataContext, k *kn
 	if e != nil {
 		return nil, e
 	}
-	e = csr.Fetch(&DataTable, 0, false)
+	if csr != nil {
+		e = csr.Fetch(&DataTable, 0, false)
+	}
 	csr.Close()
 	if e != nil {
 		return nil, e
@@ -223,7 +233,9 @@ func (m *HistoricalValueEquation) GetMaintenanceData(ctx *orm.DataContext, k *kn
 	if e != nil {
 		return nil, e
 	}
-	e = csr.Fetch(&DataOrder, 0, false)
+	if csr != nil {
+		e = csr.Fetch(&DataOrder, 0, false)
+	}
 	csr.Close()
 	if e != nil {
 		return nil, e
@@ -291,7 +303,9 @@ func (m *HistoricalValueEquation) GetOperatingData(ctx *orm.DataContext, k *knot
 		Aggr(dbox.AggrSum, "OperatingCost", "OperatingCost").
 		Aggr(dbox.AggrSum, "FuelTransportCost", "FuelTransportCost").
 		From(ve.TableName()).Cursor(nil)
-	e = csr.Fetch(&DataTotal, 0, false)
+	if csr != nil {
+		e = csr.Fetch(&DataTotal, 0, false)
+	}
 	csr.Close()
 	if e != nil {
 		return nil, e
@@ -304,7 +318,9 @@ func (m *HistoricalValueEquation) GetOperatingData(ctx *orm.DataContext, k *knot
 			Aggr(dbox.AggrSum, "NetGeneration", "NetGeneration").
 			Aggr(dbox.AggrSum, "OperatingCost", "OperatingCost").
 			From(ve.TableName()).Group(groupBy).Cursor(nil)
-		e = csr.Fetch(&DataDetail, 0, false)
+		if csr != nil {
+			e = csr.Fetch(&DataDetail, 0, false)
+		}
 		csr.Close()
 		if e != nil {
 			return nil, e
@@ -377,7 +393,9 @@ func (m *HistoricalValueEquation) GetRevenueData(ctx *orm.DataContext, k *knot.W
 		Aggr(dbox.AggrSum, "Incentive", "Incentive").
 		Aggr(dbox.AggrSum, "Revenue", "Revenue").
 		From(ve.TableName()).Cursor(nil)
-	e = csr.Fetch(&DataChartRevenue, 0, false)
+	if csr != nil {
+		e = csr.Fetch(&DataChartRevenue, 0, false)
+	}
 	csr.Close()
 	if e != nil {
 		return nil, e
@@ -391,7 +409,9 @@ func (m *HistoricalValueEquation) GetRevenueData(ctx *orm.DataContext, k *knot.W
 		Aggr(dbox.AggrSum, "Incentive", "Incentive").
 		Aggr(dbox.AggrSum, "Revenue", "Revenue").
 		From(ve.TableName()).Group(groupBy).Cursor(nil)
-	e = csr.Fetch(&DataChartRevenueEx, 0, false)
+	if csr != nil {
+		e = csr.Fetch(&DataChartRevenueEx, 0, false)
+	}
 	csr.Close()
 	if e != nil {
 		return nil, e
@@ -474,7 +494,9 @@ func (m *HistoricalValueEquation) GetDataQuality(ctx *orm.DataContext, k *knot.W
 		}
 		temp := []*ValueEquationDataQuality{}
 		csr, e := ctx.Find(new(ValueEquationDataQuality), tk.M{}.Set("where", dbox.And(query...)))
-		e = csr.Fetch(&temp, 0, false)
+		if csr != nil {
+			e = csr.Fetch(&temp, 0, false)
+		}
 		csr.Close()
 		if e != nil {
 			return nil, e
@@ -498,7 +520,9 @@ func (m *HistoricalValueEquation) GetDataQuality(ctx *orm.DataContext, k *knot.W
 			Aggr(dbox.AggrSum, "BackupFuel_Data", "BackupFuel_Data").
 			Aggr(dbox.AggrSum, "FuelTransport_Data", "FuelTransport_Data").
 			From(vedq.TableName()).Group(groupBy).Cursor(nil)
-		e = csr.Fetch(&result, 0, false)
+		if csr != nil {
+			e = csr.Fetch(&result, 0, false)
+		}
 		csr.Close()
 		if e != nil {
 			return nil, e
@@ -648,7 +672,9 @@ func (m *HistoricalValueEquation) GetPerformanceData(ctx *orm.DataContext, k *kn
 		Aggr(dbox.AggrSum, "NetGeneration", "NetGeneration").
 		Aggr(dbox.AggrSum, "PrctWAF", "PrctWAF").
 		From(ve.TableName()).Group(groupBy).Cursor(nil)
-	e = csr.Fetch(&result, 0, false)
+	if csr != nil {
+		e = csr.Fetch(&result, 0, false)
+	}
 	csr.Close()
 	if e != nil {
 		return nil, e
@@ -737,7 +763,9 @@ func (m *HistoricalValueEquation) GetAssetWorkData(ctx *orm.DataContext, k *knot
 		Aggr(dbox.AggrSum, "MaintenanceCost", "MaintenanceCost").
 		Aggr(dbox.AggrSum, "OperatingCost", "OperatingCost").
 		From(ve.TableName()).Group(groupBy).Cursor(nil)
-	e = csr.Fetch(&result, 0, false)
+	if csr != nil {
+		e = csr.Fetch(&result, 0, false)
+	}
 	csr.Close()
 	if e != nil {
 		return nil, e
