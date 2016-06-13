@@ -472,13 +472,14 @@ func (m *HistoricalValueEquation) GetDataQuality(ctx *orm.DataContext, k *knot.W
 		} else {
 			query = append(query, dbox.Eq("Plant", m.Selected[0]))
 		}
-		temp := []ValueEquationDataQuality{}
+		temp := []*ValueEquationDataQuality{}
 		csr, e := ctx.Find(new(ValueEquationDataQuality), tk.M{}.Set("where", dbox.And(query...)))
 		e = csr.Fetch(&temp, 0, false)
 		csr.Close()
 		if e != nil {
 			return nil, e
 		} else {
+			m.GetValueEquationDocument(ctx, temp)
 			return temp, e
 		}
 	} else {
@@ -511,6 +512,93 @@ func (m *HistoricalValueEquation) GetDataQuality(ctx *orm.DataContext, k *knot.W
 		}
 	}
 	return result, e
+}
+
+func (m *HistoricalValueEquation) GetValueEquationDocument(ctx *orm.DataContext, VEDQList []*ValueEquationDataQuality) {
+	for _, i := range VEDQList {
+		query := []*dbox.Filter{}
+		query = append(query, dbox.Eq("VEId", int(i.Id)))
+
+		CapacityPaymentDocuments := []VEDQCapacityPaymentDocuments{}
+		csr, _ := ctx.Find(new(VEDQCapacityPaymentDocuments), tk.M{}.Set("where", dbox.And(query...)))
+		if csr != nil {
+			csr.Fetch(&CapacityPaymentDocuments, 0, false)
+			i.CapacityPaymentDocuments = CapacityPaymentDocuments
+		}
+		csr.Close()
+
+		BackupFuelDocuments := []VEDQBackupFuelDocuments{}
+		csr, _ = ctx.Find(new(VEDQBackupFuelDocuments), tk.M{}.Set("where", dbox.And(query...)))
+		if csr != nil {
+			csr.Fetch(&BackupFuelDocuments, 0, false)
+			i.BackupFuelDocuments = BackupFuelDocuments
+		}
+		csr.Close()
+
+		EnergyPaymentDocuments := []VEDQEnergyPaymentDocuments{}
+		csr, _ = ctx.Find(new(VEDQEnergyPaymentDocuments), tk.M{}.Set("where", dbox.And(query...)))
+		if csr != nil {
+			csr.Fetch(&EnergyPaymentDocuments, 0, false)
+			i.EnergyPaymentDocuments = EnergyPaymentDocuments
+		}
+		csr.Close()
+
+		MaintenanceCostDocuments := []VEDQMaintenanceCostDocuments{}
+		csr, _ = ctx.Find(new(VEDQMaintenanceCostDocuments), tk.M{}.Set("where", dbox.And(query...)))
+		if csr != nil {
+			csr.Fetch(&MaintenanceCostDocuments, 0, false)
+			i.MaintenanceCostDocuments = MaintenanceCostDocuments
+		}
+		csr.Close()
+
+		MaintenanceDurationDocuments := []VEDQMaintenanceDurationDocuments{}
+		csr, _ = ctx.Find(new(VEDQMaintenanceDurationDocuments), tk.M{}.Set("where", dbox.And(query...)))
+		if csr != nil {
+			csr.Fetch(&MaintenanceDurationDocuments, 0, false)
+			i.MaintenanceDurationDocuments = MaintenanceDurationDocuments
+		}
+		csr.Close()
+
+		PenaltyDocuments := []VEDQPenaltyDocuments{}
+		csr, _ = ctx.Find(new(VEDQPenaltyDocuments), tk.M{}.Set("where", dbox.And(query...)))
+		if csr != nil {
+			csr.Fetch(&PenaltyDocuments, 0, false)
+			i.PenaltyDocuments = PenaltyDocuments
+		}
+		csr.Close()
+
+		IncentiveDocuments := []VEDQIncentiveDocuments{}
+		csr, _ = ctx.Find(new(VEDQIncentiveDocuments), tk.M{}.Set("where", dbox.And(query...)))
+		if csr != nil {
+			csr.Fetch(&IncentiveDocuments, 0, false)
+			i.IncentiveDocuments = IncentiveDocuments
+		}
+		csr.Close()
+
+		PrimaryFuel1stDocuments := []VEDQPrimaryFuel1stDocuments{}
+		csr, _ = ctx.Find(new(VEDQPrimaryFuel1stDocuments), tk.M{}.Set("where", dbox.And(query...)))
+		if csr != nil {
+			csr.Fetch(&PrimaryFuel1stDocuments, 0, false)
+			i.PrimaryFuel1stDocuments = PrimaryFuel1stDocuments
+		}
+		csr.Close()
+
+		PrimaryFuel2ndDocuments := []VEDQPrimaryFuel2ndDocuments{}
+		csr, _ = ctx.Find(new(VEDQPrimaryFuel2ndDocuments), tk.M{}.Set("where", dbox.And(query...)))
+		if csr != nil {
+			csr.Fetch(&PrimaryFuel2ndDocuments, 0, false)
+			i.PrimaryFuel2ndDocuments = PrimaryFuel2ndDocuments
+		}
+		csr.Close()
+
+		StartupPaymentDocuments := []VEDQStartupPaymentDocuments{}
+		csr, _ = ctx.Find(new(VEDQStartupPaymentDocuments), tk.M{}.Set("where", dbox.And(query...)))
+		if csr != nil {
+			csr.Fetch(&StartupPaymentDocuments, 0, false)
+			i.StartupPaymentDocuments = StartupPaymentDocuments
+		}
+		csr.Close()
+	}
 }
 
 func (m *HistoricalValueEquation) GetPerformanceData(ctx *orm.DataContext, k *knot.WebContext) (interface{}, error) {
