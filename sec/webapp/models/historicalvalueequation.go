@@ -46,26 +46,39 @@ func (m *HistoricalValueEquation) SetPayLoad(k *knot.WebContext) error {
 
 func (m *HistoricalValueEquation) GetSummaryData(ctx *orm.DataContext, k *knot.WebContext) (interface{}, error) {
 	m.SetPayLoad(k)
-	result, DataChart, DataDetail := tk.M{}, []tk.M{}, []tk.M{}
+	type DataValue struct {
+		ID              string
+		Plant           string  `json:'Plant'`
+		Unit            string  `json:'Unit'`
+		Revenue         float64 `json:'Revenue'`
+		MaintenanceCost float64 `json:'MaintenanceCost'`
+		OperatingCost   float64 `json:'OperatingCost'`
+	}
+	result, DataChart, DataDetail := tk.M{}, []DataValue{}, []*DataValue{}
 	c := ctx.Connection
-	ve := ValueEquation{}
+	ve := new(ValueEquation)
 	query := []*dbox.Filter{}
-	query = append(query, dbox.Gte("Period.Dates", m.StartPeriod))
-	query = append(query, dbox.Lte("Period.Dates", m.EndPeriod))
+	query = append(query, dbox.Gte("Dates", m.StartPeriod))
+	query = append(query, dbox.Lte("Dates", m.EndPeriod))
+
 	csr, e := c.NewQuery().
 		Where(query...).
-		Aggr(dbox.AggrSum, "$Revenue", "Amount").
-		Aggr(dbox.AggrSum, "$MaintenanceCost", "MaintenanceCost").
-		Aggr(dbox.AggrSum, "$OperatingCost", "OperatingCost").
+		Select("Plant").
+		Aggr(dbox.AggrSum, "Revenue", "Revenue").
+		Aggr(dbox.AggrSum, "MaintenanceCost", "MaintenanceCost").
+		Aggr(dbox.AggrSum, "OperatingCost", "OperatingCost").
 		From(ve.TableName()).Group("Plant").Cursor(nil)
-	e = csr.Fetch(&DataChart, 0, false)
-	csr.Close()
 	if e != nil {
 		return nil, e
 	}
-	for _, i := range DataChart {
-		i.Set("_id", i.Get("_id").(tk.M).Get("Plant"))
+
+	if csr != nil {
+		e = csr.Fetch(&DataChart, 0, false)
 	}
+	if e != nil {
+		return nil, e
+	}
+	csr.Close()
 	result.Set("DataChart", DataChart)
 
 	groupBy := "Plant"
@@ -78,18 +91,24 @@ func (m *HistoricalValueEquation) GetSummaryData(ctx *orm.DataContext, k *knot.W
 
 	if m.Scope != "Unit" {
 		csr, e := c.NewQuery().
-			Where(query...).
-			Aggr(dbox.AggrSum, "$Revenue", "Revenue").
-			Aggr(dbox.AggrSum, "$MaintenanceCost", "MaintenanceCost").
-			Aggr(dbox.AggrSum, "$OperatingCost", "OperatingCost").
+			Where(query...).Select(groupBy).
+			Aggr(dbox.AggrSum, "Revenue", "Revenue").
+			Aggr(dbox.AggrSum, "MaintenanceCost", "MaintenanceCost").
+			Aggr(dbox.AggrSum, "OperatingCost", "OperatingCost").
 			From(ve.TableName()).Group(groupBy).Cursor(nil)
-		e = csr.Fetch(&DataDetail, 0, false)
+		if csr != nil {
+			e = csr.Fetch(&DataDetail, 0, false)
+		}
 		csr.Close()
 		if e != nil {
 			return nil, e
 		}
 		for _, i := range DataDetail {
-			i.Set("_id", i.Get("_id").(tk.M).Get(groupBy))
+			if i.Unit != "" {
+				i.ID = i.Unit
+			} else {
+				i.ID = i.Plant
+			}
 		}
 	}
 
@@ -99,13 +118,23 @@ func (m *HistoricalValueEquation) GetSummaryData(ctx *orm.DataContext, k *knot.W
 
 func (m *HistoricalValueEquation) GetMaintenanceData(ctx *orm.DataContext, k *knot.WebContext) (interface{}, error) {
 	m.SetPayLoad(k)
-	result, DataMainEx, DataOrder, DataChart, DataTable, pipes := tk.M{}, []tk.M{}, []tk.M{}, []tk.M{}, []tk.M{}, []tk.M{}
+	type DataValue struct {
+		ID            string
+		DataSource    string  `json:'DataSource'`
+		WorkOrderType string  `json:'WorkOrderType'`
+		Plant         string  `json:'Plant'`
+		Unit          string  `json:'Unit'`
+		LaborCost     float64 `json:'LaborCost'`
+		MaterialCost  float64 `json:'MaterialCost'`
+		ServiceCost   float64 `json:'ServiceCost'`
+	}
+
+	result, DataMainEx, DataOrder, DataChart, DataTable, Temp, IDList := tk.M{}, []DataValue{}, []DataValue{}, []tk.M{}, []DataValue{}, []tk.M{}, []interface{}{}
 	c := ctx.Connection
-	ve := ValueEquation{}
 	query := []*dbox.Filter{}
-	query = append(query, dbox.Gte("Period.Dates", m.StartPeriod))
-	query = append(query, dbox.Lte("Period.Dates", m.EndPeriod))
-	groupBy := "$Plant"
+	query = append(query, dbox.Gte("Dates", m.StartPeriod))
+	query = append(query, dbox.Lte("Dates", m.EndPeriod))
+	groupBy := "Plant"
 	switch m.Scope {
 	case "Kingdom":
 		break
@@ -113,7 +142,7 @@ func (m *HistoricalValueEquation) GetMaintenanceData(ctx *orm.DataContext, k *kn
 		if m.Selected != nil && len(m.Selected) > 0 {
 			query = append(query, dbox.In("Plant", m.Selected))
 		}
-		groupBy = "$Unit"
+		groupBy = "Unit"
 		break
 	case "Phase":
 		if m.Selected != nil && len(m.Selected) > 0 {
@@ -125,69 +154,123 @@ func (m *HistoricalValueEquation) GetMaintenanceData(ctx *orm.DataContext, k *kn
 		if m.Selected != nil && len(m.Selected) > 0 {
 			query = append(query, dbox.In("Unit", m.Selected))
 		}
-		groupBy = "$Unit"
+		groupBy = "Unit"
 		break
 	default:
 		break
 	}
 
-	// Get DataTable
-	pipes = append(pipes, tk.M{"$unwind": "$Detail"})
-	pipes = append(pipes, tk.M{"$group": tk.M{
-		"_id": tk.M{"DataSource": "$Detail.DataSource",
-			"WorkOrderType": "$Detail.WorkOrderType"},
-		"LaborCost":    tk.M{"$sum": "$Detail.LaborCost"},
-		"MaterialCost": tk.M{"$sum": "$Detail.MaterialCost"},
-		"ServiceCost":  tk.M{"$sum": "$Detail.ServiceCost"},
-	}})
-	csr, e := c.NewQuery().Command("pipe", pipes).Where(query...).From(ve.TableName()).Cursor(nil)
-	e = csr.Fetch(&DataTable, 0, false)
-	csr.Close()
-	if e != nil {
-		return nil, e
-	}
-
 	// Get DataMainEx
-	pipes = append(pipes[0:0], tk.M{"$group": tk.M{
-		"_id":          groupBy,
-		"LaborCost":    tk.M{"$sum": "$TotalLabourCost"},
-		"MaterialCost": tk.M{"$sum": "$TotalMaterialCost"},
-		"ServiceCost":  tk.M{"$sum": "$TotalServicesCost"},
-	}})
-	csr, e = c.NewQuery().Command("pipe", pipes).Where(query...).From(ve.TableName()).Cursor(nil)
-	e = csr.Fetch(&DataMainEx, 0, false)
+	csr, e := c.NewQuery().
+		Where(query...).
+		Select(groupBy).
+		Aggr(dbox.AggrSum, "TotalLabourCost", "LaborCost").
+		Aggr(dbox.AggrSum, "TotalMaterialCost", "MaterialCost").
+		Aggr(dbox.AggrSum, "TotalServicesCost", "ServiceCost").
+		From(new(ValueEquation).TableName()).Group(groupBy).Cursor(nil)
+	if e != nil {
+		return nil, e
+	}
+	if csr != nil {
+		e = csr.Fetch(&DataMainEx, 0, false)
+	}
+	csr.Close()
+	if e != nil {
+		return nil, e
+	}
+	for _, i := range DataMainEx {
+		if i.Unit != "" {
+			i.ID = i.Unit
+		} else {
+			i.ID = i.Plant
+		}
+	}
+
+	csr, e = c.NewQuery().
+		Where(query...).Select("Id").
+		From(new(ValueEquation).TableName()).Cursor(nil)
+	if e != nil {
+		return nil, e
+	}
+	if csr != nil {
+		e = csr.Fetch(&Temp, 0, false)
+	}
+	csr.Close()
+	if e != nil {
+		return nil, e
+	}
+	for _, i := range Temp {
+		IDList = append(IDList, i.GetInt("id"))
+	}
+
+	query = []*dbox.Filter{}
+	query = append(query, dbox.In("VEId", IDList...))
+
+	// Get DataTable
+	csr, e = c.NewQuery().
+		Where(query...).
+		Select("DataSource", "WorkOrderType").
+		Aggr(dbox.AggrSum, "LaborCost", "LaborCost").
+		Aggr(dbox.AggrSum, "MaterialCost", "MaterialCost").
+		Aggr(dbox.AggrSum, "ServiceCost", "ServiceCost").
+		From(new(ValueEquationDetails).TableName()).Group("DataSource", "WorkOrderType").Cursor(nil)
+	if e != nil {
+		return nil, e
+	}
+	if csr != nil {
+		e = csr.Fetch(&DataTable, 0, false)
+	}
 	csr.Close()
 	if e != nil {
 		return nil, e
 	}
 
-	// Get DataOrder
-	pipes = append(pipes[0:0], tk.M{"$unwind": "$Top10"})
-	pipes = append(pipes, tk.M{"$group": tk.M{
-		"_id":           "$Top10.WorkOrderType",
-		"WorkOrderType": tk.M{"$first": "$Top10.WorkOrderType"},
-	}})
-	csr, e = c.NewQuery().Command("pipe", pipes).Where(query...).From(ve.TableName()).Cursor(nil)
-	e = csr.Fetch(&DataOrder, 0, false)
+	// Get DataOrder - For Visualisation
+	csr, e = c.NewQuery().
+		Where(query...).
+		Select("WorkOrderType").
+		From(new(ValueEquationTop10).TableName()).Group("WorkOrderType").Cursor(nil)
+	if e != nil {
+		return nil, e
+	}
+	if csr != nil {
+		e = csr.Fetch(&DataOrder, 0, false)
+	}
 	csr.Close()
 	if e != nil {
 		return nil, e
+	}
+	for _, i := range DataOrder {
+		if i.Unit != "" {
+			i.ID = i.Unit
+		} else {
+			i.ID = i.Plant
+		}
 	}
 
 	// Data Chart - set for empty, if you want to add it. its available on the previous version while its still using beego.
-
 	result.Set("DataMainEx", DataMainEx).Set("DataOrder", DataOrder).Set("DataChart", DataChart).Set("DataTable", DataTable)
 	return result, nil
 }
 
 func (m *HistoricalValueEquation) GetOperatingData(ctx *orm.DataContext, k *knot.WebContext) (interface{}, error) {
+	type DataValue struct {
+		ID                string
+		Plant             string  `json:'Plant'`
+		Unit              string  `json:'Unit'`
+		OperatingCost     float64 `json:'OperatingCost'`
+		FuelTransportCost float64 `json:'FuelTransportCost'`
+		Capacity          float64 `json:'Capacity'`
+		NetGeneration     float64 `json:'NetGeneration'`
+	}
+
 	m.SetPayLoad(k)
-	result, DataChart, DataTable, DataTotal, DataDetail := tk.M{}, []tk.M{}, []tk.M{}, []tk.M{}, []tk.M{}
+	result, DataChart, DataTable, DataTotal, DataDetail := tk.M{}, []tk.M{}, []tk.M{}, []*DataValue{}, []*DataValue{}
 	c := ctx.Connection
 	ve := ValueEquation{}
 	query := []*dbox.Filter{}
-	query = append(query, dbox.Gte("Period.Dates", m.StartPeriod))
-	query = append(query, dbox.Lte("Period.Dates", m.EndPeriod))
+	query = append(query, dbox.Gte("Dates", m.StartPeriod))
+	query = append(query, dbox.Lte("Dates", m.EndPeriod))
 	groupBy := "Plant"
 	switch m.Scope {
 	case "Kingdom":
@@ -217,10 +300,12 @@ func (m *HistoricalValueEquation) GetOperatingData(ctx *orm.DataContext, k *knot
 	// Getting "DataTable" - skip, need $unwind [ $Fuel ]
 	csr, e := c.NewQuery().
 		Where(query...).
-		Aggr(dbox.AggrSum, "$OperatingCost", "OperatingCost").
-		Aggr(dbox.AggrSum, "$FuelTransportCost", "FuelTransportCost").
-		From(ve.TableName()).Group("").Cursor(nil)
-	e = csr.Fetch(&DataTotal, 0, false)
+		Aggr(dbox.AggrSum, "OperatingCost", "OperatingCost").
+		Aggr(dbox.AggrSum, "FuelTransportCost", "FuelTransportCost").
+		From(ve.TableName()).Cursor(nil)
+	if csr != nil {
+		e = csr.Fetch(&DataTotal, 0, false)
+	}
 	csr.Close()
 	if e != nil {
 		return nil, e
@@ -228,18 +313,24 @@ func (m *HistoricalValueEquation) GetOperatingData(ctx *orm.DataContext, k *knot
 
 	if m.Scope != "Unit" {
 		csr, e = c.NewQuery().
-			Where(query...).
-			Aggr(dbox.AggrSum, "$Capacity", "Capacity").
-			Aggr(dbox.AggrSum, "$NetGeneration", "NetGeneration").
-			Aggr(dbox.AggrSum, "$OperatingCost", "OperatingCost").
+			Where(query...).Select(groupBy).
+			Aggr(dbox.AggrSum, "Capacity", "Capacity").
+			Aggr(dbox.AggrSum, "NetGeneration", "NetGeneration").
+			Aggr(dbox.AggrSum, "OperatingCost", "OperatingCost").
 			From(ve.TableName()).Group(groupBy).Cursor(nil)
-		e = csr.Fetch(&DataDetail, 0, false)
+		if csr != nil {
+			e = csr.Fetch(&DataDetail, 0, false)
+		}
 		csr.Close()
 		if e != nil {
 			return nil, e
 		}
 		for _, i := range DataDetail {
-			i.Set("_id", i.Get("_id").(tk.M).Get(groupBy))
+			if i.Unit != "" {
+				i.ID = i.Unit
+			} else {
+				i.ID = i.Plant
+			}
 		}
 	}
 
@@ -248,13 +339,25 @@ func (m *HistoricalValueEquation) GetOperatingData(ctx *orm.DataContext, k *knot
 }
 
 func (m *HistoricalValueEquation) GetRevenueData(ctx *orm.DataContext, k *knot.WebContext) (interface{}, error) {
+	type DataValue struct {
+		ID              string
+		Plant           string  `json:'Plant'`
+		Unit            string  `json:'Unit'`
+		CapacityPayment float64 `json:'CapacityPayment'`
+		EnergyPayment   float64 `json:'EnergyPayment'`
+		StartupPayment  float64 `json:'StartupPayment'`
+		PenaltyAmount   float64 `json:'PenaltyAmount'`
+		Incentive       float64 `json:'Incentive'`
+		Revenue         float64 `json:'Revenue'`
+	}
+
 	m.SetPayLoad(k)
-	result, DataChartRevenue, DataChartRevenueEx := tk.M{}, []tk.M{}, []tk.M{}
+	result, DataChartRevenue, DataChartRevenueEx := tk.M{}, []*DataValue{}, []*DataValue{}
 	c := ctx.Connection
 	ve := ValueEquation{}
 	query := []*dbox.Filter{}
-	query = append(query, dbox.Gte("Period.Dates", m.StartPeriod))
-	query = append(query, dbox.Lte("Period.Dates", m.EndPeriod))
+	query = append(query, dbox.Gte("Dates", m.StartPeriod))
+	query = append(query, dbox.Lte("Dates", m.EndPeriod))
 	groupBy := "Plant"
 	switch m.Scope {
 	case "Kingdom":
@@ -283,49 +386,74 @@ func (m *HistoricalValueEquation) GetRevenueData(ctx *orm.DataContext, k *knot.W
 
 	csr, e := c.NewQuery().
 		Where(query...).
-		Aggr(dbox.AggrSum, "$CapacityPayment", "CapacityPayment").
-		Aggr(dbox.AggrSum, "$EnergyPayment", "EnergyPayment").
-		Aggr(dbox.AggrSum, "$StartupPayment", "StartupPayment").
-		Aggr(dbox.AggrSum, "$PenaltyAmount", "PenaltyAmount").
-		Aggr(dbox.AggrSum, "$Incentive", "Incentive").
-		Aggr(dbox.AggrSum, "$Revenue", "Revenue").
-		From(ve.TableName()).Group("").Cursor(nil)
-	e = csr.Fetch(&DataChartRevenue, 0, false)
+		Aggr(dbox.AggrSum, "CapacityPayment", "CapacityPayment").
+		Aggr(dbox.AggrSum, "EnergyPayment", "EnergyPayment").
+		Aggr(dbox.AggrSum, "StartupPayment", "StartupPayment").
+		Aggr(dbox.AggrSum, "PenaltyAmount", "PenaltyAmount").
+		Aggr(dbox.AggrSum, "Incentive", "Incentive").
+		Aggr(dbox.AggrSum, "Revenue", "Revenue").
+		From(ve.TableName()).Cursor(nil)
+	if csr != nil {
+		e = csr.Fetch(&DataChartRevenue, 0, false)
+	}
 	csr.Close()
 	if e != nil {
 		return nil, e
 	}
-
 	csr, e = c.NewQuery().
-		Where(query...).
-		Aggr(dbox.AggrSum, "$CapacityPayment", "CapacityPayment").
-		Aggr(dbox.AggrSum, "$EnergyPayment", "EnergyPayment").
-		Aggr(dbox.AggrSum, "$StartupPayment", "StartupPayment").
-		Aggr(dbox.AggrSum, "$PenaltyAmount", "PenaltyAmount").
-		Aggr(dbox.AggrSum, "$Incentive", "Incentive").
-		Aggr(dbox.AggrSum, "$Revenue", "Revenue").
+		Where(query...).Select(groupBy).
+		Aggr(dbox.AggrSum, "CapacityPayment", "CapacityPayment").
+		Aggr(dbox.AggrSum, "EnergyPayment", "EnergyPayment").
+		Aggr(dbox.AggrSum, "StartupPayment", "StartupPayment").
+		Aggr(dbox.AggrSum, "PenaltyAmount", "PenaltyAmount").
+		Aggr(dbox.AggrSum, "Incentive", "Incentive").
+		Aggr(dbox.AggrSum, "Revenue", "Revenue").
 		From(ve.TableName()).Group(groupBy).Cursor(nil)
-	e = csr.Fetch(&DataChartRevenueEx, 0, false)
+	if csr != nil {
+		e = csr.Fetch(&DataChartRevenueEx, 0, false)
+	}
 	csr.Close()
 	if e != nil {
 		return nil, e
 	}
 	for _, i := range DataChartRevenueEx {
-		i.Set("_id", i.Get("_id").(tk.M).Get(groupBy))
+		if i.Unit != "" {
+			i.ID = i.Unit
+		} else {
+			i.ID = i.Plant
+		}
 	}
 	// Remaining : sort by _id. descending for "DataChartRevenueEx"
 	return result.Set("DataChartRevenue", DataChartRevenue).Set("DataChartRevenueEx", DataChartRevenueEx), e
 }
 
 func (m *HistoricalValueEquation) GetDataQuality(ctx *orm.DataContext, k *knot.WebContext) (interface{}, error) {
+	type DataValue struct {
+		ID                       string
+		Plant                    string  `json:'Plant'`
+		Unit                     string  `json:'Unit'`
+		Count                    float64 `json:'Count'`
+		CapacityPayment_Data     float64 `json:'CapacityPayment_Data'`
+		EnergyPayment_Data       float64 `json:'EnergyPayment_Data'`
+		StartupPayment_Data      float64 `json:'StartupPayment_Data'`
+		Penalty_Data             float64 `json:'Penalty_Data'`
+		Incentive_Data           float64 `json:'Incentive_Data'`
+		MaintenanceCost_Data     float64 `json:'MaintenanceCost_Data'`
+		MaintenanceDuration_Data float64 `json:'MaintenanceDuration_Data'`
+		PrimaryFuel1st_Data      float64 `json:'PrimaryFuel1st_Data'`
+		PrimaryFuel2nd_Data      float64 `json:'PrimaryFuel2nd_Data'`
+		BackupFuel_Data          float64 `json:'BackupFuel_Data'`
+		FuelTransport_Data       float64 `json:'FuelTransport_Data'`
+	}
+
 	m.SetPayLoad(k)
 	var e error = nil
-	result := []tk.M{}
+	result := []*DataValue{}
 	c := ctx.Connection
 	vedq := ValueEquationDataQuality{}
 	query := []*dbox.Filter{}
-	query = append(query, dbox.Gte("Period.Dates", m.StartPeriod))
-	query = append(query, dbox.Lte("Period.Dates", m.EndPeriod))
+	query = append(query, dbox.Gte("Dates", m.StartPeriod))
+	query = append(query, dbox.Lte("Dates", m.EndPeriod))
 	groupBy := "Plant"
 	switch m.Scope {
 	case "Kingdom":
@@ -354,8 +482,8 @@ func (m *HistoricalValueEquation) GetDataQuality(ctx *orm.DataContext, k *knot.W
 
 	if m.Scope == "Unit" || (m.Scope == "Plant" && m.Selected != nil && len(m.Selected) == 1) {
 		query := []*dbox.Filter{}
-		query = append(query, dbox.Gte("Period.Dates", m.StartPeriod))
-		query = append(query, dbox.Lte("Period.Dates", m.EndPeriod))
+		query = append(query, dbox.Gte("Dates", m.StartPeriod))
+		query = append(query, dbox.Lte("Dates", m.EndPeriod))
 		if m.Scope == "Unit" {
 			query = append(query, dbox.Eq("Plant", m.SelectedPlant))
 			if m.Selected != nil && len(m.Selected) > 0 {
@@ -364,50 +492,155 @@ func (m *HistoricalValueEquation) GetDataQuality(ctx *orm.DataContext, k *knot.W
 		} else {
 			query = append(query, dbox.Eq("Plant", m.Selected[0]))
 		}
-
+		temp := []*ValueEquationDataQuality{}
 		csr, e := ctx.Find(new(ValueEquationDataQuality), tk.M{}.Set("where", dbox.And(query...)))
-		e = csr.Fetch(&result, 0, false)
+		if csr != nil {
+			e = csr.Fetch(&temp, 0, false)
+		}
 		csr.Close()
 		if e != nil {
 			return nil, e
+		} else {
+			m.GetValueEquationDocument(ctx, temp)
+			return temp, e
 		}
 	} else {
 		csr, e := c.NewQuery().
-			Where(query...).
+			Where(query...).Select(groupBy).
 			Aggr(dbox.AggrSum, "1", "Count").
-			Aggr(dbox.AggrSum, "$CapacityPayment_Data", "CapacityPayment_Data").
-			Aggr(dbox.AggrSum, "$EnergyPayment_Data", "EnergyPayment_Data").
-			Aggr(dbox.AggrSum, "$StartupPayment_Data", "StartupPayment_Data").
-			Aggr(dbox.AggrSum, "$Penalty_Data", "Penalty_Data").
-			Aggr(dbox.AggrSum, "$Incentive_Data", "Incentive_Data").
-			Aggr(dbox.AggrSum, "$MaintenanceCost_Data", "MaintenanceCost_Data").
-			Aggr(dbox.AggrSum, "$MaintenanceDuration_Data", "MaintenanceDuration_Data").
-			Aggr(dbox.AggrSum, "$PrimaryFuel1st_Data", "PrimaryFuel1st_Data").
-			Aggr(dbox.AggrSum, "$PrimaryFuel2nd_Data", "PrimaryFuel2nd_Data").
-			Aggr(dbox.AggrSum, "$BackupFuel_Data", "BackupFuel_Data").
-			Aggr(dbox.AggrSum, "$FuelTransport_Data", "FuelTransport_Data").
+			Aggr(dbox.AggrSum, "CapacityPayment_Data", "CapacityPayment_Data").
+			Aggr(dbox.AggrSum, "EnergyPayment_Data", "EnergyPayment_Data").
+			Aggr(dbox.AggrSum, "StartupPayment_Data", "StartupPayment_Data").
+			Aggr(dbox.AggrSum, "Penalty_Data", "Penalty_Data").
+			Aggr(dbox.AggrSum, "Incentive_Data", "Incentive_Data").
+			Aggr(dbox.AggrSum, "MaintenanceCost_Data", "MaintenanceCost_Data").
+			Aggr(dbox.AggrSum, "MaintenanceDuration_Data", "MaintenanceDuration_Data").
+			Aggr(dbox.AggrSum, "PrimaryFuel1st_Data", "PrimaryFuel1st_Data").
+			Aggr(dbox.AggrSum, "PrimaryFuel2nd_Data", "PrimaryFuel2nd_Data").
+			Aggr(dbox.AggrSum, "BackupFuel_Data", "BackupFuel_Data").
+			Aggr(dbox.AggrSum, "FuelTransport_Data", "FuelTransport_Data").
 			From(vedq.TableName()).Group(groupBy).Cursor(nil)
-		e = csr.Fetch(&result, 0, false)
+		if csr != nil {
+			e = csr.Fetch(&result, 0, false)
+		}
 		csr.Close()
 		if e != nil {
 			return nil, e
 		}
 		for _, i := range result {
-			i.Set("_id", i.Get("_id").(tk.M).Get(groupBy))
+			if i.Unit != "" {
+				i.ID = i.Unit
+			} else {
+				i.ID = i.Plant
+			}
 		}
 	}
 	return result, e
 }
 
+func (m *HistoricalValueEquation) GetValueEquationDocument(ctx *orm.DataContext, VEDQList []*ValueEquationDataQuality) {
+	for _, i := range VEDQList {
+		query := []*dbox.Filter{}
+		query = append(query, dbox.Eq("VEId", int(i.Id)))
+
+		CapacityPaymentDocuments := []VEDQCapacityPaymentDocuments{}
+		csr, _ := ctx.Find(new(VEDQCapacityPaymentDocuments), tk.M{}.Set("where", dbox.And(query...)))
+		if csr != nil {
+			csr.Fetch(&CapacityPaymentDocuments, 0, false)
+			i.CapacityPaymentDocuments = CapacityPaymentDocuments
+		}
+		csr.Close()
+
+		BackupFuelDocuments := []VEDQBackupFuelDocuments{}
+		csr, _ = ctx.Find(new(VEDQBackupFuelDocuments), tk.M{}.Set("where", dbox.And(query...)))
+		if csr != nil {
+			csr.Fetch(&BackupFuelDocuments, 0, false)
+			i.BackupFuelDocuments = BackupFuelDocuments
+		}
+		csr.Close()
+
+		EnergyPaymentDocuments := []VEDQEnergyPaymentDocuments{}
+		csr, _ = ctx.Find(new(VEDQEnergyPaymentDocuments), tk.M{}.Set("where", dbox.And(query...)))
+		if csr != nil {
+			csr.Fetch(&EnergyPaymentDocuments, 0, false)
+			i.EnergyPaymentDocuments = EnergyPaymentDocuments
+		}
+		csr.Close()
+
+		MaintenanceCostDocuments := []VEDQMaintenanceCostDocuments{}
+		csr, _ = ctx.Find(new(VEDQMaintenanceCostDocuments), tk.M{}.Set("where", dbox.And(query...)))
+		if csr != nil {
+			csr.Fetch(&MaintenanceCostDocuments, 0, false)
+			i.MaintenanceCostDocuments = MaintenanceCostDocuments
+		}
+		csr.Close()
+
+		MaintenanceDurationDocuments := []VEDQMaintenanceDurationDocuments{}
+		csr, _ = ctx.Find(new(VEDQMaintenanceDurationDocuments), tk.M{}.Set("where", dbox.And(query...)))
+		if csr != nil {
+			csr.Fetch(&MaintenanceDurationDocuments, 0, false)
+			i.MaintenanceDurationDocuments = MaintenanceDurationDocuments
+		}
+		csr.Close()
+
+		PenaltyDocuments := []VEDQPenaltyDocuments{}
+		csr, _ = ctx.Find(new(VEDQPenaltyDocuments), tk.M{}.Set("where", dbox.And(query...)))
+		if csr != nil {
+			csr.Fetch(&PenaltyDocuments, 0, false)
+			i.PenaltyDocuments = PenaltyDocuments
+		}
+		csr.Close()
+
+		IncentiveDocuments := []VEDQIncentiveDocuments{}
+		csr, _ = ctx.Find(new(VEDQIncentiveDocuments), tk.M{}.Set("where", dbox.And(query...)))
+		if csr != nil {
+			csr.Fetch(&IncentiveDocuments, 0, false)
+			i.IncentiveDocuments = IncentiveDocuments
+		}
+		csr.Close()
+
+		PrimaryFuel1stDocuments := []VEDQPrimaryFuel1stDocuments{}
+		csr, _ = ctx.Find(new(VEDQPrimaryFuel1stDocuments), tk.M{}.Set("where", dbox.And(query...)))
+		if csr != nil {
+			csr.Fetch(&PrimaryFuel1stDocuments, 0, false)
+			i.PrimaryFuel1stDocuments = PrimaryFuel1stDocuments
+		}
+		csr.Close()
+
+		PrimaryFuel2ndDocuments := []VEDQPrimaryFuel2ndDocuments{}
+		csr, _ = ctx.Find(new(VEDQPrimaryFuel2ndDocuments), tk.M{}.Set("where", dbox.And(query...)))
+		if csr != nil {
+			csr.Fetch(&PrimaryFuel2ndDocuments, 0, false)
+			i.PrimaryFuel2ndDocuments = PrimaryFuel2ndDocuments
+		}
+		csr.Close()
+
+		StartupPaymentDocuments := []VEDQStartupPaymentDocuments{}
+		csr, _ = ctx.Find(new(VEDQStartupPaymentDocuments), tk.M{}.Set("where", dbox.And(query...)))
+		if csr != nil {
+			csr.Fetch(&StartupPaymentDocuments, 0, false)
+			i.StartupPaymentDocuments = StartupPaymentDocuments
+		}
+		csr.Close()
+	}
+}
+
 func (m *HistoricalValueEquation) GetPerformanceData(ctx *orm.DataContext, k *knot.WebContext) (interface{}, error) {
+	type DataValue struct {
+		ID            string
+		Plant         string  `json:'Plant'`
+		Unit          string  `json:'Unit'`
+		NetGeneration float64 `json:'NetGeneration'`
+		PrctWAF       float64 `json:'PrctWAF'`
+	}
 	m.SetPayLoad(k)
 	var e error = nil
-	result := []tk.M{}
+	result := []*DataValue{}
 	c := ctx.Connection
 	ve := ValueEquation{}
 	query := []*dbox.Filter{}
-	query = append(query, dbox.Gte("Period.Dates", m.StartPeriod))
-	query = append(query, dbox.Lte("Period.Dates", m.EndPeriod))
+	query = append(query, dbox.Gte("Dates", m.StartPeriod))
+	query = append(query, dbox.Lte("Dates", m.EndPeriod))
 	groupBy := "Plant"
 	switch m.Scope {
 	case "Kingdom":
@@ -435,31 +668,58 @@ func (m *HistoricalValueEquation) GetPerformanceData(ctx *orm.DataContext, k *kn
 	}
 
 	csr, e := c.NewQuery().
-		Where(query...).
-		Aggr(dbox.AggrSum, "$NetGeneration", "NetGeneration").
-		Aggr(dbox.AggrSum, "$PrctWAF", "PrctWAF").
+		Where(query...).Select(groupBy).
+		Aggr(dbox.AggrSum, "NetGeneration", "NetGeneration").
+		Aggr(dbox.AggrSum, "PrctWAF", "PrctWAF").
 		From(ve.TableName()).Group(groupBy).Cursor(nil)
-	e = csr.Fetch(&result, 0, false)
+	if csr != nil {
+		e = csr.Fetch(&result, 0, false)
+	}
 	csr.Close()
 	if e != nil {
 		return nil, e
 	}
 	for _, i := range result {
-		i.Set("_id", i.Get("_id").(tk.M).Get(groupBy))
+		if i.Unit != "" {
+			i.ID = i.Unit
+		} else {
+			i.ID = i.Plant
+		}
 	}
 	// Remaining : sort by _id. descending for "result"
 	return result, e
 }
 
 func (m *HistoricalValueEquation) GetAssetWorkData(ctx *orm.DataContext, k *knot.WebContext) (interface{}, error) {
+	type DataValue struct {
+		ID                 string
+		Plant              string  `json:'Plant'`
+		Unit               string  `json:'Unit'`
+		ValueEquationCost  float64 `json:'ValueEquationCost'`
+		MaxPowerGeneration float64 `json:'MaxPowerGeneration'`
+		PotentialRevenue   float64 `json:'PotentialRevenue'`
+		NetGeneration      float64 `json:'NetGeneration'`
+		Revenue            float64 `json:'Revenue'`
+		ForcedOutages      float64 `json:'ForcedOutages'`
+		ForcedOutagesLoss  float64 `json:'ForcedOutagesLoss'`
+		UnforcedOutages    float64 `json:'UnforcedOutages'`
+
+		UnforcedOutagesLoss float64 `json:'UnforcedOutagesLoss'`
+		TotalLabourCost     float64 `json:'TotalLabourCost'`
+		TotalMaterialCost   float64 `json:'TotalMaterialCost'`
+		TotalServicesCost   float64 `json:'TotalServicesCost'`
+		MaintenanceCost     float64 `json:'MaintenanceCost'`
+		OperatingCost       float64 `json:'OperatingCost'`
+	}
+
 	m.SetPayLoad(k)
 	var e error = nil
-	result := []tk.M{}
+	result := []*DataValue{}
 	c := ctx.Connection
 	ve := ValueEquation{}
 	query := []*dbox.Filter{}
-	query = append(query, dbox.Gte("Period.Dates", m.StartPeriod))
-	query = append(query, dbox.Lte("Period.Dates", m.EndPeriod))
+	query = append(query, dbox.Gte("Dates", m.StartPeriod))
+	query = append(query, dbox.Lte("Dates", m.EndPeriod))
 	groupBy := "Plant"
 	switch m.Scope {
 	case "Kingdom":
@@ -487,29 +747,35 @@ func (m *HistoricalValueEquation) GetAssetWorkData(ctx *orm.DataContext, k *knot
 	}
 
 	csr, e := c.NewQuery().
-		Where(query...).
-		Aggr(dbox.AggrSum, "$ValueEquationCost", "ValueEquationCost").
-		Aggr(dbox.AggrSum, "$MaxPowerGeneration", "MaxPowerGeneration").
-		Aggr(dbox.AggrSum, "$PotentialRevenue", "PotentialRevenue").
-		Aggr(dbox.AggrSum, "$NetGeneration", "NetGeneration").
-		Aggr(dbox.AggrSum, "$Revenue", "Revenue").
-		Aggr(dbox.AggrSum, "$ForcedOutages", "ForcedOutages").
-		Aggr(dbox.AggrSum, "$ForcedOutagesLoss", "ForcedOutagesLoss").
-		Aggr(dbox.AggrSum, "$UnforcedOutages", "UnforcedOutages").
-		Aggr(dbox.AggrSum, "$UnforcedOutagesLoss", "UnforcedOutagesLoss").
-		Aggr(dbox.AggrSum, "$TotalLabourCost", "TotalLabourCost").
-		Aggr(dbox.AggrSum, "$TotalMaterialCost", "TotalMaterialCost").
-		Aggr(dbox.AggrSum, "$TotalServicesCost", "TotalServicesCost").
-		Aggr(dbox.AggrSum, "$MaintenanceCost", "MaintenanceCost").
-		Aggr(dbox.AggrSum, "$OperatingCost", "OperatingCost").
+		Where(query...).Select(groupBy).
+		Aggr(dbox.AggrSum, "ValueEquationCost", "ValueEquationCost").
+		Aggr(dbox.AggrSum, "MaxPowerGeneration", "MaxPowerGeneration").
+		Aggr(dbox.AggrSum, "PotentialRevenue", "PotentialRevenue").
+		Aggr(dbox.AggrSum, "NetGeneration", "NetGeneration").
+		Aggr(dbox.AggrSum, "Revenue", "Revenue").
+		Aggr(dbox.AggrSum, "ForcedOutages", "ForcedOutages").
+		Aggr(dbox.AggrSum, "ForcedOutagesLoss", "ForcedOutagesLoss").
+		Aggr(dbox.AggrSum, "UnforcedOutages", "UnforcedOutages").
+		Aggr(dbox.AggrSum, "UnforcedOutagesLoss", "UnforcedOutagesLoss").
+		Aggr(dbox.AggrSum, "TotalLabourCost", "TotalLabourCost").
+		Aggr(dbox.AggrSum, "TotalMaterialCost", "TotalMaterialCost").
+		Aggr(dbox.AggrSum, "TotalServicesCost", "TotalServicesCost").
+		Aggr(dbox.AggrSum, "MaintenanceCost", "MaintenanceCost").
+		Aggr(dbox.AggrSum, "OperatingCost", "OperatingCost").
 		From(ve.TableName()).Group(groupBy).Cursor(nil)
-	e = csr.Fetch(&result, 0, false)
+	if csr != nil {
+		e = csr.Fetch(&result, 0, false)
+	}
 	csr.Close()
 	if e != nil {
 		return nil, e
 	}
 	for _, i := range result {
-		i.Set("_id", i.Get("_id").(tk.M).Get(groupBy))
+		if i.Unit != "" {
+			i.ID = i.Unit
+		} else {
+			i.ID = i.Plant
+		}
 	}
 	// Remaining : sort by _id. descending for "result"
 	return result, e

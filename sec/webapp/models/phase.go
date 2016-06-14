@@ -7,8 +7,8 @@ import (
 
 type PhaseModel struct {
 	orm.ModelBase `bson:"-",json:"-"`
-	Id            string ` bson:"_id" , json:"_id" `
-	Phase  string
+	Id            int    ` bson:"Id" json:"Id" `
+	Phase         string ` bson:"Phase" json:"Phase" `
 }
 
 func NewPhaseModel() *PhaseModel {

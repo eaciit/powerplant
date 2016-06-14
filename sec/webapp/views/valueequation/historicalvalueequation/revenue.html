@@ -75,7 +75,7 @@
 		  </thead>
 		  <tbody data-bind="foreach:ChartDataRevEx">
 		    <tr>
-		    	<th data-bind="text:_id"></td>
+		    	<th data-bind="text:ID"></td>
 				<td data-bind="text:kendo.toString(CapacityPayment,'N0'),attr:{style:HVERevenue.isMaxOrMinCapacityPayment(CapacityPayment)}" class="align-right sar-currency"></td>
 				<td data-bind="text:kendo.toString(EnergyPayment,'N0'),attr:{style:HVERevenue.isMaxOrMinEnergyPayment(EnergyPayment)}" class="align-right sar-currency"></td>
 				<td data-bind="text:kendo.toString(StartupPayment,'N0'),attr:{style:HVERevenue.isMaxOrMinStartupPayment(StartupPayment)}" class="align-right sar-currency"></td>
@@ -135,10 +135,10 @@ HVERevenue.GetData = function(){
 				var DataRevEx = res.Data.DataChartRevenueEx;
 				if(HVESummary.scope()=="Plant"){
 					for(var i in DataRevEx){
-						DataRevEx[i].Index = parseFloat(DataRevEx[i]._id.substr(2));
+						DataRevEx[i].Index = parseFloat(DataRevEx[i].ID.substr(2));
 					}
-					var GTArr = Enumerable.From(DataRevEx).Where(function(x){return x._id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
-					var STArr = Enumerable.From(DataRevEx).Where(function(x){return x._id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+					var GTArr = Enumerable.From(DataRevEx).Where(function(x){return x.ID.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+					var STArr = Enumerable.From(DataRevEx).Where(function(x){return x.ID.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
 					var arr = [];
 					for(var i in GTArr){
 					arr.push(GTArr[i]);
@@ -146,7 +146,7 @@ HVERevenue.GetData = function(){
 					for(var i in STArr){
 					arr.push(STArr[i]);
 					}
-					var UnmappedArr = Enumerable.From(DataRevEx).Where(function(x){return x._id =="Unmapped Data"}).OrderBy(function(x){return x.Index}).ToArray();
+					var UnmappedArr = Enumerable.From(DataRevEx).Where(function(x){return x.ID =="Unmapped Data"}).OrderBy(function(x){return x.Index}).ToArray();
 					for(var i in UnmappedArr){
 					arr.push(UnmappedArr[i]);
 					}

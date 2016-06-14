@@ -259,6 +259,7 @@ ValueEquation.GetUnitList = function(){
     if(!res.IsError){
         var ds = res.Data;
         for(var i in ds){
+          ds[i].Id = ds[i].Unit;
           ds[i].Index = parseFloat(ds[i].Id.substr(2));
         }
         var GTArr = Enumerable.From(ds).Where(function(x){return x.Id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
