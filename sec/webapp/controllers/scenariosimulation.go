@@ -1,6 +1,6 @@
 package controllers
 
-import (
+/*import (
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/knot/knot.v1"
 	. "github.com/eaciit/powerplant/sec/webapp/models"
@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type ScenarioSimulation struct {
+/*type ScenarioSimulation struct {
 	*BaseController
 }
 
@@ -282,4 +282,4 @@ func (s *ScenarioSimulation) SaveData(k *knot.WebContext) interface{} {
 	result.Set("Message", msg)
 
 	return result
-}
+}*/

@@ -41,7 +41,7 @@ func init() {
 	app.Register(&ValueEquationComparisonController{baseCont})
 	app.Register(&HistoricalValueEquationController{baseCont})
 	app.Register(&HypothesisController{baseCont})
-	app.Register(&ScenarioSimulation{baseCont})
+	//app.Register(&ScenarioSimulation{baseCont})
 	app.Register(&UploadDataController{baseCont})
 	/*app.Register(&InitController{baseCont})
 	app.Register(&OrganizationController{baseCont})

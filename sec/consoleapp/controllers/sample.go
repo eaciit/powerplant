@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	m "github.com/eaciit/powerplant/sec/consoleapp/models"
+	m "github.com/eaciit/powerplant/sec/library/models"
 	// "github.com/eaciit/dbox"
 	tk "github.com/eaciit/toolkit"
 	// "gopkg.in/mgo.v2/bson"
