@@ -67,7 +67,7 @@ func (m *HistoricalValueEquation) GetSummaryData(ctx *orm.DataContext, k *knot.W
 		Aggr(dbox.AggrSum, "Revenue", "Revenue").
 		Aggr(dbox.AggrSum, "MaintenanceCost", "MaintenanceCost").
 		Aggr(dbox.AggrSum, "OperatingCost", "OperatingCost").
-		From(ve.TableName()).Group("Plant").Cursor(nil)
+		From(ve.TableName()).Group("Plant").Order("-Plant").Cursor(nil)
 	if e != nil {
 		return nil, e
 	}
@@ -95,7 +95,7 @@ func (m *HistoricalValueEquation) GetSummaryData(ctx *orm.DataContext, k *knot.W
 			Aggr(dbox.AggrSum, "Revenue", "Revenue").
 			Aggr(dbox.AggrSum, "MaintenanceCost", "MaintenanceCost").
 			Aggr(dbox.AggrSum, "OperatingCost", "OperatingCost").
-			From(ve.TableName()).Group(groupBy).Cursor(nil)
+			From(ve.TableName()).Group(groupBy).Order("-" + groupBy).Cursor(nil)
 		if csr != nil {
 			e = csr.Fetch(&DataDetail, 0, false)
 		}
@@ -129,7 +129,7 @@ func (m *HistoricalValueEquation) GetMaintenanceData(ctx *orm.DataContext, k *kn
 		ServiceCost   float64 `json:'ServiceCost'`
 	}
 
-	result, DataMainEx, DataOrder, DataChart, DataTable, Temp, IDList := tk.M{}, []DataValue{}, []DataValue{}, []tk.M{}, []DataValue{}, []tk.M{}, []interface{}{}
+	result, DataMainEx, DataOrder, DataChart, DataTable, Temp, IDList := tk.M{}, []*DataValue{}, []*DataValue{}, []tk.M{}, []DataValue{}, []tk.M{}, []interface{}{}
 	c := ctx.Connection
 	query := []*dbox.Filter{}
 	query = append(query, dbox.Gte("Dates", m.StartPeriod))
@@ -167,7 +167,7 @@ func (m *HistoricalValueEquation) GetMaintenanceData(ctx *orm.DataContext, k *kn
 		Aggr(dbox.AggrSum, "TotalLabourCost", "LaborCost").
 		Aggr(dbox.AggrSum, "TotalMaterialCost", "MaterialCost").
 		Aggr(dbox.AggrSum, "TotalServicesCost", "ServiceCost").
-		From(new(ValueEquation).TableName()).Group(groupBy).Cursor(nil)
+		From(new(ValueEquation).TableName()).Group(groupBy).Order("-" + groupBy).Cursor(nil)
 	if e != nil {
 		return nil, e
 	}
@@ -317,7 +317,7 @@ func (m *HistoricalValueEquation) GetOperatingData(ctx *orm.DataContext, k *knot
 			Aggr(dbox.AggrSum, "Capacity", "Capacity").
 			Aggr(dbox.AggrSum, "NetGeneration", "NetGeneration").
 			Aggr(dbox.AggrSum, "OperatingCost", "OperatingCost").
-			From(ve.TableName()).Group(groupBy).Cursor(nil)
+			From(ve.TableName()).Group(groupBy).Order(groupBy).Cursor(nil)
 		if csr != nil {
 			e = csr.Fetch(&DataDetail, 0, false)
 		}
@@ -408,7 +408,7 @@ func (m *HistoricalValueEquation) GetRevenueData(ctx *orm.DataContext, k *knot.W
 		Aggr(dbox.AggrSum, "PenaltyAmount", "PenaltyAmount").
 		Aggr(dbox.AggrSum, "Incentive", "Incentive").
 		Aggr(dbox.AggrSum, "Revenue", "Revenue").
-		From(ve.TableName()).Group(groupBy).Cursor(nil)
+		From(ve.TableName()).Group(groupBy).Order("-" + groupBy).Cursor(nil)
 	if csr != nil {
 		e = csr.Fetch(&DataChartRevenueEx, 0, false)
 	}
@@ -423,7 +423,6 @@ func (m *HistoricalValueEquation) GetRevenueData(ctx *orm.DataContext, k *knot.W
 			i.ID = i.Plant
 		}
 	}
-	// Remaining : sort by _id. descending for "DataChartRevenueEx"
 	return result.Set("DataChartRevenue", DataChartRevenue).Set("DataChartRevenueEx", DataChartRevenueEx), e
 }
 
@@ -519,7 +518,7 @@ func (m *HistoricalValueEquation) GetDataQuality(ctx *orm.DataContext, k *knot.W
 			Aggr(dbox.AggrSum, "PrimaryFuel2nd_Data", "PrimaryFuel2nd_Data").
 			Aggr(dbox.AggrSum, "BackupFuel_Data", "BackupFuel_Data").
 			Aggr(dbox.AggrSum, "FuelTransport_Data", "FuelTransport_Data").
-			From(vedq.TableName()).Group(groupBy).Cursor(nil)
+			From(vedq.TableName()).Group(groupBy).Order("-" + groupBy).Cursor(nil)
 		if csr != nil {
 			e = csr.Fetch(&result, 0, false)
 		}
@@ -671,7 +670,7 @@ func (m *HistoricalValueEquation) GetPerformanceData(ctx *orm.DataContext, k *kn
 		Where(query...).Select(groupBy).
 		Aggr(dbox.AggrSum, "NetGeneration", "NetGeneration").
 		Aggr(dbox.AggrSum, "PrctWAF", "PrctWAF").
-		From(ve.TableName()).Group(groupBy).Cursor(nil)
+		From(ve.TableName()).Group(groupBy).Order(groupBy).Cursor(nil)
 	if csr != nil {
 		e = csr.Fetch(&result, 0, false)
 	}
@@ -686,7 +685,6 @@ func (m *HistoricalValueEquation) GetPerformanceData(ctx *orm.DataContext, k *kn
 			i.ID = i.Plant
 		}
 	}
-	// Remaining : sort by _id. descending for "result"
 	return result, e
 }
 
@@ -762,7 +760,7 @@ func (m *HistoricalValueEquation) GetAssetWorkData(ctx *orm.DataContext, k *knot
 		Aggr(dbox.AggrSum, "TotalServicesCost", "TotalServicesCost").
 		Aggr(dbox.AggrSum, "MaintenanceCost", "MaintenanceCost").
 		Aggr(dbox.AggrSum, "OperatingCost", "OperatingCost").
-		From(ve.TableName()).Group(groupBy).Cursor(nil)
+		From(ve.TableName()).Group(groupBy).Order(groupBy).Cursor(nil)
 	if csr != nil {
 		e = csr.Fetch(&result, 0, false)
 	}
@@ -777,6 +775,5 @@ func (m *HistoricalValueEquation) GetAssetWorkData(ctx *orm.DataContext, k *knot
 			i.ID = i.Plant
 		}
 	}
-	// Remaining : sort by _id. descending for "result"
 	return result, e
 }
