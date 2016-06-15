@@ -12,6 +12,9 @@ type ValueEquationController struct {
 }
 
 func (c *ValueEquationController) Default(k *knot.WebContext) interface{} {
+	if k.Session("userid") == nil {
+		c.Redirect(k, "login", "default")
+	}
 	c.LoadPartial(k, "valueequation/browse.html",
 		"valueequation/historicalvalueequation/index.html",
 		"valueequation/historicalvalueequation/maintenance.html",

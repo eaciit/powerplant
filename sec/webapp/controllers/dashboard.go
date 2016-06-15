@@ -22,7 +22,9 @@ func (c *DashboardController) CheckNotError(e error) error {
 }
 
 func (c *DashboardController) Default(k *knot.WebContext) interface{} {
-	//c.LoadBase(k)
+	if k.Session("userid") == nil {
+		c.Redirect(k, "login", "default")
+	}
 	c.LoadPartial(k, "dashboard/numberofturbines.html", "dashboard/powervsfuelconsumtion.html", "dashboard/numberofworkorders.html", "dashboard/maintenancecost.html")
 
 	k.Config.OutputType = knot.OutputTemplate
