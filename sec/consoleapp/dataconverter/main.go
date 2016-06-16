@@ -6,7 +6,7 @@ import (
 	_ "github.com/eaciit/dbox/dbc/mongo"
 	_ "github.com/eaciit/dbox/dbc/mssql"
 	"github.com/eaciit/orm"
-	. "github.com/eaciit/powerplant/sec/consoleapp/controllers"
+	. "github.com/eaciit/powerplant/sec/consoleapp/dataconverter/controllers"
 	// . "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
 )
@@ -87,9 +87,9 @@ func main() {
 	// convert(new(SummaryData), base) // 					done
 	// convert(new(DataBrowser), base) // 					done
 
-	migrate := new(MigrateData)
-	migrate.BaseController = base
-	migrate.GenerateMasterUnit()
+	// migrate := new(MigrateData)
+	// migrate.BaseController = base
+	// migrate.GenerateMasterUnit()
 
 	// migrate.DoCostSheet() // 							done
 	// migrate.DoGeneralInfo() // 							done
@@ -106,8 +106,8 @@ func main() {
 	//migrate.DoGenerateAssetType()
 	//migrate.DoGenerateAssetLevel()
 
-	check := DataChecker{base}
-	check.CheckDetailData()
+	// check := DataChecker{base}
+	// check.CheckDetailData()
 }
 
 func convert(m orm.IModel, base *BaseController) {

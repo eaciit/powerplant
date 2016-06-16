@@ -1,11 +1,6 @@
 package controllers
 
 import (
-	"reflect"
-	"strconv"
-	"sync"
-	"time"
-
 	"github.com/eaciit/dbox"
 	_ "github.com/eaciit/dbox/dbc/mongo"
 	_ "github.com/eaciit/dbox/dbc/mssql"
@@ -13,6 +8,10 @@ import (
 	. "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
 	"gopkg.in/mgo.v2/bson"
+	"reflect"
+	"strconv"
+	"sync"
+	"time"
 )
 
 type MigrateData struct {
