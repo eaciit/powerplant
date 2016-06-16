@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type ScenarioSimulation struct {
+type ScenarioSimulationModel struct {
 	sync.RWMutex
 	orm.ModelBase `bson:"-" json:"-"`
 	//Id                   int64 `bson:"Id" json:"Id"`
@@ -42,7 +42,7 @@ type ScenarioSimulation struct {
 	LastUpdate                    time.Time `bson:"Last_Update" json:"LastUpdate"`
 }
 
-func (s *ScenarioSimulation) TableName() string {
+func (s *ScenarioSimulationModel) TableName() string {
 	return "ScenarioSimulation"
 }
 

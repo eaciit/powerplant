@@ -111,7 +111,7 @@ var ScenarioSimulation = {
            <div class="row">
                 <label class="col-md-4 filter-label">Unit</label>
                 <div class="col-md-8">
-                    <input type="text" data-bind="kendoMultiSelect:{value:selectedUnit,data:UnitList,dataValueField:'Id',dataTextField:'Id',placeholder:'All'}"/>
+                    <input type="text" data-bind="kendoMultiSelect:{value:selectedUnit,data:UnitList,placeholder:'All'}"/>
                 </div>
             </div>
         </div>
@@ -380,6 +380,7 @@ ScenarioSimulation.GetData = function(){
   var url = "/scenariosimulation/getdata"
     var parm = ScenarioSimulation.GetFilter();
    ajaxPost(url, parm, function(data){
+      //console.log(data);
       if(data.Status=="OK"){   
             ScenarioSimulation.isResultAvailable(true);
             ScenarioSimulation.ProcessingData(data.Data);
@@ -415,27 +416,17 @@ ScenarioSimulation.Initiate = function(updatingFilter){
           if(!res.IsError){
             ScenarioSimulation.Processing(false);
               if(!updatingFilter){
-                /*ScenarioSimulation.PlantList(Enumerable.From(res.Data.PlantList).Select(function(x){return x.Id}).ToArray());*/
                 var Plantname = [];
                 for (var i = 0 ; i < res.Data.PlantList.length ; i++){
                     Plantname.push(res.Data.PlantList[i].Plant);
                 }
                 ScenarioSimulation.PlantList(Plantname);
               }
-              var ds = res.Data.UnitList;
-              for(var i in ds){
-                ds[i].Index = parseFloat(ds[i].Id.substr(2));
+              var Unitname = [];
+              for (var i = 0 ; i < res.Data.UnitList.length ; i++){
+                  Unitname.push(res.Data.UnitList[i].Unit);
               }
-              var GTArr = Enumerable.From(ds).Where(function(x){return x.Id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
-              var STArr = Enumerable.From(ds).Where(function(x){return x.Id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
-              var arr = [];
-              for(var i in GTArr){
-                arr.push(GTArr[i]);
-              }
-              for(var i in STArr){
-                arr.push(STArr[i]);
-              }
-              ScenarioSimulation.UnitList(arr);
+              ScenarioSimulation.UnitList(Unitname);
           }else{
               alert(res.Message);
           }
