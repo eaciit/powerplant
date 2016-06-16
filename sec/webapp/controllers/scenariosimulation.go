@@ -67,7 +67,7 @@ func (s *ScenarioSimulation) Initiate(k *knot.WebContext) interface{} {
 		return e.Error()
 	}
 
-	/*csr, e = s.DB().Find(new(UnitModel), tk.M{}.Set("skip", 0).Set("limit", 0))*/
+	//csr, e = s.DB().Find(new(UnitModel), tk.M{}.Set("skip", 0).Set("limit", 0))
 	csr, e = s.DB().Connection.NewQuery().Select("Unit").From("MasterUnit").Cursor(nil)
 	UnitList := make([]UnitModel, 0)
 	e = csr.Fetch(&UnitList, 0, true)

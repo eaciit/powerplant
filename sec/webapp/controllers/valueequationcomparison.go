@@ -11,6 +11,9 @@ type ValueEquationComparisonController struct {
 }
 
 func (c *ValueEquationComparisonController) Default(k *knot.WebContext) interface{} {
+	if k.Session("userid") == nil {
+		c.Redirect(k, "login", "default")
+	}
 	c.LoadPartial(k)
 	k.Config.OutputType = knot.OutputTemplate
 

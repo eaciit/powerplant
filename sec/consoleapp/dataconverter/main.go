@@ -6,7 +6,7 @@ import (
 	_ "github.com/eaciit/dbox/dbc/mongo"
 	_ "github.com/eaciit/dbox/dbc/mssql"
 	"github.com/eaciit/orm"
-	. "github.com/eaciit/powerplant/sec/consoleapp/controllers"
+	. "github.com/eaciit/powerplant/sec/consoleapp/dataconverter/controllers"
 	// . "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
 )
@@ -87,23 +87,27 @@ func main() {
 	// convert(new(SummaryData), base) // 					done
 	// convert(new(DataBrowser), base) // 					done
 
-	migrate := new(MigrateData)
-	migrate.BaseController = base
-	migrate.GenerateMasterUnit()
+	// migrate := new(MigrateData)
+	// migrate.BaseController = base
+	// migrate.GenerateMasterUnit()
 
 	// migrate.DoCostSheet() // 							done
 	// migrate.DoGeneralInfo() // 							done
 	// migrate.DoPowerPlantOutages()	//					done
 	// migrate.DoValueEquationDataQuality()	//				done
-
-	// migrate.DoScenarioSimulation() 		//				done
-	// migrate.DoValueEquationDashboard()					done
-	// migrate.DoPowerPlantOutages() // 					done
-	// migrate.DoGenerateVibration()						done
-
+	// migrate.DoValueEquationDashboard()
+	//migrate.DoPowerPlantOutages()
+	//migrate.DoGenerateVibration()							done
 	// migrate.DoValueEquation() //							done
 	// migrate.DoPowerPlantOutages() //						done
-	// migrate.DoDataBrowser()								done
+	// migrate.DoDataBrowser()
+	// migrate.DoMasterUnit()
+	//migrate.DoGenerateAssetClass()
+	//migrate.DoGenerateAssetType()
+	//migrate.DoGenerateAssetLevel()
+
+	// check := DataChecker{base}
+	// check.CheckDetailData()
 }
 
 func convert(m orm.IModel, base *BaseController) {

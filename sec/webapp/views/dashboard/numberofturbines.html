@@ -20,9 +20,7 @@ Dashboard.GetNumberOfTurbines  = function(){
 Dashboard.GenNumberOfTurbines = function(dataSource){
   $.each(dataSource, function(index, value){
     dataSource[index].count = value.count;
-    $.each(value._id, function(index1, value1){
-      dataSource[index]._id = value1;
-    });
+    dataSource[index]._id = value._id;
   });
 
   $("#NumberOfTurbinesChart").html("");

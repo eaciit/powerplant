@@ -367,6 +367,7 @@ ScenarioSimulation.GetDataSimulation = function(){
       dataType: 'json',
       data : parm,
       success : function(res) {
+		//console.log(res);
           if(res.Status=="OK"){    
             ScenarioSimulation.GenDataSimulation(res.Data);
           }else{
@@ -380,7 +381,6 @@ ScenarioSimulation.GetData = function(){
   var url = "/scenariosimulation/getdata"
     var parm = ScenarioSimulation.GetFilter();
    ajaxPost(url, parm, function(data){
-      //console.log(data);
       if(data.Status=="OK"){   
             ScenarioSimulation.isResultAvailable(true);
             ScenarioSimulation.ProcessingData(data.Data);
@@ -416,17 +416,19 @@ ScenarioSimulation.Initiate = function(updatingFilter){
           if(!res.IsError){
             ScenarioSimulation.Processing(false);
               if(!updatingFilter){
+                /*ScenarioSimulation.PlantList(Enumerable.From(res.Data.PlantList).Select(function(x){return x.Id}).ToArray());*/
                 var Plantname = [];
                 for (var i = 0 ; i < res.Data.PlantList.length ; i++){
                     Plantname.push(res.Data.PlantList[i].Plant);
                 }
                 ScenarioSimulation.PlantList(Plantname);
               }
-              var Unitname = [];
+              var ds = res.Data.UnitList;
+              var UnitName = [];
               for (var i = 0 ; i < res.Data.UnitList.length ; i++){
-                  Unitname.push(res.Data.UnitList[i].Unit);
+                UnitName.push(res.Data.UnitList[i].Unit);
               }
-              ScenarioSimulation.UnitList(Unitname);
+              ScenarioSimulation.UnitList(UnitName);
           }else{
               alert(res.Message);
           }

@@ -158,7 +158,7 @@ ScenarioSimulation.SaveSimulation = function(){
     };
     ScenarioSimulation.Processing(true);
    ajaxPost(url, parm, function(data){
-    console.log(data);
+    //console.log(data);
       if(data.Status=="OK"){   
             ScenarioSimulation.GetDataSimulation();
             ScenarioSimulation.Processing(false);

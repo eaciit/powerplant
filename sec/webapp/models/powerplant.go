@@ -1,11 +1,11 @@
 package models
 
 import (
-	. "github.com/eaciit/orm"
+	"github.com/eaciit/orm"
 )
 
 type PlantData struct {
-	ModelBase             `bson:"base"`
+	orm.ModelBase         `bson:"-",json:"-"`
 	PlantName             string  `bson:"PlantName"`
 	PlantCode             string  `bson:"PlantCode"`
 	Province              string  `bson:"Province"`
@@ -22,14 +22,4 @@ type PlantData struct {
 
 func (c *PlantData) TableName() string {
 	return "PowerPlantCoordinates"
-}
-
-type PlantCapacity struct {
-	ModelBase     `bson:"base"`
-	PlantCode     string  `bson:"_id"`
-	TotalCapacity float64 `bson:"TotalCapacity"`
-}
-
-func (c *PlantCapacity) TableName() string {
-	return "DataBrowser"
 }

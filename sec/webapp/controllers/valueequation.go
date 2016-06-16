@@ -12,6 +12,9 @@ type ValueEquationController struct {
 }
 
 func (c *ValueEquationController) Default(k *knot.WebContext) interface{} {
+	if k.Session("userid") == nil {
+		c.Redirect(k, "login", "default")
+	}
 	c.LoadPartial(k, "valueequation/browse.html",
 		"valueequation/historicalvalueequation/index.html",
 		"valueequation/historicalvalueequation/maintenance.html",
@@ -36,6 +39,7 @@ func (c *ValueEquationController) Default(k *knot.WebContext) interface{} {
 
 func (c *ValueEquationController) Initiate(k *knot.WebContext) interface{} {
 	k.Config.OutputType = knot.OutputJson
+	var e error
 	csr, e := c.Ctx.Find(new(PlantModel), tk.M{}.Set("skip", 0).Set("limit", 0))
 	defer csr.Close()
 	PlantList := make([]PlantModel, 0)
@@ -66,6 +70,7 @@ func (c *ValueEquationController) GetUnitList(k *knot.WebContext) interface{} {
 	d := struct {
 		SelectedPlant string
 	}{}
+	e := k.GetPayload(&d)
 	csr, e := c.Ctx.Find(new(MasterUnitPlant), tk.M{}.Set("where", dbox.Eq("Plant", d.SelectedPlant)))
 	defer csr.Close()
 	UnitPlantList := make([]MasterUnitPlant, 0)
