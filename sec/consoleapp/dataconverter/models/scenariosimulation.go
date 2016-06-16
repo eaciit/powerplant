@@ -7,10 +7,10 @@ import (
 	"time"
 )
 
-type ScenarioSimulation struct {
+type ScenarioSimulationModel struct {
 	sync.RWMutex
-	orm.ModelBase                 `bson:"-" json:"-"`
-	Id                            string    `bson:"_id"`
+	orm.ModelBase `bson:"-" json:"-"`
+	//Id                   int64 `bson:"Id" json:"Id"`
 	StartPeriod                   time.Time `bson:"Start_Period" json:"StartPeriod"`
 	EndPeriod                     time.Time `bson:"End_Period" json:"EndPeriod"`
 	Name                          string    `bson:"Name" json:"Name"`
@@ -42,15 +42,16 @@ type ScenarioSimulation struct {
 	LastUpdate                    time.Time `bson:"Last_Update" json:"LastUpdate"`
 }
 
-func (s *ScenarioSimulation) TableName() string {
+func (s *ScenarioSimulationModel) TableName() string {
 	return "ScenarioSimulation"
 }
 
 type ScenarioSimulationSelectedPlant struct {
 	sync.RWMutex
 	orm.ModelBase `bson:"-" json:"-"`
-	SSId          string `bson:"SSId" json:"SSId"`
-	Plant         string `bson:"Plant" json:"Plant"`
+	//Id  int64 `bson:"Id" json:"Id"`
+	SSId  int64  `bson:"SSId" json:"SSId"`
+	Plant string `bson:"Plant" json:"Plant"`
 }
 
 func (sp *ScenarioSimulationSelectedPlant) TableName() string {
@@ -60,8 +61,9 @@ func (sp *ScenarioSimulationSelectedPlant) TableName() string {
 type ScenarioSimulationSelectedUnit struct {
 	sync.RWMutex
 	orm.ModelBase `bson:"-" json:"-"`
-	SSId          string `bson:"SSId" json:"SSId"`
-	Unit          string `bson:"Unit" json:"Unit"`
+	//Id int64 `bson:"Id" json:"Id"`
+	SSId int64  `bson:"SSId" json:"SSId"`
+	Unit string `bson:"Unit" json:"Unit"`
 }
 
 func (su *ScenarioSimulationSelectedUnit) TableName() string {
@@ -71,10 +73,11 @@ func (su *ScenarioSimulationSelectedUnit) TableName() string {
 type ScenarioSimulationSelectedScenario struct {
 	sync.RWMutex
 	orm.ModelBase `bson:"-" json:"-"`
-	SSId          string  `bson:"SSId" json:"SSId"`
-	ID            string  `bson:"ID" json:"ID"`
-	Name          string  `bson:"Name" json:"Name"`
-	Value         float64 `bson:"Value" json:"Value"`
+	//Id  int64 `bson:"Id" json:"Id"`
+	SSId  int64   `bson:"SSId" json:"SSId"`
+	ID    string  `bson:"ID" json:"ID"`
+	Name  string  `bson:"Name" json:"Name"`
+	Value float64 `bson:"Value" json:"Value"`
 }
 
 func (ss *ScenarioSimulationSelectedScenario) TableName() string {
