@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/eaciit/knot/knot.v1"
+	. "github.com/eaciit/powerplant/sec/webapp/models"
 	tk "github.com/eaciit/toolkit"
 )
 
@@ -12,7 +13,6 @@ type LoginController struct {
 func (c *LoginController) Default(k *knot.WebContext) interface{} {
 	c.LoadPartial(k)
 	k.Config.NoLog = true
-
 	k.Config.OutputType = knot.OutputTemplate
 	k.Config.LayoutTemplate = ""
 	return ""
@@ -22,7 +22,6 @@ func (c *LoginController) Do(k *knot.WebContext) interface{} {
 	k.Config.OutputType = knot.OutputJson
 	k.Config.NoLog = true
 
-	isLogged := false
 	msg := ""
 	p := struct {
 		UserName   string
@@ -32,21 +31,18 @@ func (c *LoginController) Do(k *knot.WebContext) interface{} {
 	e := k.GetPayload(&p)
 	if e != nil {
 		c.WriteLog(e)
-		// msg = "Error: " + e.Error()
 	}
+	User := new(UserModel)
+	User, Found := User.LoginDo(c.Ctx, p.UserName, p.Password)
 
-	tk.Println(p)
-	// // temporary
-	// if p.UserName == "eaciit" && p.Password == "Password.1" {
-	k.SetSession("userid", p.UserName)
-	k.SetSession("username", "EACIIT Administrator")
-	k.SetSession("userrole", "ADMIN")
-	isLogged = true
-	// 	msg = ""
-	// } else {
-	// 	msg = "Your User ID or password are not matches!"
-	// }
-	return tk.M{}.Set("IsLogged", isLogged).Set("Message", msg).Set("success", true)
+	if Found {
+		k.SetSession("userid", User.UserName)
+		k.SetSession("username", User.FullName)
+		k.SetSession("userrole", "ADMIN")
+	} else {
+		msg = "Your User ID or password are not matches!"
+	}
+	return tk.M{}.Set("IsLogged", Found).Set("Message", msg).Set("success", true)
 }
 
 func (c *LoginController) DoLogout(k *knot.WebContext) interface{} {

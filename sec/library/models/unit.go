@@ -7,11 +7,11 @@ import (
 
 type UnitModel struct {
 	orm.ModelBase `bson:"-",json:"-"`
-	Id            int    `bson:"Id"  json:"Id" `
-	Unit          string `bson:"Unit"  json:"Unit" `
+	//Id            string
+	Unit string
 }
 
-func NewUnitModel() *UnitModel {
+/*func NewUnitModel() *UnitModel {
 	m := new(UnitModel)
 	// m.Id = bson.NewObjectId()
 	return m
@@ -19,7 +19,7 @@ func NewUnitModel() *UnitModel {
 
 func (e *UnitModel) RecordID() interface{} {
 	return e.Id
-}
+}*/
 
 func (m *UnitModel) TableName() string {
 	return "MasterUnit"

@@ -48,7 +48,7 @@
 	  </thead>
 	  <tbody data-bind="foreach:DataPerformance">
 	    <tr>
-	    	<th data-bind="text:_id"></td>
+	    	<th data-bind="text:ID"></td>
 			<td width="150" data-bind="text:kendo.toString(NetGeneration,'N2')" class="align-right"></td>
 			<td width="150" data-bind="text:kendo.toString(PrctWAF/100,'P2'), attr:{style:HVEPerformance.Below75Percent(PrctWAF)}" class="align-right"></td>
 		</td>
@@ -87,10 +87,10 @@ HVEPerformance.GetData = function(){
 				var DataPerformance = res.Data;
 				if(HVESummary.scope()=="Plant"){
 					for(var i in DataPerformance){
-						DataPerformance[i].Index = parseFloat(DataPerformance[i]._id.substr(2));
+						DataPerformance[i].Index = parseFloat(DataPerformance[i].ID.substr(2));
 					}
-					var GTArr = Enumerable.From(DataPerformance).Where(function(x){return x._id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
-					var STArr = Enumerable.From(DataPerformance).Where(function(x){return x._id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+					var GTArr = Enumerable.From(DataPerformance).Where(function(x){return x.ID.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+					var STArr = Enumerable.From(DataPerformance).Where(function(x){return x.ID.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
 					var arr = [];
 					for(var i in GTArr){
 					arr.push(GTArr[i]);
@@ -98,7 +98,7 @@ HVEPerformance.GetData = function(){
 					for(var i in STArr){
 					arr.push(STArr[i]);
 					}
-					var UnmappedArr = Enumerable.From(DataPerformance).Where(function(x){return x._id =="Unmapped Data"}).OrderBy(function(x){return x.Index}).ToArray();
+					var UnmappedArr = Enumerable.From(DataPerformance).Where(function(x){return x.ID =="Unmapped Data"}).OrderBy(function(x){return x.Index}).ToArray();
 					for(var i in UnmappedArr){
 					arr.push(UnmappedArr[i]);
 					}

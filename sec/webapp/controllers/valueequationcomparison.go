@@ -1,12 +1,19 @@
 package controllers
 
-// . "github.com/eaciit/powerplant/sec/webapp/models"
+import (
+	"github.com/eaciit/knot/knot.v1"
+	. "github.com/eaciit/powerplant/sec/webapp/models"
+	tk "github.com/eaciit/toolkit"
+)
 
 type ValueEquationComparisonController struct {
 	*BaseController
 }
 
-/*func (c *ValueEquationComparisonController) Default(k *knot.WebContext) interface{} {
+func (c *ValueEquationComparisonController) Default(k *knot.WebContext) interface{} {
+	if k.Session("userid") == nil {
+		c.Redirect(k, "login", "default")
+	}
 	c.LoadPartial(k)
 	k.Config.OutputType = knot.OutputTemplate
 
@@ -28,4 +35,3 @@ func (c *ValueEquationComparisonController) GetUnitList(k *knot.WebContext) inte
 	result, e := vec.GetUnitList(c.Ctx, k)
 	return ResultInfo(result, e)
 }
-*/

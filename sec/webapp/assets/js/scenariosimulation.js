@@ -157,25 +157,21 @@ ScenarioSimulation.SaveSimulation = function(){
         ValueEquation:d.ValueEquation(),
     };
     ScenarioSimulation.Processing(true);
-    $.ajax({
-      url: url,
-      type: 'post',
-      dataType: 'json',
-      data : parm,
-      success : function(res) {
-          if(res.Status=="OK"){    
-             ScenarioSimulation.GetDataSimulation();
-              ScenarioSimulation.Processing(false);
-              ScenarioSimulation.ResetSelection();
-              ScenarioSimulation.isCreatingSimulation(false);
-          }else{
-              alert(res.message);
-          }
-      },
-   });
+   ajaxPost(url, parm, function(data){
+    //console.log(data);
+      if(data.Status=="OK"){   
+            ScenarioSimulation.GetDataSimulation();
+            ScenarioSimulation.Processing(false);
+            ScenarioSimulation.ResetSelection();
+            ScenarioSimulation.isCreatingSimulation(false);
+      }else{
+          alert(data.Message);
+      }
+  });
 }
 ScenarioSimulation.ProcessingData = function(dataSource){
     var FutureDataSource = dataSource;
+    //console.log(dataSource);
     // Pre Set Value
     var HistoricData = ScenarioSimulation.HistoricValueEquation;
     var FutureData = ScenarioSimulation.FutureValueEquation;
@@ -287,21 +283,15 @@ ScenarioSimulation.RemoveSimulation = function(index){
     }
     var url = "/scenariosimulation/removedata"
     var parm = ScenarioSimulation.GetFilter();
-    $.ajax({
-      url: url,
-      type: 'post',
-      dataType: 'json',
-      data : parm,
-      success : function(res) {
-          if(res.Status=="OK"){    
+    ajaxPost(url, parm, function(data){
+      if(data.Status=="OK"){   
             ScenarioSimulation.selectedSimulation("");
             ScenarioSimulation.selectedDescription("");
-             ScenarioSimulation.GetDataSimulation();
-          }else{
-              alert(res.message);
-          }
-      },
-    });
+            ScenarioSimulation.GetDataSimulation();
+      }else{
+          alert(data.Message);
+      }
+  });
 }
 ScenarioSimulation.GetDetailSimulation = function(index){
     ScenarioSimulation.isCreatingSimulation(true);

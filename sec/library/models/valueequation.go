@@ -9,8 +9,8 @@ import (
 
 type ValueEquation struct {
 	sync.RWMutex
-	orm.ModelBase        `bson:"-" json:"-"`
-	Id                   string    `bson:"_id"`
+	orm.ModelBase `bson:"-" json:"-"`
+	//Id                   int64 `bson:"Id" json:"Id"`
 	Dates                time.Time `bson:"PeriodDates" json:"Dates"`
 	Year                 int       `bson:"PeriodYear" json:"Year"`
 	Month                int       `bson:"PeriodMonth" json:"Month"`
@@ -78,8 +78,9 @@ func (vp *ValueEquationPeriod) TableName() string {
 
 type ValueEquationFuel struct {
 	sync.RWMutex
-	orm.ModelBase         `bson:"-" json:"-"`
-	VEId                  string  `bson:"VEId" json:"VEId"`
+	orm.ModelBase `bson:"-" json:"-"`
+	// Id            int64  `bson:"Id" json:"Id"`
+	VEId                  int64   `bson:"VEId" json:"VEId"`
 	IsPrimaryFuel         bool    `bson:"isPrimaryFuel" json:"isPrimaryFuel"`
 	FuelType              string  `bson:"FuelType" json:"FuelType"`
 	FuelCostPerUnit       float64 `bson:"FuelCostPerUnit" json:"FuelCostPerUnit"`
@@ -95,7 +96,8 @@ func (vf *ValueEquationFuel) TableName() string {
 type ValueEquationDetails struct {
 	sync.RWMutex
 	orm.ModelBase `bson:"-" json:"-"`
-	VEId          string  `bson:"VEId" json:"VEId"`
+	// Id            int64  `bson:"Id" json:"Id"`
+	VEId          int64   `bson:"VEId" json:"VEId"`
 	DataSource    string  `bson:"DataSource" json:"DataSource"`
 	WorkOrderType string  `bson:"WorkOrderType" json:"WorkOrderType"`
 	Duration      float64 `bson:"Duration" json:"Duration"`
@@ -110,8 +112,9 @@ func (vd *ValueEquationDetails) TableName() string {
 
 type ValueEquationTop10 struct {
 	sync.RWMutex
-	orm.ModelBase            `bson:"-" json:"-"`
-	VEId                     string  `bson:"VEId" json:"VEId"`
+	orm.ModelBase `bson:"-" json:"-"`
+	// Id            			int64  `bson:"Id" json:"Id"`
+	VEId                     int64   `bson:"VEId" json:"VEId"`
 	WorkOrderID              string  `bson:"WorkOrderID" json:"WorkOrderID"`
 	WorkOrderDescription     string  `bson:"WorkOrderDescription" json:"WorkOrderDescription"`
 	EquipmentType            string  `bson:"EquipmentType" json:"EquipmentType"`

@@ -1,12 +1,19 @@
 package controllers
 
-// import . "github.com/eaciit/powerplant/sec/webapp/models"
+import (
+	"github.com/eaciit/knot/knot.v1"
+	. "github.com/eaciit/powerplant/sec/webapp/models"
+	tk "github.com/eaciit/toolkit"
+)
 
 type UploadDataController struct {
 	*BaseController
 }
 
-/*func (c *UploadDataController) Default(k *knot.WebContext) interface{} {
+func (c *UploadDataController) Default(k *knot.WebContext) interface{} {
+	if k.Session("userid") == nil {
+		c.Redirect(k, "login", "default")
+	}
 	c.LoadPartial(k, "valueequation/browse.html",
 		"valueequation/historicalvalueequation/index.html",
 		"valueequation/historicalvalueequation/maintenance.html",
@@ -56,4 +63,3 @@ func (c *UploadDataController) Initiate(k *knot.WebContext) interface{} {
 	result.Set("UnitList", UnitList)
 	return ResultInfo(result, e)
 }
-*/

@@ -276,7 +276,6 @@
     });
 
     Dashboard.period.subscribe(function(NewVal){
-        console.log(NewVal);
         switch(NewVal){
             case "ThisMonth":
                 Dashboard.startMonthly(new Date(Now.getFullYear(),Now.getMonth(),1));
@@ -542,9 +541,7 @@
         var Name = "";
         var Code = "";
         for(var i in selectedMap){
-            // console.log(selectedMap[i]);
             selectedAsset = selectedAsset.concat(selectedMap[i]);
-            console.log(selectedAsset);
             if(i==selectedMap.length-1){
                 Name += selectedMap[i].PlantName;
                 Code += selectedMap[i].PlantCode;
@@ -617,7 +614,6 @@
 
             }
         } catch (err) {
-            console.log(err);
             Dashboard.ErrorOnMap(true);
         }
 
@@ -655,7 +651,7 @@
                     for(var r in result){
                         for(var pc in plantCapacity){
                             if(result[r].PlantCode == plantCapacity[pc]._id){
-                                result[r].TotalCapacity = plantCapacity[pc].TotalCapacity;
+                                result[r].TotalCapacity = plantCapacity[pc].totalcapacity;
                                 break;
                             }
                         }

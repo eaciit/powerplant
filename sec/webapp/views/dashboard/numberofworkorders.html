@@ -17,20 +17,20 @@ Dashboard.GetNumberOfWorkOrder  = function(){
  });
 }
 Dashboard.GenNumberOfWorkOrder = function(dataSource){
-	var PeriodList = Enumerable.From(dataSource).Distinct(function(x){return x._id.period}).OrderBy(function(b){return b._id.period}).ToArray();
-	var WOList = Enumerable.From(dataSource).Distinct(function(x){return x._id.workorder}).ToArray();
+	var PeriodList = Enumerable.From(dataSource).Distinct(function(x){return x.period}).OrderBy(function(b){return b.period}).ToArray();
+	var WOList = Enumerable.From(dataSource).Distinct(function(x){return x.workordertype}).ToArray();
 	var Sources = [];
 	var SeriesList = [];
 	var SeriesListCost = [];
 	for(var s in WOList){
-		SeriesList.push({field:'series'+s,modifiedname: ChangeWOName( WOList[s]._id.workorder), name: WOList[s]._id.workorder});
-		SeriesListCost.push({field:'costseries'+s,modifiedname: ChangeWOName( WOList[s]._id.workorder), name: WOList[s]._id.workorder});
+		SeriesList.push({field:'series'+s,modifiedname: ChangeWOName( WOList[s].workordertype), name: WOList[s].workordertype});
+		SeriesListCost.push({field:'costseries'+s,modifiedname: ChangeWOName( WOList[s].workordertype), name: WOList[s].workordertype});
 	}
 	for(var i in PeriodList){
-		var obj = {period:PeriodList[i]._id.period};
-		var PeriodSources = Enumerable.From(dataSource).Where(function(x){return x._id.period==obj.period}).ToArray();
+		var obj = {period:PeriodList[i].period};
+		var PeriodSources = Enumerable.From(dataSource).Where(function(x){return x.period==obj.period}).ToArray();
 		for(var j in SeriesList){
-			var data = Enumerable.From(PeriodSources).Where(function(x){return x._id.workorder==SeriesList[j].name}).FirstOrDefault();
+			var data = Enumerable.From(PeriodSources).Where(function(x){return x.workordertype==SeriesList[j].name}).FirstOrDefault();
 			if(data!==undefined){
 				obj[SeriesList[j].field] = data.count;
 				obj["cost"+SeriesList[j].field] = data.cost;
@@ -94,7 +94,6 @@ Dashboard.GenNumberOfWorkOrder = function(dataSource){
 
 ChangeWOName = function(WOName)
 {
-
 	retVal = '';
 	if(WOName == 'WOOM')
 		retVal = 'Outage Maintenance';

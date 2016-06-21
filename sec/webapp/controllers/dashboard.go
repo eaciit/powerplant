@@ -5,16 +5,26 @@ import (
 
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/knot/knot.v1"
-	. "github.com/eaciit/powerplant/sec/webapp/models"
+	. "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
+	"strings"
 )
 
 type DashboardController struct {
 	*BaseController
 }
 
+func (c *DashboardController) CheckNotError(e error) error {
+	if e != nil && (!strings.EqualFold(e.Error(), "no more data to fetched!")) {
+		return e
+	}
+	return nil
+}
+
 func (c *DashboardController) Default(k *knot.WebContext) interface{} {
-	//c.LoadBase(k)
+	if k.Session("userid") == nil {
+		c.Redirect(k, "login", "default")
+	}
 	c.LoadPartial(k, "dashboard/numberofturbines.html", "dashboard/powervsfuelconsumtion.html", "dashboard/numberofworkorders.html", "dashboard/maintenancecost.html")
 
 	k.Config.OutputType = knot.OutputTemplate
@@ -31,9 +41,9 @@ func (c *DashboardController) Initiate(k *knot.WebContext) interface{} {
 	k.Config.OutputType = knot.OutputJson
 
 	type ReturnValue struct {
-		AssetClass []AssetClass
-		AssetLevel []AssetLevel
-		AssetType  []AssetType
+		AssetClass []SampleAssetClass
+		AssetLevel []SampleAssetLevel
+		AssetType  []SampleAssetType
 	}
 
 	var (
@@ -41,7 +51,7 @@ func (c *DashboardController) Initiate(k *knot.WebContext) interface{} {
 	)
 
 	filter := tk.M{}
-	curr, e := c.DB().Find(&AssetClass{}, filter)
+	curr, e := c.DB().Find(&SampleAssetClass{}, filter)
 
 	if e != nil {
 	}
@@ -51,7 +61,7 @@ func (c *DashboardController) Initiate(k *knot.WebContext) interface{} {
 		return e.Error()
 	}
 
-	curr, e = c.DB().Find(&AssetLevel{}, filter)
+	curr, e = c.DB().Find(&SampleAssetLevel{}, filter)
 
 	if e != nil {
 	}
@@ -61,7 +71,7 @@ func (c *DashboardController) Initiate(k *knot.WebContext) interface{} {
 		return e.Error()
 	}
 
-	curr, e = c.DB().Find(&AssetType{}, filter)
+	curr, e = c.DB().Find(&SampleAssetType{}, filter)
 
 	if e != nil {
 	}
@@ -73,7 +83,9 @@ func (c *DashboardController) Initiate(k *knot.WebContext) interface{} {
 
 	defer curr.Close()
 
-	return (tk.M{}).Set("success", true).Set("data", Result).Set("message", "")
+	selectedPeriod := time.Now().Year() - 1
+
+	return (tk.M{}).Set("success", true).Set("data", Result).Set("message", "").Set("selected Period", selectedPeriod)
 }
 
 func (c *DashboardController) GetData(k *knot.WebContext) interface{} {
@@ -88,17 +100,16 @@ func (c *DashboardController) GetData(k *knot.WebContext) interface{} {
 	e := k.GetPayload(&d)
 
 	type ReturnValue struct {
-		PlantList         []PlantData
+		PlantList         []PowerPlantCoordinates
 		PlantCapacityList []tk.M
 	}
 
 	var (
-		Result       ReturnValue
-		query, pipes []tk.M
+		Result ReturnValue
 	)
 
 	filter := tk.M{}
-	curr, e := c.DB().Find(&PlantData{}, filter)
+	curr, e := c.DB().Find(&PowerPlantCoordinates{}, filter)
 
 	if e != nil {
 	}
@@ -114,16 +125,12 @@ func (c *DashboardController) GetData(k *knot.WebContext) interface{} {
 	//selectedPeriod := d.StartDate
 	selectedPeriod := time.Now().Year() - 1
 
-	query = append(query, tk.M{"Period.Year": tk.M{"$eq": selectedPeriod}})
-	pipes = append(pipes, tk.M{"$match": tk.M{"$and": query}})
-	pipes = append(pipes, tk.M{"$group": tk.M{
-		"_id":           "$PlantDetail.PlantCode",
-		"TotalCapacity": tk.M{"$sum": "$TurbineInfos.InstalledCapacity"},
-	}})
-
 	cursor, _ := c.DB().Connection.NewQuery().
+		Select("PlantCode as _id").
 		From("ValueEquation_Dashboard").
-		Command("pipe", pipes).
+		Where(dbox.Eq("Year", selectedPeriod)).
+		Aggr(dbox.AggrSum, "InstalledCapacity", "TotalCapacity").
+		Group("PlantCode").
 		Cursor(nil)
 
 	defer cursor.Close()
@@ -154,9 +161,8 @@ func (c *DashboardController) GetNumberOfTurbines(k *knot.WebContext) interface{
 
 		selectedPeriod := time.Now().Year() - 1
 
-		filter = append(filter, dbox.Eq("Period.Year", selectedPeriod))
-		filter = append(filter, dbox.Ne("TurbineInfos.UnitType", ""))
-		filter = append(filter, dbox.Ne("TurbineInfos.UnitType", nil))
+		filter = append(filter, dbox.Eq("Year", selectedPeriod))
+		filter = append(filter, dbox.Ne("UnitType", ""))
 
 		if len(d.Plant) != 0 {
 			filter = append(filter, dbox.Eq("Plant", d.Plant[0]))
@@ -165,15 +171,17 @@ func (c *DashboardController) GetNumberOfTurbines(k *knot.WebContext) interface{
 		result := make([]tk.M, 0)
 
 		cursor, _ := c.DB().Connection.NewQuery().
+			Select("UnitType as _id").
 			From("ValueEquation_Dashboard").
 			Where(filter...).
-			Group("TurbineInfos.UnitType").
+			Group("UnitType").
 			Aggr(dbox.AggrSum, 1, "count").
 			Cursor(nil)
 
 		defer cursor.Close()
 		e = cursor.Fetch(&result, 0, true)
 
+		e = c.CheckNotError(e)
 		return result, e
 	}, nil)
 
@@ -197,38 +205,34 @@ func (c *DashboardController) GetPowerVsFuelConsumtion(k *knot.WebContext) inter
 	r.Run(func(in interface{}) (interface{}, error) {
 
 		var (
-			pipes  []tk.M
 			filter []*dbox.Filter
 		)
 
 		selectedPeriod := d.Period
-		filter = append(filter, dbox.Eq("Period.Year", selectedPeriod))
+		filter = append(filter, dbox.Eq("Year", selectedPeriod))
 
 		if len(d.Plant) > 0 {
-			filter = append(filter, dbox.In("Plant", d.Plant[0]))
+			filter = append(filter, dbox.Eq("Plant", d.Plant[0]))
 		}
 
 		result := make([]tk.M, 0)
 
-		pipes = append(pipes, tk.M{"$group": tk.M{
-			"_id":            "$Plant",
-			"FuelConsumtion": tk.M{"$sum": "$TurbineInfos.UpdatedFuelConsumption"},
-			"Power":          tk.M{"$sum": "$NetGeneration"},
-		}})
-
-		pipes = append(pipes, tk.M{"$sort": tk.M{
-			"_id": 1,
-		}})
-
 		cursor, e := c.DB().Connection.NewQuery().
-			Command("pipe", pipes).
-			Where(filter...).
+			Select("Plant as _id").
 			From("ValueEquation_Dashboard").
+			Where(filter...).
+			Group("Plant").
+			Aggr(dbox.AggrSum, "UpdatedFuelConsumption", "FuelConsumtion").
+			Aggr(dbox.AggrSum, "NetGeneration", "Power").
+			Order("_id").
 			Cursor(nil)
 
 		defer cursor.Close()
 
 		e = cursor.Fetch(&result, 0, true)
+
+		e = c.CheckNotError(e)
+
 		return result, e
 	}, nil)
 
@@ -251,33 +255,31 @@ func (c *DashboardController) GetNumberOfWorkOrder(k *knot.WebContext) interface
 
 	r.Run(func(in interface{}) (interface{}, error) {
 
-		var (
-			pipes  []tk.M
-			filter []*dbox.Filter
-		)
+		filter := ""
+		sintax := ""
 
 		if len(d.Plant) > 0 {
-			filter = append(filter, dbox.Eq("Plant", d.Plant[0]))
+			filter = d.Plant[0]
 		}
-
-		pipes = append(pipes, tk.M{"$unwind": "$Top10"})
-		pipes = append(pipes, tk.M{"$group": tk.M{
-			"_id":   tk.M{"period": "$Period.Year", "workorder": "$Top10.WorkOrderType"},
-			"count": tk.M{"$sum": 1},
-			"cost":  tk.M{"$sum": "$Top10.MaintenanceCost"},
-		}})
 
 		result := make([]tk.M, 0)
 
+		if filter == "" {
+			sintax = "select dbo.ValueEquation_Dashboard.Year as period, dbo.VEDTop10.WorkOrderType, count(*) as count, sum(dbo.VEDTop10.MaintenanceCost) as cost from dbo.ValueEquation_Dashboard inner join dbo.VEDTop10 on dbo.ValueEquation_Dashboard.Id = dbo.VEDTop10.VEId group by dbo.ValueEquation_Dashboard.Year, dbo.VEDTop10.WorkOrderType"
+		} else {
+			sintax = "select dbo.ValueEquation_Dashboard.Year as period, dbo.VEDTop10.WorkOrderType, count(*) as count, sum(dbo.VEDTop10.MaintenanceCost) as cost from dbo.ValueEquation_Dashboard inner join dbo.VEDTop10 on dbo.ValueEquation_Dashboard.Id = dbo.VEDTop10.VEId where dbo.ValueEquation_Dashboard.Plant = '" + filter + "' group by dbo.ValueEquation_Dashboard.Year, dbo.VEDTop10.WorkOrderType"
+		}
+
 		cursor, e := c.DB().Connection.NewQuery().
-			From("ValueEquation_Dashboard").
-			Command("pipe", pipes).
-			Where(filter...).
-			Order("Plant").
+			Command("freequery", tk.M{}.
+				Set("syntax", sintax)).
 			Cursor(nil)
 
+		_ = filter
 		defer cursor.Close()
 		e = cursor.Fetch(&result, 0, true)
+
+		e = c.CheckNotError(e)
 
 		return result, e
 	}, nil)

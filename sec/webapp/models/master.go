@@ -1,6 +1,6 @@
 package models
 
-/*import (
+import (
 	"github.com/eaciit/orm"
 	tk "github.com/eaciit/toolkit"
 	"gopkg.in/mgo.v2/bson"
@@ -15,10 +15,10 @@ func (m *Master) GetMasterPlant() tk.M {
 
 // MasterUnitPlant
 type MasterUnitPlant struct {
-	orm.ModelBase `bson:"-",json:"-"`
-	Id            bson.ObjectId ` bson:"_id" , json:"_id" `
-	Plant         string
-	Unit          string
+	orm.ModelBase `bson:"-" json:"-"`
+	Id            bson.ObjectId ` bson:"_id" json:"_id" `
+	Plant         string        `json:Plant`
+	Unit          string        `json:Unit`
 }
 
 func NewMasterUnitPlant() *MasterUnitPlant {
@@ -34,4 +34,3 @@ func (e *MasterUnitPlant) RecordID() interface{} {
 func (m *MasterUnitPlant) TableName() string {
 	return "MasterUnitPlant"
 }
-*/

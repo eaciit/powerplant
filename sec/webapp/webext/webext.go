@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/eaciit/dbox"
-	_ "github.com/eaciit/dbox/dbc/mongo"
 	_ "github.com/eaciit/dbox/dbc/mssql"
 	"github.com/eaciit/knot/knot.v1"
 	"github.com/eaciit/orm"
@@ -42,7 +41,7 @@ func init() {
 	app.Register(&ValueEquationComparisonController{baseCont})
 	app.Register(&HistoricalValueEquationController{baseCont})
 	app.Register(&HypothesisController{baseCont})
-	app.Register(&ScenarioSimulationController{baseCont})
+	app.Register(&ScenarioSimulation{baseCont})
 	app.Register(&UploadDataController{baseCont})
 	/*app.Register(&InitController{baseCont})
 	app.Register(&OrganizationController{baseCont})
@@ -59,7 +58,6 @@ func PrepareConnection() (dbox.IConnection, error) {
 	config := ReadConfig()
 	ci := &dbox.ConnectionInfo{config["host"], config["database"], config["username"], config["password"], nil}
 	c, e := dbox.NewConnection("mssql", ci)
-	// c, e := dbox.NewConnection("mongo", ci)
 
 	if e != nil {
 		return nil, e
@@ -75,6 +73,7 @@ func PrepareConnection() (dbox.IConnection, error) {
 
 func ReadConfig() map[string]string {
 	ret := make(map[string]string)
+	fmt.Println(wd, "conf/app.conf")
 	file, err := os.Open(wd + "conf/app.conf")
 	if err == nil {
 		defer file.Close()
