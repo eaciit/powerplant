@@ -388,6 +388,8 @@ func getNewPointer(m orm.IModel) orm.IModel {
 		return new(MasterActivityType)
 	case "MasterUnitPlant":
 		return new(MasterUnitPlant)
+	case "PowerPlantCoordinates":
+		return new(PowerPlantCoordinates)
 	default:
 		return m
 	}

@@ -179,7 +179,8 @@ function GenerateDataBrowser(){
         if(f.type=="string"){
             var URLFilter = "/databrowser/getfilter";
             URLFilter += "?active_field="+f.field;
-            if (f.field == "Plant.PlantName" /*|| f.field == "Maintenance.WorkOrderType"*/){
+            // if (f.field == "Plant.PlantName" /*|| f.field == "Maintenance.WorkOrderType"*/){
+            if (f.field == "PlantPlantName" /*|| f.field == "Maintenance.WorkOrderType"*/){
                 var cols = {
                     "field":f.field,
                     "title":f.alias,
@@ -230,15 +231,16 @@ function GenerateDataBrowser(){
                 attributes: { "style": "text-align:center" },
                 filterable:false,
                 width:100,
-            });
-
-            //settype
-            typelist.push({
-                "field":f.field,
-                "type":f.type,
-            });
+            });            
         }
+
+        //settype
+        typelist.push({
+            "field":f.field,
+            "type":f.type,
+        });
     }
+
     var hypo = $("#HypothesisId").html();
     var url = "/databrowser/getgriddb";
     DataBrowser().SelectedFilter(param);
@@ -308,7 +310,8 @@ function GenerateDataBrowser(){
                                                 td+="<td role='gridcell'>-";
                                             else
                                             {
-                                                td+= "<td role='gridcell' class='align-right'>"+ kendo.toString(dt[0][typelist[i].field.replace(".","")+"avg"] ,'N2');
+                                                td+= "<td role='gridcell' class='align-right'>"+ /*kendo.toString(dt[0][typelist[i].field.replace(".","")+"avg"] ,'N2');*/
+                                                kendo.toString(dt[0][typelist[i].field + "avg"] ,'N2');
                                             }
                                             td+="</td>"
                                             strhtml+=td;
@@ -322,7 +325,9 @@ function GenerateDataBrowser(){
                                             if(typelist[i].type=="string"||typelist[i].type=="date"){
                                                 td+="<td role='gridcell'>-";
                                             } else {
-                                                td+= "<td role='gridcell' class='align-right'>"+ kendo.toString(dt[0][typelist[i].field.replace(".","")+"sum"] ,'N2');
+                                                td+= "<td role='gridcell' class='align-right'>"+ /*kendo.toString(dt[0][typelist[i].field.replace(".","")+"sum"] ,'N2');*/
+
+                                                kendo.toString(dt[0][typelist[i].field + "sum"] ,'N2');
                                             }
                                             td+="</td>"
                                             strhtml+=td;

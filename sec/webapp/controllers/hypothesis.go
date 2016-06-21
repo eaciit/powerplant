@@ -110,7 +110,7 @@ func (c *HypothesisController) Initiate(k *knot.WebContext) interface{} {
 
 	e = curr.Fetch(&Result.UnitList, 0, true)
 
-	tk.Printf("Result.UnitList: %#v \n\n", Result.UnitList)
+	// tk.Printf("Result.UnitList: %#v \n\n", Result.UnitList)
 
 	return ResultInfo(Result, e)
 }

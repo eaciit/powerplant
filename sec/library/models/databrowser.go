@@ -61,8 +61,8 @@ func (m *DataBrowser) TableName() string {
 }
 
 type AssetMaintenance struct {
-	sync.RWMutex
-	orm.ModelBase          `bson:"-" json:"-"`
+	/*sync.RWMutex
+	orm.ModelBase          `bson:"-" json:"-"`*/
 	Id                     int64     `bson:"Id" json:"Id"`
 	WorkOrderType          string    `bson:"WorkOrderType" json:"WorkOrderType"`
 	MaintenanceOrder       string    `bson:"MaintenanceOrder" json:"MaintenanceOrder"`
@@ -77,9 +77,9 @@ type AssetMaintenance struct {
 	LastMaintenanceDate    time.Time `bson:"LastMaintenanceDate" json:"LastMaintenanceDate"`
 	MaintenanceInterval    int       `bson:"MaintenanceInterval" json:"MaintenanceInterval"`
 	MaintenanceCost        float64   `bson:"MaintenanceCost" json:"MaintenanceCost"`
-	DataBrowserId          int64     `bson:"DataBrowserId" json:"DataBrowserId"`
+	// DataBrowserId          int64     `bson:"DataBrowserId" json:"DataBrowserId"`
 }
 
-func (m *AssetMaintenance) TableName() string {
+/*func (m *AssetMaintenance) TableName() string {
 	return "AssetMaintenance"
-}
+}*/
