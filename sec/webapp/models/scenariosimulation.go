@@ -1,6 +1,6 @@
 package models
 
-import (
+/*import (
 	"github.com/eaciit/orm"
 	"gopkg.in/mgo.v2/bson"
 	"time"
@@ -50,3 +50,4 @@ func NewScenarioSimulation() *ScenarioSimulationModel {
 func (c *ScenarioSimulationModel) TableName() string {
 	return "ScenarioSimulation"
 }
+*/

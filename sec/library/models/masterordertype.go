@@ -13,6 +13,10 @@ type MasterOrderType struct {
 	OrderTypeDesc string `bson:"OrderTypeDesc" json:"OrderTypeDesc"`
 }
 
+func (m *MasterOrderType) RecordID() interface{} {
+	return m.Id
+}
+
 func (m *MasterOrderType) TableName() string {
 	return "MasterOrderType"
 }

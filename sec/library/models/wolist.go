@@ -9,7 +9,8 @@ import (
 
 type WOList struct {
 	sync.RWMutex
-	orm.ModelBase      `bson:"-" json:"-"`
+	orm.ModelBase `bson:"-" json:"-"`
+	// Id                 int64     `bson:"Id" json:"Id"`
 	UserStatus         string    `bson:"UserStatus" json:"UserStatus"`
 	SystemStatus       string    `bson:"SystemStatus" json:"SystemStatus"`
 	Type               string    `bson:"Type" json:"Type"`

@@ -15,3 +15,8 @@ type MasterPlant struct {
 func (m *MasterPlant) TableName() string {
 	return "MasterPlant"
 }
+
+func NewMasterPlant() *MasterPlant {
+	m := new(MasterPlant)
+	return m
+}
