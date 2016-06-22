@@ -1,12 +1,13 @@
 package models
 
 import (
+	"strconv"
+	"time"
+
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/knot/knot.v1"
 	"github.com/eaciit/orm"
 	tk "github.com/eaciit/toolkit"
-	"strconv"
-	"time"
 )
 
 type ValueEquationComparison struct {

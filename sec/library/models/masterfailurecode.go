@@ -1,8 +1,9 @@
 package models
 
 import (
-	"github.com/eaciit/orm"
 	"sync"
+
+	"github.com/eaciit/orm"
 )
 
 type MasterFailureCode struct {
@@ -10,6 +11,10 @@ type MasterFailureCode struct {
 	orm.ModelBase `bson:"-" json:"-"`
 	Id            string `bson:"_id" json:"Id"`
 	Text          string `bson:"text" json:"Text"`
+}
+
+func (e *MasterFailureCode) RecordID() interface{} {
+	return e.Id
 }
 
 func (m *MasterFailureCode) TableName() string {

@@ -8,10 +8,11 @@
 </style>
 
 <script>
-  // model.BreadCrumbs.push(new BreadCrumb("Home", "Home", "/", "", ""));
-  // model.BreadCrumbs.push(new BreadCrumb("{{.PageId}}", "{{.HypothesisCategory}} Analysis - {{.HypothesisId}}", "#", "active", ""));
+  model.PageId("{{.PageId}}");
+  model.PageTitle("{{.PageTitle}}");
+  model.BreadCrumbs.push(new BreadCrumb("{{.PageId}}", "{{.PageTitle}}", "#", "active", ""));
 
-    var Hypothesis = {
+  var Hypothesis = {
     Processing:ko.observable(true),
     ProcessingMatch:ko.observable(true),
     Plant:ko.observableArray([]),
@@ -31,7 +32,7 @@
   var SelectedFie = {{ .SelectedFields }};
 
   Hypothesis.SetPeriod = function(){
-   Hypothesis.Period($(this.element).val());
+    Hypothesis.Period($(this.element).val());
   }
 
   Hypothesis.Reset = function(){
@@ -53,22 +54,23 @@
         dataType: 'json',
         data : null,
         success : function(res) {
-            if(!res.IsError){
-                Hypothesis.PlantList(res.Data.PlantList);
-                $('#txtPeriod').val(Hypothesis.Period());
-                for(var x in res.Data.EQTypeList){
-                res.Data.EQTypeList[x].EquipmentTypeDesc = res.Data.EQTypeList[x].EquipmentType+" - "+res.Data.EQTypeList[x].EquipmentTypeDesc;
-              }
-              Hypothesis.EQTypeList(res.Data.EQTypeList);
-              Hypothesis.OrderTypeList(res.Data.OrderTypeList);
+          if(!res.IsError){
+            Hypothesis.PlantList(res.Data.PlantList);
+            $('#txtPeriod').val(Hypothesis.Period());
 
-              Hypothesis.FailureCodeList(res.Data.FailureCode);
-              Hypothesis.FailureCode([]);
-              Hypothesis.Refresh();
-
-            }else{
-                alert(res.message);
+            for(var x in res.Data.EQTypeList){
+              res.Data.EQTypeList[x].EquipmentTypeDesc = res.Data.EQTypeList[x].EquipmentType+" - "+res.Data.EQTypeList[x].EquipmentTypeDesc;
+            
             }
+            Hypothesis.EQTypeList(res.Data.EQTypeList);
+            Hypothesis.OrderTypeList(res.Data.OrderTypeList);
+
+            Hypothesis.FailureCodeList(res.Data.FailureCode);
+            Hypothesis.FailureCode([]);
+            Hypothesis.Refresh();
+          }else{
+              alert(res.message);
+          }
         },
      });
   }
@@ -92,7 +94,7 @@
 
 </script>
 
-<div class="row" id="HypothesisPage" data-bind="with:Hypothesis">
+<div class="row-fluid" id="HypothesisPage" data-bind="with:Hypothesis">
   <div class="col-md-3" id="HypothesisFilter">
      <div class="row" id="FilterTitle">
       <div class="col-md-12">

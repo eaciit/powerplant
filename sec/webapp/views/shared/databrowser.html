@@ -1,26 +1,25 @@
 <div data-bind="with:DataBrowser">
- <div class="row" data-bind="visible:Processing()">
-          <div class="col-md-12 align-center">
-              {{template "processing.html"}}
-          </div>
-      </div>
-<div class="row" data-bind="visible:!Processing()">
-    <div class="col-md-2">Fields :</div>
-    <div class="col-md-8" >
-        <input  id="MSFields" class="min-top" data-bind="kendoMultiSelect:{value:SelectedFields,data:Fields,dataValueField:'field',dataTextField:'alias',placeholder:'Choose Fields..',filter: 'contains'}"></input>
+    <div class="row" data-bind="visible:Processing()">
+        <div class="col-md-12 align-center">
+            {{template "processing.html"}}
+        </div>
     </div>
-    <div class="col-md-2">
-        <button type="button" class="btn btn-default btn-sm" style="margin-top:-6px;" data-bind="click:DataBrowserSaveExcel">
-            <span class="fa fa-download"></span>&nbsp;&nbsp;XLS
-        </button>
+    <div class="row" data-bind="visible:!Processing()">
+        <div class="col-md-2">Fields :</div>
+        <div class="col-md-8" >
+            <input  id="MSFields" class="min-top" data-bind="kendoMultiSelect:{value:SelectedFields,data:Fields,dataValueField:'field',dataTextField:'alias',placeholder:'Choose Fields..',filter: 'contains'}"></input>
+        </div>
+        <div class="col-md-2">
+            <button type="button" class="btn btn-default btn-sm" style="margin-top:-6px;" data-bind="click:DataBrowserSaveExcel">
+                <span class="fa fa-download"></span>&nbsp;&nbsp;XLS
+            </button>
+        </div>
     </div>
-</div>
-<div class="row" data-bind="visible:!Processing()">
-    <div class="col-md-12 align-center marg-top">
-        <div id="databrowsergrid"></div>
+    <div class="row" data-bind="visible:!Processing()">
+        <div class="col-md-12 align-center marg-top">
+            <div id="databrowsergrid"></div>
+        </div>
     </div>
-</div>
-
 </div>
 
 <style type="text/css">
@@ -37,9 +36,6 @@
 </style>
 
 <script type="text/javascript">
-
-
-
 function FillField(){
     var fieldx =DBFie;
     var selectedx = SelectedFie;
@@ -58,7 +54,7 @@ function FillField(){
 
         for(var i in CompleteBearing){
             var d = {};
-            d["tipe"]= "double";
+            d["type"]= "double";
             d["alias"]= CompleteBearing[i];
             d["field"] = CompleteBearing[i];
             DataBrowser().Fields().push(d);
@@ -72,132 +68,120 @@ function FillField(){
     }
 }
 
-
 function GenerateSumH16(dt,typelist){
-
     if(dt.length>0){
             setTimeout(function(){
-
-
-
                 var strhtml = "<tr role='row'><td class='sum-header' colspan='"+ typelist.length +"' > Average </td></tr><tr>";
-                    for(var i in typelist)
+                for(var i in typelist){
+                    var td = "";
+                    if(typelist[i].type=="string"||typelist[i].type=="date")
+                        td+="<td role='gridcell'>-";
+                    else
                     {
-                        var td = "";
-                        if(typelist[i].tipe=="string"||typelist[i].tipe=="date")
-                            td+="<td role='gridcell'>-";
-                        else
-                        {
-                            td+= "<td role='gridcell' class='align-right'>"+ kendo.toString(dt[0][typelist[i].field.replace(".","")+"avg"] ,'N2');
-                        }
-                        td+="</td>"
-                        strhtml+=td;
+                        td+= "<td role='gridcell' class='align-right'>"+ kendo.toString(dt[0][typelist[i].field.replace(".","")+"avg"] ,'N2');
                     }
-
-
+                    td+="</td>"
+                    strhtml+=td;
+                }
                 strhtml+="</tr>"
-                 $('#databrowsergrid').find('tbody').append(strhtml);
+                $('#databrowsergrid').find('tbody').append(strhtml);
 
-                 var strhtml = "<tr role='row'><td class='sum-header' colspan='"+ typelist.length +"' > Total </td></tr><tr>";
-                    for(var i in typelist)
+                var strhtml = "<tr role='row'><td class='sum-header' colspan='"+ typelist.length +"' > Total </td></tr><tr>";
+                for(var i in typelist){
+                    var td = "";
+                    if(typelist[i].type=="string"||typelist[i].type=="date")
+                    td+="<td role='gridcell'>-";
+                    else
                     {
-                        var td = "";
-                        if(typelist[i].tipe=="string"||typelist[i].tipe=="date")
-                           td+="<td role='gridcell'>-";
-                        else
-                        {
-                            td+= "<td role='gridcell' class='align-right'>"+ kendo.toString(dt[0][typelist[i].field.replace(".","")+"sum"] ,'N2');
-                        }
-                        td+="</td>"
-                        strhtml+=td;
+                        td+= "<td role='gridcell' class='align-right'>"+ kendo.toString(dt[0][typelist[i].field.replace(".","")+"sum"] ,'N2');
                     }
-
-
+                    td+="</td>"
+                    strhtml+=td;
+                }
                 strhtml+="</tr>"
-                 $('#databrowsergrid').find('tbody').append(strhtml);
-
-
+                $('#databrowsergrid').find('tbody').append(strhtml);
             },300);
     }
 }
-
 </script>
 
 <script type="text/javascript">
+var DataBrowser = ko.observable({
+    Fields : ko.observableArray([]),
+    SelectedFields :  ko.observableArray([]),
+    Columns :  ko.observableArray([]),
+    Processing:ko.observable(false),
+    isFristLoading:ko.observable(false),
+    SelectedFilter:ko.observable(),
+    SelectedColumn:ko.observableArray([]),
+    DisplayTypeList:ko.observableArray([]),
+});
 
-    var DataBrowser = ko.observable({
-        Fields : ko.observableArray([]),
-        SelectedFields :  ko.observableArray([]),
-        Columns :  ko.observableArray([]),
-        Processing:ko.observable(false),
-        isFristLoading:ko.observable(false),
-        SelectedFilter:ko.observable(),
-        SelectedColumn:ko.observableArray([]),
-        DisplayTypeList:ko.observableArray([]),
+DataBrowserSaveExcel = function(){
+    //DataBrowser.Processing(true);
+    var url = "/databrowser/saveexcel";
+    var parm = DataBrowser().SelectedFilter();
+    parm.HeaderList = Enumerable.From(DataBrowser().SelectedColumn()).Select(function(x){return x.title}).ToArray();
+    parm.DisplayTypeList = DataBrowser().DisplayTypeList();
+    parm.DisplayTypeCount = DataBrowser().DisplayTypeList().length;
+
+    ajaxPost(url, parm, function(res){
+        if(res.Status=="OK"){
+            // DataBrowser.Processing(false);
+            location.href = res.Data;
+        }else{
+            alert(res.message);
+        }
     });
+}
 
-    DataBrowserSaveExcel = function(){
-        //DataBrowser.Processing(true);
-        var url = "/databrowser/saveexcel";
-        var parm = DataBrowser().SelectedFilter();
-        parm.HeaderList = Enumerable.From(DataBrowser().SelectedColumn()).Select(function(x){return x.title}).ToArray();
-        parm.DisplayTypeList = DataBrowser().DisplayTypeList();
-        parm.DisplayTypeCount = DataBrowser().DisplayTypeList().length;
-
-        ajaxPost(url, parm, function(res){
-            if(res.Status=="OK"){
-              //DataBrowser.Processing(false);
-                location.href = res.Data;
-              }else{
-                  alert(res.message);
-              }
-        });
+function GenerateDataBrowser(){
+    if(DataBrowser().Fields().length==0 || $("#HypothesisId").html() =="H16" ){
+        FillField();
     }
-	function GenerateDataBrowser(){
-        if(DataBrowser().Fields().length==0 || $("#HypothesisId").html() =="H16" ){
-            FillField();
+
+    var fields = DataBrowser().SelectedFields();
+    var paramdouble = [];
+    var allfields = [];
+    var schema = {};
+    var columns = [];
+    var typelist = [];
+
+    var Filter =  $('#HypothesisId').html() =="H18"?{PeriodFrom:model.Filter().PeriodFrom,PeriodTo :model.Filter().PeriodFrom  }:  Hypothesis.GetFilter();
+    var param = {Fields:allfields,Fieldsdouble:paramdouble,Hypoid:"H3"};
+
+    for (var property in Filter) {
+        if (Filter.hasOwnProperty(property)) {
+            param[property]  = Filter[property];
         }
+    }
 
-        var fields = DataBrowser().SelectedFields();
-        var paramdouble = [];
-        var allfields = [];
-        var schema = {};
-        var columns = [];
-        var typelist = [];
+    for(var i in fields){
+        var f = _.find(DataBrowser().Fields(), function(num){ 
+            return num.field == fields[i] ; 
+        });
 
-        var Filter =  $('#HypothesisId').html() =="H18"?{PeriodFrom:model.Filter().PeriodFrom,PeriodTo :model.Filter().PeriodFrom  }:  Hypothesis.GetFilter();
-        var param = {Fields:allfields,Fieldsdouble:paramdouble,Hypoid:"H3"};
+        //Set Parameter
+        if(f.type=="double")
+            paramdouble.push(f.field);
 
-        for (var property in Filter) {
-            if (Filter.hasOwnProperty(property)) {
-                param[property]  = Filter[property]
-            }
-        }
+        allfields.push(f.field);
 
-        for(var i in fields){
-            var f = _.find(DataBrowser().Fields(), function(num){ return num.field == fields[i] ; });
-            // console.log(f);
-            // console.log(fields[i])
+        //build Schema
+        if(f.type=="string")
+            schema[f.field] = {type : "string"}
+        else if(f.type=="double")
+            schema[f.field] = {type : "number"}
+        else
+            schema[f.field] = {type : "date"}
 
-            //Set Parameter
-            if(f.tipe=="double"){
-            paramdouble.push(f.field);}
-            allfields.push(f.field);
-
-            //build Schema
-            if(f.tipe=="string")
-            schema[f.field] = { type : "string"  }
-            else if(f.tipe=="double")
-            schema[f.field] = { type : "number"  }
-            else
-            schema[f.field] = { type : "date"  }
-
-            //build Columns
-            if(f.tipe=="string"){
-                var URLFilter = "/databrowser/getfilter";
-                URLFilter += "?active_field="+f.field;
-                if (f.field == "Plant.PlantName" /*|| f.field == "Maintenance.WorkOrderType"*/){
-                    var cols = {
+        //build Columns
+        if(f.type=="string"){
+            var URLFilter = "/databrowser/getfilter";
+            URLFilter += "?active_field="+f.field;
+            // if (f.field == "Plant.PlantName" /*|| f.field == "Maintenance.WorkOrderType"*/){
+            if (f.field == "PlantPlantName" /*|| f.field == "Maintenance.WorkOrderType"*/){
+                var cols = {
                     "field":f.field,
                     "title":f.alias,
                     "attributes":{ class:"align-left"},
@@ -206,10 +190,10 @@ function GenerateSumH16(dt,typelist){
                         multi: true ,
                         dataSource: {
                             schema: {
-                            data: function(response) {
-                              return response.Data;
-                            }
-                          },
+                                data: function(response) {
+                                    return response.Data;
+                                }
+                            },
                             transport: {
                                 read: {
                                     url: URLFilter,
@@ -217,31 +201,29 @@ function GenerateSumH16(dt,typelist){
                                     method:'POST',
                                     data: param
                                 },
-                           }
+                            }
                         }
                     },
-                    };
-                }else {
-                    var cols = {
+                };
+            }else {
+                var cols = {
                     "field":f.field,
                     "title":f.alias,
                     "attributes":{ class:"align-left"},
                     width:150,
                 };
-                }
-
-
-                columns.push(cols);
-            }else if(f.tipe == "double"){
-                columns.push({
-                    "field":f.field,
-                    "title":f.alias,
-                    "format":"{0:N2}",
-                    "attributes":{ class:"align-right"},
-                    width:100
-                });
             }
-            else if(f.tipe == "date")
+
+            columns.push(cols);
+        }else if(f.type == "double"){
+            columns.push({
+                "field":f.field,
+                "title":f.alias,
+                "format":"{0:N2}",
+                "attributes":{ class:"align-right"},
+                width:100
+            });
+        }else if(f.type == "date"){
             columns.push({
                 "field":f.field,
                 "title":f.alias,
@@ -249,30 +231,29 @@ function GenerateSumH16(dt,typelist){
                 attributes: { "style": "text-align:center" },
                 filterable:false,
                 width:100,
-            });
-
-            //settype
-            typelist.push({
-                "field":f.field,
-                "tipe":f.tipe,
-            });
-
+            });            
         }
 
-     var hypo = $("#HypothesisId").html();
+        //settype
+        typelist.push({
+            "field":f.field,
+            "type":f.type,
+        });
+    }
+
+    var hypo = $("#HypothesisId").html();
     var url = "/databrowser/getgriddb";
     DataBrowser().SelectedFilter(param);
     DataBrowser().SelectedColumn(columns);
     DataBrowser().DisplayTypeList(typelist);
 
-    if(hypo =="H16")
-    {
+    if(hypo =="H16"){
         $("#databrowsergrid").html("");
         $('#databrowsergrid').kendoGrid({
             dataSource:{
                 data : DataGrid,
                 pageSize : 10
-             },
+            },
             resizable: true,
             scrollable:true,
             sortable: {
@@ -289,20 +270,18 @@ function GenerateSumH16(dt,typelist){
                 GenerateSumH16(dt,typelist);
             },
             columns:columns,
-
         });
 
-     //DataBrowser().Processing(false);
-    }
-    else{
-      if(DataBrowser().isFristLoading()){
-        DataBrowser().Processing(true);
-      }
+        //DataBrowser().Processing(false);
+    } else {
+        if(DataBrowser().isFristLoading()){
+            DataBrowser().Processing(true);
+        }
 
-      $("#databrowsergrid").html("");
-      $('#databrowsergrid').kendoGrid({
-         dataSource: {
-            transport: {
+        $("#databrowsergrid").html("");
+        $('#databrowsergrid').kendoGrid({
+            dataSource: {
+                transport: {
                     read: function(option){
                         param.Filter = option.data.filter;
                         param.Page = option.data.page;
@@ -312,55 +291,53 @@ function GenerateSumH16(dt,typelist){
                         param.Take = option.data.take;
 
                         $.ajax({
-                       url: url,
-                       dataType: "json",
-                       data: ko.mapping.toJSON(param),
-                       type: "POST",
-                       contentType: "application/json; charset=utf-8",
-                       complete: function (datas) {
-                        DataBrowser().Processing(false);
-                        var data = JSON.parse(datas.responseText);
-                        console.log(data);
-                        option.success(data);
-                        var dt = data.Data.Summary;
-                        if(dt.length>0){
-                                setTimeout(function(){
-                                    var strhtml = "<tr role='row'><td class='sum-header' colspan='"+ typelist.length +"' > Average </td></tr><tr>";
-                                        for(var i in typelist)
-                                        {
+                            url: url,
+                            dataType: "json",
+                            data: ko.mapping.toJSON(param),
+                            type: "POST",
+                            contentType: "application/json; charset=utf-8",
+                            complete: function (datas) {
+                                DataBrowser().Processing(false);
+                                var data = JSON.parse(datas.responseText);
+                                option.success(data);
+                                var dt = data.Data.Summary;
+                                if(dt.length>0){
+                                    setTimeout(function(){
+                                        var strhtml = "<tr role='row'><td class='sum-header' colspan='"+ typelist.length +"' > Average </td></tr><tr>";
+                                        for(var i in typelist){
                                             var td = "";
-                                            if(typelist[i].tipe=="string"||typelist[i].tipe=="date")
+                                            if(typelist[i].type=="string"||typelist[i].type=="date")
                                                 td+="<td role='gridcell'>-";
                                             else
                                             {
-                                                td+= "<td role='gridcell' class='align-right'>"+ kendo.toString(dt[0][typelist[i].field.replace(".","")+"avg"] ,'N2');
+                                                td+= "<td role='gridcell' class='align-right'>"+ /*kendo.toString(dt[0][typelist[i].field.replace(".","")+"avg"] ,'N2');*/
+                                                kendo.toString(dt[0][typelist[i].field + "avg"] ,'N2');
                                             }
                                             td+="</td>"
                                             strhtml+=td;
                                         }
-                                    strhtml+="</tr>"
-                                     $('#databrowsergrid').find('tbody').append(strhtml);
+                                        strhtml+="</tr>"
+                                        $('#databrowsergrid').find('tbody').append(strhtml);
 
-                                     var strhtml = "<tr role='row'><td class='sum-header' colspan='"+ typelist.length +"' > Total </td></tr><tr>";
-                                        for(var i in typelist)
-                                        {
+                                        var strhtml = "<tr role='row'><td class='sum-header' colspan='"+ typelist.length +"' > Total </td></tr><tr>";
+                                        for(var i in typelist){
                                             var td = "";
-                                            if(typelist[i].tipe=="string"||typelist[i].tipe=="date")
-                                               td+="<td role='gridcell'>-";
-                                            else
-                                            {
-                                                td+= "<td role='gridcell' class='align-right'>"+ kendo.toString(dt[0][typelist[i].field.replace(".","")+"sum"] ,'N2');
+                                            if(typelist[i].type=="string"||typelist[i].type=="date"){
+                                                td+="<td role='gridcell'>-";
+                                            } else {
+                                                td+= "<td role='gridcell' class='align-right'>"+ /*kendo.toString(dt[0][typelist[i].field.replace(".","")+"sum"] ,'N2');*/
+
+                                                kendo.toString(dt[0][typelist[i].field + "sum"] ,'N2');
                                             }
                                             td+="</td>"
                                             strhtml+=td;
                                         }
-                                    strhtml+="</tr>"
-                                     $('#databrowsergrid').find('tbody').append(strhtml);
-                                },300);
+                                        strhtml+="</tr>"
+                                        $('#databrowsergrid').find('tbody').append(strhtml);
+                                    },300);
+                                }
                             }
-
-                       }
-                       })
+                        });
                     }
                 },
                 schema: {
@@ -370,7 +347,6 @@ function GenerateSumH16(dt,typelist){
                         fields: schema
                     }
                 },
-
                 pageSize: 10,
                 serverPaging: true, // enable server paging
                 serverSorting: true,
@@ -394,10 +370,7 @@ function GenerateSumH16(dt,typelist){
                 $("#databrowsergrid .k-pager-nav").css('display','none');
                 $("#databrowsergrid .k-pager-numbers").css('display','none');
             }
-    });
+        });
+    }
 }
-
-	}
-
-
 </script>

@@ -86,10 +86,18 @@ func main() {
 
 	// convert(new(SummaryData), base) // 					done
 	// convert(new(DataBrowser), base) // 					done
+	// convert(new(MasterActivityType), base) // 			done
+	// convert(new(MasterUnitPlant), base) // 				done
 
+<<<<<<< HEAD:sec/consoleapp/main.go
+	/*migrate := new(MigrateData)
+	migrate.BaseController = base
+	migrate.GenerateMasterUnit()
+=======
 	// migrate := new(MigrateData)
 	// migrate.BaseController = base
 	// migrate.GenerateMasterUnit()
+>>>>>>> 045cb564605fa8b9b95d97f73ef998f5cdb46379:sec/consoleapp/dataconverter/main.go
 
 	// migrate.DoCostSheet() // 							done
 	// migrate.DoGeneralInfo() // 							done
@@ -100,6 +108,11 @@ func main() {
 	//migrate.DoGenerateVibration()							done
 	// migrate.DoValueEquation() //							done
 	// migrate.DoPowerPlantOutages() //						done
+<<<<<<< HEAD:sec/consoleapp/main.go
+	// migrate.DoDataBrowser()								done
+	// migrate.DoGenerateDataBrowserSelectedFields() //		done
+	// migrate.DoGenerateDataBrowserFields() // 			done*/
+=======
 	// migrate.DoDataBrowser()
 	// migrate.DoMasterUnit()
 	//migrate.DoGenerateAssetClass()
@@ -108,6 +121,7 @@ func main() {
 
 	// check := DataChecker{base}
 	// check.CheckDetailData()
+>>>>>>> 045cb564605fa8b9b95d97f73ef998f5cdb46379:sec/consoleapp/dataconverter/main.go
 }
 
 func convert(m orm.IModel, base *BaseController) {

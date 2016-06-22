@@ -1,6 +1,6 @@
 package models
 
-import (
+/*import (
 	"github.com/eaciit/orm"
 )
 
@@ -16,3 +16,4 @@ func (e *MasterActivityType) RecordID() interface{} {
 func (m *MasterActivityType) TableName() string {
 	return "MasterActivityType"
 }
+*/
