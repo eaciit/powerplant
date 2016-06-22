@@ -39,7 +39,12 @@ func (m *Master) GeneratePlantMaster(ctx *orm.DataContext) error {
 	}
 
 	for _, plant := range FunctionalLocationList {
-		tk.Println(plant)
+		d := tk.M{}
+		e := tk.StructToM(plant, &d)
+		if e != nil {
+			tk.Println(e)
+		}
+		tk.Println(d)
 		// Generate data as per code
 	}
 	if e != nil {

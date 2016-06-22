@@ -4,9 +4,8 @@ import (
 	_ "github.com/eaciit/dbox/dbc/mssql"
 	"github.com/eaciit/orm"
 	. "github.com/eaciit/powerplant/sec/consoleapp/generator/controllers"
-	"os"
-	// . "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
+	"os"
 )
 
 var (
@@ -29,8 +28,11 @@ func main() {
 	defer base.Ctx.Close()
 
 	// Generate DataMaster
-	Mst := DataMaster{base}
-	Mst.Generate()
+	// Mst := DataMaster{base}
+	// Mst.Generate()
+
+	MOR := DataMOR{base}
+	MOR.Generate()
 
 	tk.Println("Application closed..")
 
