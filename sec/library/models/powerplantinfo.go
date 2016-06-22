@@ -14,10 +14,10 @@ type PowerPlantInfo struct {
 	Region                string  `bson:"Region" json:"Region"`
 	City                  string  `bson:"City" json:"City"`
 	FuelTypes_Crude       bool    `bson:"FuelTypes_Crude" json:"FuelTypes_Crude"`
-	FuleTypes_Heavy       bool    `bson:"FuleTypes_Heavy" json:"FuleTypes_Heavy"`
-	FuleTypes_Diesel      bool    `bson:"FuleTypes_Diesel" json:"FuleTypes_Diesel"`
-	FuleTypes_Gas         bool    `bson:"FuleTypes_Gas" json:"FuleTypes_Gas"`
-	GasTurbineUnit        float64 `bson:"GasTurbineUnit" json:"GasTurbineUnit"`
+	FuelTypes_Heavy       bool    `bson:"FuelTypes_Heavy" json:"FuelTypes_Heavy"`
+	FuelTypes_Diesel      bool    `bson:"FuelTypes_Diesel" json:"FuelTypes_Diesel"`
+	FuelTypes_Gas         bool    `bson:"FuelTypes_Gas" json:"FuelTypes_Gas"`
+	GasTurbineUnit        int     `bson:"GasTurbineUnit" json:"GasTurbineUnit"`
 	GasTurbineCapacity    float64 `bson:"GasTurbineCapacity" json:"GasTurbineCapacity"`
 	SteamUnit             int     `bson:"SteamUnit" json:"SteamUnit"`
 	SteamCapacity         float64 `bson:"SteamCapacity" json:"SteamCapacity"`
