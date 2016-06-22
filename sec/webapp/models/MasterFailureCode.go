@@ -1,6 +1,6 @@
 package models
 
-import (
+/*import (
 	"github.com/eaciit/orm"
 )
 
@@ -17,3 +17,4 @@ func (e *MasterFailureCode) RecordID() interface{} {
 func (m *MasterFailureCode) TableName() string {
 	return "MasterFailureCode"
 }
+*/

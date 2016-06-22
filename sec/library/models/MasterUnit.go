@@ -1,8 +1,9 @@
 package models
 
 import (
-	"github.com/eaciit/orm"
 	"sync"
+
+	"github.com/eaciit/orm"
 )
 
 type MasterUnit struct {
