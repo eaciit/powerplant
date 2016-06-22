@@ -9,7 +9,7 @@ type DataSummary struct {
 	*BaseController
 }
 
-func (s *DataSummary) GenerateSummary() {
+func (s *DataSummary) Generate() {
 	tk.Println("##Generating Summary Data..")
 	sum := new(Summary)
 	e := sum.GenerateSummaryData(s.Ctx)

@@ -28,11 +28,16 @@ func main() {
 	defer base.Ctx.Close()
 
 	// Generate DataMaster
-	// Mst := DataMaster{base}
-	// Mst.Generate()
+	Mst := DataMaster{base}
+	Mst.Generate()
 
-	MOR := DataMOR{base}
-	MOR.Generate()
+	// Generate MOR
+	// MOR := DataMOR{base}
+	// MOR.Generate()
+
+	// Generate Summary
+	// Summary := DataSummary{base}
+	// Summary.Generate()
 
 	tk.Println("Application closed..")
 
