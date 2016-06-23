@@ -9,7 +9,8 @@ import (
 )
 
 type UserModel struct {
-	orm.ModelBase     `bson:"-",json:"-"`
+	orm.ModelBase `bson:"-",json:"-"`
+	// Id                int       `json:Id`
 	UserName          string    `json:"UserName"`
 	FullName          string    `json:"FullName"`
 	Enable            bool      `json:"Enable"`
