@@ -4,9 +4,8 @@ import (
 	_ "github.com/eaciit/dbox/dbc/mssql"
 	"github.com/eaciit/orm"
 	. "github.com/eaciit/powerplant/sec/consoleapp/generator/controllers"
-	"os"
-	// . "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
+	"os"
 )
 
 var (
@@ -31,6 +30,14 @@ func main() {
 	// Generate DataMaster
 	Mst := DataMaster{base}
 	Mst.Generate()
+
+	// Generate MOR
+	// MOR := DataMOR{base}
+	// MOR.Generate()
+
+	// Generate Summary
+	// Summary := DataSummary{base}
+	// Summary.Generate()
 
 	tk.Println("Application closed..")
 
