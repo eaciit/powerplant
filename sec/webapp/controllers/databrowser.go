@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"bufio"
-	"fmt"
 	"os"
+	"sort"
 
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/knot/knot.v1"
@@ -18,8 +18,17 @@ import (
 )
 
 var (
-	SP_ALIAS  = "RES."
-	SQLSCRIPT = "sqlscript"
+	// SpAlias     = "RES."
+	SQLScript    = "sqlscript"
+	FiltersMain  = []string{"MaintenanceInterval"}
+	FiltersPlant = []string{"PlantPlantName"}
+	FiltersWO    = []string{"ActualDuration", "PlanDuration", "WorkOrderType", "ActualFinish", "ActualStart", "MaintenanceCost", "MaintenanceDescription", "MaintenanceOrder", "PlanFinish", "PlanStart"}
+	FiltersDB    = []string{"EquipmentType", "EquipmentTypeDescription", "FLDescription", "FunctionalLocation"}
+	FilWO        = []string{}
+	FilDB        = []string{}
+	FilMain      = []string{}
+	FilPlant     = []string{}
+	FieldStr     = []string{"PlantPlantName", "WorkOrderType"}
 )
 
 type DataBrowserController struct {
@@ -35,7 +44,32 @@ type Result struct {
 	SelectedFields     interface{}
 }
 
+type DataBrowserInput struct {
+	EQType           []string
+	FailureCode      []string
+	Fields           []string
+	Fieldsdouble     []string
+	Hypoid           string
+	OrderType        []string
+	Page             int
+	PageSize         int
+	Period           string
+	Plant            []string
+	Skip             int
+	Take             int
+	Top              int
+	Filter           tk.M
+	Sort             []tk.M
+	DisplayTypeCount int
+	DisplayTypeList  []tk.M
+	HeaderList       []string
+}
+
 func (this *DataBrowserController) Default(k *knot.WebContext) interface{} {
+	if k.Session("userid") == nil {
+		this.Redirect(k, "login", "default")
+	}
+
 	this.LoadPartial(k, "shared/databrowser.html")
 
 	k.Config.OutputType = knot.OutputTemplate
@@ -78,349 +112,211 @@ func (this *DataBrowserController) Default(k *knot.WebContext) interface{} {
 	return result1
 }
 
-func constructOperator(operator string) string {
+func constructFilters(operator string, field string, value interface{}, logic string) {
+	condition := ""
+
 	switch operator {
 	case "eq":
-		return "="
+		condition = "="
 	case "neq":
-		return "<>"
+		condition = "<>"
 	case "startswith":
-		return "like"
+		condition = "like"
 	case "contains":
-		return "like"
+		condition = "like"
 	case "endswith":
-		return "like"
+		condition = "like"
 	case "doesnotcontain":
-		return "not like"
+		condition = "not like"
 	case "gt":
-		return ">"
+		condition = ">"
 	case "gte":
-		return ">="
+		condition = ">="
 	case "lte":
-		return "<="
+		condition = "<="
 	case "lt":
-		return "<"
+		condition = "<"
 	}
 
-	return ""
+	sort.Strings(FiltersDB)
+	sort.Strings(FiltersWO)
+	sort.Strings(FiltersMain)
+	sort.Strings(FiltersPlant)
+	sort.Strings(FieldStr)
+
+	val := tk.ToString(value)
+
+	str := sort.SearchStrings(FieldStr, field)
+
+	if str < len(FieldStr) && FieldStr[str] == field {
+		val = "'" + val + "'"
+	}
+
+	db := sort.SearchStrings(FiltersDB, field)
+	wo := sort.SearchStrings(FiltersWO, field)
+	main := sort.SearchStrings(FiltersMain, field)
+	plant := sort.SearchStrings(FiltersPlant, field)
+
+	if db < len(FiltersDB) && FiltersDB[db] == field {
+		FilDB = append(FilDB, " "+logic+" "+field+" "+condition+" "+val)
+	} else if wo < len(FiltersWO) && FiltersWO[wo] == field {
+		FilWO = append(FilWO, " "+logic+" "+"RESULT."+field+" "+condition+" "+val+" ")
+	} else if main < len(FiltersMain) && FiltersMain[main] == field {
+		FilMain = append(FilMain, " "+logic+" "+field+" "+condition+" "+val+" ")
+	} else if plant < len(FiltersPlant) && FiltersPlant[plant] == field {
+		FilPlant = append(FilPlant, " "+logic+" "+field+" "+condition+" "+val+" ")
+	}
+}
+
+func getDataBrowser(d DataBrowserInput) (params tk.M, e error) {
+
+	FilWO = []string{}
+	FilDB = []string{}
+	FilMain = []string{}
+	FilPlant = []string{}
+	params = tk.M{}
+
+	if d.Period == "" {
+		params.Set("@PeriodYear", " PeriodYear = 2014")
+		params.Set("@PeriodFrom", "'1/1/2014  00:00:00.000'")
+		params.Set("@PeriodTo", "'1/1/2015  00:00:00.000'")
+	} else if d.Period != "" {
+		selectedPeriod, _ := strconv.Atoi(d.Period)
+		params.Set("@PeriodYear", " PeriodYear = "+d.Period)
+		params.Set("@PeriodFrom", "'1/1/"+d.Period+"  00:00:00.000'")
+		params.Set("@PeriodTo", "'1/1/"+strconv.Itoa(selectedPeriod+1)+"  00:00:00.000'")
+	}
+
+	if len(d.EQType) > 0 {
+		str := strings.Join(d.EQType, ",")
+		params.Set("@EquipmentType", " AND EquipmentType IN ("+str+")")
+	} else {
+		params.Set("@EquipmentType", " AND EquipmentType <> 'xxx'")
+	}
+
+	if len(d.Plant) > 0 {
+		str := strings.Join(d.Plant, ",")
+		params.Set("@PlantName", " WHERE PlantName IN ("+str+")")
+	} else {
+		params.Set("@PlantName", " WHERE PlantName <> ''")
+	}
+
+	if d.Page != 0 {
+		if d.Page != 1 {
+			params.Set("@Offset", strconv.Itoa((d.Page-1)*d.PageSize))
+		} else {
+			params.Set("@Offset", strconv.Itoa(d.Page-1))
+		}
+
+	} else {
+		params.Set("@Offset", "0")
+	}
+
+	if d.PageSize != 0 {
+		params.Set("@Limit", strconv.Itoa(d.PageSize))
+	} else {
+		params.Set("@Limit", "10")
+	}
+
+	if d.Filter != nil {
+		filters := d.Filter.Get("filters").([]interface{})
+		logic := d.Filter.GetString("logic")
+
+		for _, fil := range filters {
+			val := fil.(map[string]interface{})
+			filters2 := val["filters"]
+
+			if filters2 != nil {
+				listFilters2 := filters2.([]interface{})
+				logic2 := val["logic"].(string)
+
+				for _, fil2 := range listFilters2 {
+					// tk.Printf("fil2: %#v \n", fil2)
+					val2 := fil2.(map[string]interface{})
+
+					field2 := val2["field"].(string)
+					operator2 := val2["operator"].(string)
+					value2 := val2["value"]
+
+					constructFilters(operator2, field2, value2, logic2)
+				}
+			} else {
+				field := val["field"].(string)
+				operator := val["operator"].(string)
+				value := val["value"]
+
+				constructFilters(operator, field, value, logic)
+			}
+		}
+	}
+
+	if len(FilDB) > 0 {
+		strFilter := strings.Join(FilDB, " ")
+		params.Set("@FILTERS_DB", strFilter)
+	} else {
+		params.Set("@FILTERS_DB", "")
+	}
+
+	if len(FilWO) > 0 {
+		tmpFilter := strings.Split(FilWO[0], " ")
+		FilWO[0] = strings.Join(tmpFilter[2:], " ")
+		strFilter := strings.Join(FilWO, " ")
+		params.Set("@FILTERS_WO", " WHERE "+strFilter)
+	} else {
+		params.Set("@FILTERS_WO", "")
+	}
+
+	if len(FilMain) > 0 {
+		tmpFilter := strings.Split(FilMain[0], " ")
+		FilMain[0] = strings.Join(tmpFilter[2:], " ")
+		strFilter := strings.Join(FilMain, " ")
+		params.Set("@FILTERS_MAIN", " WHERE "+strFilter)
+	} else {
+		params.Set("@FILTERS_MAIN", "")
+	}
+
+	if len(FilPlant) > 0 {
+		tmpFilter := strings.Split(FilPlant[0], " ")
+		FilPlant[0] = strings.Join(tmpFilter[2:], " ")
+		strFilter := strings.Join(FilPlant, " ")
+		params.Set("@PlantName", " WHERE "+strFilter)
+	} else {
+		params.Set("@PlantName", "")
+	}
+
+	if len(d.Sort) > 0 {
+		orderByStr := ""
+		for _, val := range d.Sort {
+			orderByStr += " ," + val.GetString("field") + " " + val.GetString("dir") + " "
+		}
+		orderByStr = strings.Replace(orderByStr, ",", "", 1)
+		params.Set("@ORDERBY", " "+orderByStr+" ")
+	} else {
+		params.Set("@ORDERBY", " PlantPlantName asc ")
+	}
+
+	return
 }
 
 func (this *DataBrowserController) GetGridDb(k *knot.WebContext) interface{} {
 	k.Config.OutputType = knot.OutputJson
 
-	//var e error
-
-	params := tk.M{}
 	r := new(tk.Result)
-
-	d := struct {
-		EQType       []string
-		FailureCode  []string
-		Fields       []string
-		Fieldsdouble []string
-		Hypoid       string
-		OrderType    []string
-		Page         int
-		PageSize     int
-		Period       string
-		Plant        []string
-		Skip         int
-		Take         int
-		Top          int
-		Filter       tk.M
-		Sort         []tk.M
-	}{}
-
+	d := DataBrowserInput{}
 	_ = k.GetPayload(&d)
+	ret := tk.M{}
 
 	r.Run(func(in interface{}) (interface{}, error) {
-		hypoid := d.Hypoid
-		procedure := tk.M{}
-		orderParam := []string{}
-		procedureParam := tk.M{}
 
-		ret := tk.M{}
-
-		if d.Period == "" {
-			params.Set("@PeriodYear", " AND PeriodYear = 2014")
-			params.Set("@PeriodFrom", "'1/1/2014  00:00:00.000'")
-			params.Set("@PeriodTo", "'1/1/2015  00:00:00.000'")
-
-		} else if d.Period != "" {
-			selectedPeriod, _ := strconv.Atoi(d.Period)
-			params.Set("@PeriodYear", " AND PeriodYear = "+d.Period)
-			params.Set("@PeriodFrom", "'1/1/"+d.Period+"  00:00:00.000'")
-			params.Set("@PeriodTo", "'1/1/"+strconv.Itoa(selectedPeriod+1)+"  00:00:00.000'")
-		}
-
-		if len(d.EQType) > 0 {
-			str := strings.Join(d.EQType, ",")
-			params.Set("@EquipmentType", " AND EquipmentType IN ("+str+")")
-		} else {
-			params.Set("@EquipmentType", " AND EquipmentType <> 'xxx'")
-		}
-
-		if len(d.Plant) > 0 {
-			str := strings.Join(d.Plant, ",")
-			params.Set("@PlantName", " AND PlantName IN ("+str+")")
-		} else {
-			params.Set("@PlantName", " AND PlantName <> ''")
-		}
-
-		// fields := d.Fields
-		fieldsdouble := d.Fieldsdouble
-
-		if len(d.OrderType) > 0 {
-			str := strings.Join(d.OrderType, ",")
-			params.Set("@WorkOrderType", " AND WO.Type IN ("+str+")")
-		} else {
-			params.Set("@WorkOrderType", " 1=1")
-		}
-
-		/*var filterindex = 0
-		var filterclause = ""
-		for r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") != "" {
-			var filteroperator = r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][operator]")
-
-			if filteroperator != "" && filteroperator == "eq" {
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$eq": r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][value]")}}})
-			} else if filteroperator != "" && filteroperator == "neq" {
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$ne": r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][value]")}}})
-			} else if filteroperator != "" && (filteroperator == "startswith" || filteroperator == "contains" || filteroperator == "endswith") {
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$regex": r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][value]")}}})
-			} else if filteroperator != "" && filteroperator == "doesnotcontain" {
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"not": bson.M{"$eq": "/." + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]"+"./")}}}})
-			} else if filteroperator != "" && filteroperator == "gt" {
-				var val, _ = strconv.ParseFloat(r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]"), 64)
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$gt": val}}})
-			} else if filteroperator != "" && filteroperator == "gte" {
-				var val, _ = strconv.ParseFloat(r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]"), 64)
-
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$gte": val}}})
-			} else if filteroperator != "" && filteroperator == "lte" {
-				var val, _ = strconv.ParseFloat(r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]"), 64)
-
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$lte": val}}})
-			} else if filteroperator != "" && filteroperator == "lt" {
-				var val, _ = strconv.ParseFloat(r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]"), 64)
-
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$lt": val}}})
-			}
-
-			filterindex += 1
-		}*/
-
-		/*pipescount = pipesgrid
-		pipes = pipesgrid
-
-		take := d.Take
-		skip := d.Skip
-
-		pbuild.Set("_id", "")
-		pipes = append(pipes, tk.M{"$group": pbuild})
-		p.Set("pipe", pipes)
-		result := make([]tk.M, 0)
-
-		if len(fieldsdouble) == 0 {
-			ret.Set("Summary", result)
-		} else if skip == 0 {
-			curr, _ := this.DB().Connection.NewQuery().From("DataBrowser").Command("pipe", pipes).Cursor(nil)
-			defer curr.Close()
-			_ = curr.Fetch(&result, 0, true)
-
-			k.SetSession(hypoid+"summary", result)
-			ret.Set("Summary", result)
-		} else {
-			ret.Set("Summary", k.Session(hypoid+"summary", nil))
-		}*/
-
-		// ret.Set("Summary", []tk.M{})
-
-		//sortfield := r.FormValue("sort[0][field]")
-		//dir := r.FormValue("sort[0][dir]")
-		/*if sortfield == "" {
-			sortfield = "Plant.PlantName"
-		}
-		var sort int
-		sort = 1
-		if dir != "" && dir != "asc" {
-			sort = -1
-		}*/
-
-		/*var sortindex = 0
-		var sortclause = ""
-		for r.FormValue("sort["+strconv.Itoa(sortindex)+"][field]") != "" {
-			var sorttextdir = r.FormValue("sort[" + strconv.Itoa(sortindex) + "][dir]")
-			var sortdir = 1
-
-			if sorttextdir != "" && sorttextdir != "asc" {
-				sortdir = -1
-			}
-
-			sortclause += r.FormValue("sort["+strconv.Itoa(sortindex)+"][field]") + " : " + strconv.Itoa(sortdir) + ", "
-			pipesgrid = append(pipesgrid, bson.M{"$sort": bson.M{r.FormValue("sort[" + strconv.Itoa(sortindex) + "][field]"): sortdir}})
-			sortindex += 1
-		}
-
-		if sortclause == "" {
-			pipesgrid = append(pipesgrid, bson.M{"$sort": bson.M{sortfield: sort}})
-		}*/
-
-		/*pipesgrid = append(pipesgrid, tk.M{"$skip": skip})
-		pipesgrid = append(pipesgrid, tk.M{"$limit": take})
-
-		pgrid.Set("pipe", pipesgrid)
-		datas := make([]tk.M, 0)
-		fmt.Println(pipesgrid)
-
-		curr1, _ := this.DB().Connection.NewQuery().From("DataBrowser").Command("pipe", pipesgrid).Cursor(nil)
-		defer curr1.Close()
-		_ = curr1.Fetch(&datas, 0, true)
-
-		ret.Set("Datas", datas)
-
-		pipescount = append(pipescount, tk.M{"$group": tk.M{"_id": "", "count": tk.M{"$sum": 1}}})
-		pcount.Set("pipe", pipescount)
-		tot := make([]tk.M, 0)
-
-		if skip == 0 {
-			curr1, _ := this.DB().Connection.NewQuery().From("DataBrowser").Command("pipe", pipescount).Cursor(nil)
-			defer curr1.Close()
-			_ = curr1.Fetch(&tot, 0, true)
-
-			if len(tot) == 0 {
-				ret.Set("Total", 0)
-			} else {
-				ret.Set("Total", tot[0].GetInt("count"))
-				k.SetSession(hypoid+"count", tot[0].GetInt("count"))
-			}
-		} else {
-			ret.Set("Total", k.Session(hypoid+"count", nil))
-		}
-
-		return ret, e
-
-		_ = hypoid
-		_ = pipesgrid
-		_ = pipes
-		_ = query
-		_ = pipescount
-		_ = p
-		_ = pgrid
-		_ = pcount
-		_ = ret
-		_ = pbuildgrid
-		_ = pbuild
-
-		result = []tk.M{}
-
-		cursor, _ := this.DB().Connection.NewQuery().From("DataBrowser").Command("pipe", pipesgrid).Cursor(nil)
-
-		defer cursor.Close()
-
-		e = cursor.Fetch(&result, 0, true)
-
-		return result, e*/
-
-		if d.Page != 0 {
-			if d.Page != 1 {
-				params.Set("@Offset", strconv.Itoa((d.Page-1)*d.PageSize))
-			} else {
-				params.Set("@Offset", strconv.Itoa(d.Page-1))
-			}
-
-		} else {
-			params.Set("@Offset", "0")
-		}
-
-		if d.PageSize != 0 {
-			params.Set("@Limit", strconv.Itoa(d.PageSize))
-		} else {
-			params.Set("@Limit", "10")
-		}
-
-		// filter
-
-		filtersParam := []string{}
-
-		// filtersParam = append(filtersParam, "and")
-
-		if d.Filter != nil {
-			filters := d.Filter.Get("filters").([]interface{})
-			logic := d.Filter.GetString("logic")
-
-			for _, fil := range filters {
-				// tk.Printf(": %#v %#v \n", idx, filter)
-
-				val := fil.(map[string]interface{})
-
-				// tk.Printf("val: %#v \n", val)
-
-				filters2 := val["filters"]
-
-				if filters2 != nil {
-					listFilters2 := filters2.([]interface{})
-					logic2 := val["logic"].(string)
-
-					for _, fil2 := range listFilters2 {
-						// tk.Printf("fil2: %#v \n", fil2)
-						val2 := fil2.(map[string]interface{})
-
-						field2 := val2["field"].(string)
-						operator2 := val2["operator"].(string)
-						value2 := val2["value"]
-
-						filtersParam = append(filtersParam, SP_ALIAS+field2+" "+constructOperator(operator2)+" "+tk.ToString(value2)+" "+logic2)
-					}
-				} else {
-					field := val["field"].(string)
-					operator := val["operator"].(string)
-					value := val["value"]
-
-					filtersParam = append(filtersParam, SP_ALIAS+field+" "+constructOperator(operator)+" "+tk.ToString(value)+" "+logic)
-				}
-			}
-		}
-
-		if len(filtersParam) > 0 {
-			fmt.Printf("len: %#v \n", len(filtersParam))
-			strFilterParam := strings.Join(filtersParam, " ")
-			strFilterParam = " WHERE 1=1 " + strFilterParam + " 1=1 "
-
-			orderParam = append(orderParam, "@FILTERS")
-			procedureParam.Set("@FILTERS", strFilterParam)
-		}
-
-		if len(d.Sort) > 0 {
-			orderByStr := ""
-			for _, val := range d.Sort {
-				orderByStr += " ," + val.GetString("field") + " " + val.GetString("dir") + " "
-			}
-
-			orderByStr = strings.Replace(orderByStr, ",", "", 1)
-
-			params.Set("@ORDERBY", " "+orderByStr+" ")
-		} else {
-			params.Set("@ORDERBY", " PlantPlantName asc ")
-		}
+		params, e := getDataBrowser(d)
 
 		// get datas
 
-		script := getSQLScript(SQLSCRIPT+"/databrowser_h3.sql", params)
+		script := getSQLScript(SQLScript+"/databrowser_h3.sql", params)
 
-		tk.Printf("---\n%#v \n----\n", script)
-
+		// tk.Printf("---\n%#v \n----\n", script)
 		cursor, e := this.DB().Connection.NewQuery().
-			Command("freequery", tk.M{}.
-				Set("syntax", script)).
+			Command("freequery", tk.M{}.Set("syntax", script)).
 			Cursor(nil)
 
 		defer cursor.Close()
@@ -429,72 +325,132 @@ func (this *DataBrowserController) GetGridDb(k *knot.WebContext) interface{} {
 
 		e = cursor.Fetch(&datas, 0, true)
 
-		if e != nil {
-			tk.Println(e.Error())
+		if e != nil && e.Error() == "No more data to fetched!" {
+			e = nil
 		}
 
 		ret.Set("Datas", datas)
 
 		// get total and summary
 
-		total := k.Session(hypoid+"Total", nil)
-		summary := k.Session(hypoid+"Summary", nil)
+		total := k.Session(d.Hypoid+"Total", nil)
+		summary := k.Session(d.Hypoid+"Summary", nil)
 
-		if total == nil || summary == nil || len(fieldsdouble) > 0 {
-			summaryStr := " count(*) as Total"
+		// if total == nil || summary == nil || len(fieldsdouble) > 0 {
+		summaryStr := " count(*) as Total"
 
-			for _, val := range fieldsdouble {
-				strSum := ",(Select CAST((Sum(result." + val + ")) as float)) as " + val + "sum"
-				strAvg := ",(Select CAST((Avg(result." + val + ")) as float)) as " + val + "avg"
+		for _, val := range d.Fieldsdouble {
+			strSum := ",(Select CAST((Sum(" + val + ")) as float)) as " + val + "sum"
+			strAvg := ",(Select CAST((Avg(" + val + ")) as float)) as " + val + "avg"
 
-				summaryStr += strSum
-				summaryStr += strAvg
+			summaryStr += strSum
+			summaryStr += strAvg
+		}
+
+		params.Set("@Summary", summaryStr)
+
+		script = getSQLScript(SQLScript+"/databrowser_h3_summary.sql", params)
+		// tk.Printf("---\n%#v \n----\n", script)
+		cursorTotal, e := this.DB().Connection.NewQuery().
+			Command("freequery", tk.M{}.Set("syntax", script)).
+			Cursor(nil)
+
+		defer cursorTotal.Close()
+
+		resSum := []tk.M{}
+
+		e = cursorTotal.Fetch(&resSum, 0, true)
+
+		if e != nil && e.Error() == "No more data to fetched!" {
+			e = nil
+		}
+
+		if len(resSum) > 0 {
+			tmp := resSum[0]
+			total = tmp.GetInt("total")
+			tmpSummary := tk.M{}
+
+			for _, val := range d.Fieldsdouble {
+				tmpSummary.Set(val+"avg", tmp.GetFloat64(strings.ToLower(val+"avg")))
+				tmpSummary.Set(val+"sum", tmp.GetFloat64(strings.ToLower(val+"sum")))
 			}
 
-			params.Set("@Summary", summaryStr)
+			summary = []tk.M{tmpSummary}
 
-			script = getSQLScript(SQLSCRIPT+"/databrowser_h3_summary.sql", params)
-			tk.Printf("---\n%#v \n----\n", script)
+			/*k.SetSession(d.Hypoid+"Total", total)
+			k.SetSession(d.Hypoid+"Summary", summary)*/
 
-			cursorTotal, e := this.DB().Connection.NewQuery().
-				Command("freequery", tk.M{}.
-					Set("syntax", script)).
-				Cursor(nil)
-
-			_ = e
-
-			defer cursorTotal.Close()
-
-			resSum := []tk.M{}
-
-			e = cursorTotal.Fetch(&resSum, 0, true)
-
-			if len(resSum) > 0 {
-				tmp := resSum[0]
-				total = tmp.GetInt("total")
-				tmpSummary := tk.M{}
-
-				for _, val := range fieldsdouble {
-					tmpSummary.Set(val+"avg", tmp.GetFloat64(strings.ToLower(val+"avg")))
-					tmpSummary.Set(val+"sum", tmp.GetFloat64(strings.ToLower(val+"sum")))
-				}
-
-				summary = []tk.M{tmpSummary}
-
-				k.SetSession(hypoid+"Total", total)
-				k.SetSession(hypoid+"Summary", summary)
-
-				ret.Set("Total", total)
-				ret.Set("Summary", summary)
-			}
-		} else {
 			ret.Set("Total", total)
 			ret.Set("Summary", summary)
 		}
+		/*} else {
+			ret.Set("Total", total)
+			ret.Set("Summary", summary)
+		}*/
 
-		_ = procedure
-		_ = fieldsdouble
-		_ = summary
+		return ret, e
+	}, nil)
+
+	return r
+}
+
+func (this *DataBrowserController) GetFilter(k *knot.WebContext) interface{} {
+	k.Config.OutputType = knot.OutputJson
+
+	var e error
+
+	r := new(tk.Result)
+	d := DataBrowserInput{}
+	f := tk.M{}
+	ret := tk.M{}
+
+	_ = k.GetForms(&f)
+	_ = k.GetPayload(&d)
+
+	// tk.Printf("%#v \n", f)
+
+	r.Run(func(in interface{}) (interface{}, error) {
+
+		activeField := f.GetString("active_field")
+
+		if activeField != "" {
+			params, err := getDataBrowser(d)
+			// get datas
+			params.Set("@GROUP", activeField)
+
+			script := getSQLScript(SQLScript+"/databrowser_h3_filter.sql", params)
+
+			// tk.Printf("---\n%#v \n----\n", script)
+			cursor, err := this.DB().Connection.NewQuery().
+				Command("freequery", tk.M{}.Set("syntax", script)).
+				Cursor(nil)
+
+			defer cursor.Close()
+
+			// datas := []SPDataBrowser{}
+			tmpDatas := []tk.M{}
+			datas := []tk.M{}
+
+			err = cursor.Fetch(&tmpDatas, 0, true)
+
+			if e != nil && e.Error() == "No more data to fetched!" {
+				e = nil
+			}
+
+			if len(tmpDatas) > 0 {
+				for _, val := range tmpDatas {
+					tmp := tk.M{}
+					tmp.Set("_id", val.Get(strings.ToLower(activeField)))
+					tmp.Set(activeField, val.Get(strings.ToLower(activeField)))
+
+					datas = append(datas, tmp)
+				}
+			}
+
+			ret.Set("Data", datas)
+
+			e = err
+		}
 
 		return ret, e
 	}, nil)
@@ -509,24 +465,7 @@ type SumList struct {
 
 func (this *DataBrowserController) SaveExcel(k *knot.WebContext) interface{} {
 
-	d := struct {
-		DisplayTypeCount int
-		DisplayTypeList  []tk.M
-		EQType           []string
-		FailureCode      []string
-		Fields           []string
-		Fieldsdouble     []string
-		Hypoid           string
-		OrderType        []string
-		Page             int
-		PageSize         int
-		Period           string
-		Plant            []string
-		Skip             int
-		Take             int
-		Top              int
-		HeaderList       []string
-	}{}
+	d := DataBrowserInput{}
 
 	_ = k.GetPayload(&d)
 
@@ -534,328 +473,103 @@ func (this *DataBrowserController) SaveExcel(k *knot.WebContext) interface{} {
 		selectedColumn []string
 		DisplaySumList []SumList
 	)
+
 	r := new(tk.Result)
+
 	r.Run(func(in interface{}) (interface{}, error) {
 
-		hypoid := d.Hypoid
+		params, e := getDataBrowser(d)
 
-		var (
-			pipesgrid  []tk.M
-			pipes      []tk.M
-			query      []tk.M
-			pipescount []tk.M
-		)
+		// get datas
 
-		p := tk.M{}
-		pgrid := tk.M{}
-		pcount := tk.M{}
-		ret := tk.M{}
-		pbuildgrid := tk.M{}
-		pbuild := tk.M{}
+		script := getSQLScript(SQLScript+"/databrowser_h3.sql", params)
 
-		/*if hypoid == "H16" {
-			FromPeriod := r.FormValue("From")
-			ToPeriod := r.FormValue("To")
-			var DFrom time.Time
-			var DTo time.Time
-			DFrom, _ = fmtdate.Parse("DD-MMM-YYYY hh:mm:ss", FromPeriod+" 00:00:00")
-			DTo, _ = fmtdate.Parse("DD-MMM-YYYY hh:mm:ss", ToPeriod+" 00:00:00")
+		// tk.Printf("---\n%#v \n----\n", script)
+		cursor, e := this.DB().Connection.NewQuery().
+			Command("freequery", tk.M{}.Set("syntax", script)).
+			Cursor(nil)
 
-			y, _ := DFrom.ISOWeek()
-			yy, _ := DTo.ISOWeek()
+		defer cursor.Close()
 
-			var wy []bson.M
-			wy = append(wy, bson.M{"Period.Year": bson.M{"$eq": y}})
-			wy = append(wy, bson.M{"Period.Year": bson.M{"$eq": yy}})
+		// datas := []SPDataBrowser{}
+		datas := []tk.M{}
 
-			query = append(query, bson.M{"$or": wy})
-		} */if d.Period == "" {
-			query = append(query, tk.M{"Period.Year": tk.M{"$eq": 2014}})
-		} else {
-			selectedPeriod, _ := strconv.Atoi(d.Period)
-			query = append(query, tk.M{"Period.Year": tk.M{"$eq": selectedPeriod}})
+		e = cursor.Fetch(&datas, 0, true)
+
+		if e != nil && e.Error() == "No more data to fetched!" {
+			e = nil
 		}
 
-		if len(d.EQType) > 0 {
-			query = append(query, tk.M{"EquipmentType": tk.M{"$in": d.EQType}})
-		} else {
-			query = append(query, tk.M{"EquipmentType": tk.M{"$ne": "xxx"}})
+		// ret.Set("Datas", datas)
+
+		// get total and summary
+
+		total := 0          //k.Session(d.Hypoid+"Total", nil)
+		summary := []tk.M{} //k.Session(d.Hypoid+"Summary", nil)
+
+		// if total == nil || summary == nil || len(fieldsdouble) > 0 {
+		summaryStr := " count(*) as Total"
+
+		for _, val := range d.Fieldsdouble {
+			strSum := ",(Select CAST((Sum(" + val + ")) as float)) as " + val + "sum"
+			strAvg := ",(Select CAST((Avg(" + val + ")) as float)) as " + val + "avg"
+
+			summaryStr += strSum
+			summaryStr += strAvg
 		}
 
-		if len(d.Plant) > 0 {
-			query = append(query, tk.M{"Plant.PlantName": tk.M{"$in": d.Plant}})
-		} else {
-			query = append(query, tk.M{"Plant.PlantName": tk.M{"$ne": ""}})
+		params.Set("@Summary", summaryStr)
+
+		script = getSQLScript(SQLScript+"/databrowser_h3_summary.sql", params)
+		// tk.Printf("---\n%#v \n----\n", script)
+		cursorTotal, e := this.DB().Connection.NewQuery().
+			Command("freequery", tk.M{}.Set("syntax", script)).
+			Cursor(nil)
+
+		defer cursorTotal.Close()
+
+		resSum := []tk.M{}
+
+		e = cursorTotal.Fetch(&resSum, 0, true)
+
+		if e != nil && e.Error() == "No more data to fetched!" {
+			e = nil
 		}
 
-		//Cek Hypo Where
-		if hypoid == "H2" {
-			query = append(query, tk.M{"Maintenance": tk.M{"$ne": nil}})
-			query = append(query, tk.M{"AssetType": tk.M{"$eq": "Steam"}})
-		} else if hypoid == "H3" || hypoid == "H6" || hypoid == "H15" || hypoid == "H18" || hypoid == "H1" || hypoid == "H7" || hypoid == "H4" {
-			query = append(query, tk.M{"Maintenance": tk.M{"$ne": nil}})
-		} else if hypoid == "H8" || hypoid == "H10" {
-			query = append(query, tk.M{"MROElement": tk.M{"$ne": nil}})
-		} else if hypoid == "H17" {
-			query = append(query, tk.M{"FailureNotification": tk.M{"$ne": nil}})
-		} else if hypoid == "H16" {
-			query = append(query, tk.M{"TurbineVibrations": tk.M{"$ne": nil}})
-		}
+		if len(resSum) > 0 {
+			tmp := resSum[0]
+			total = tmp.GetInt("total")
+			_ = total
+			tmpSummary := tk.M{}
 
-		if query != nil && len(query) > 0 {
-			pipesgrid = append(pipesgrid, tk.M{"$match": tk.M{"$and": query}})
-			pipes = append(pipes, tk.M{"$match": tk.M{"$and": query}})
-			pipescount = append(pipescount, tk.M{"$match": tk.M{"$and": query}})
-		}
-
-		fields := d.Fields
-		fieldsdouble := d.Fieldsdouble
-
-		for _, fi := range fields {
-			pbuildgrid.Set(fi, 1)
-			selectedColumn = append(selectedColumn, fi)
-		}
-
-		headerList := d.HeaderList
-		for _, fi := range fieldsdouble {
-			pbuild.Set(strings.Replace(fi, ".", "", -1)+"sum", tk.M{"$sum": "$" + fi})
-			pbuild.Set(strings.Replace(fi, ".", "", -1)+"avg", tk.M{"$avg": "$" + fi})
-		}
-
-		//Cek Hypo Unwind
-
-		if hypoid == "H2" || hypoid == "H3" || hypoid == "H6" || hypoid == "H15" || hypoid == "H18" || hypoid == "H1" || hypoid == "H4" {
-
-			pipesgrid = append(pipesgrid, tk.M{"$unwind": "$Maintenance"})
-
-			pipescount = append(pipescount, tk.M{"$unwind": "$Maintenance"})
-
-			pipes = append(pipes, tk.M{"$unwind": "$Maintenance"})
-
-			//where after unwind
-			if len(d.OrderType) > 0 {
-				pipes = append(pipes, tk.M{"$match": tk.M{"Maintenance.WorkOrderType": tk.M{"$in": d.OrderType}}})
-				pipesgrid = append(pipesgrid, tk.M{"$match": tk.M{"Maintenance.WorkOrderType": tk.M{"$in": d.OrderType}}})
-				pipescount = append(pipescount, tk.M{"$match": tk.M{"Maintenance.WorkOrderType": tk.M{"$in": d.OrderType}}})
+			for _, val := range d.Fieldsdouble {
+				tmpSummary.Set(val+"avg", tmp.GetFloat64(strings.ToLower(val+"avg")))
+				tmpSummary.Set(val+"sum", tmp.GetFloat64(strings.ToLower(val+"sum")))
 			}
 
-		} else if hypoid == "H8" || hypoid == "H10" {
+			summary = []tk.M{tmpSummary}
 
-			pipesgrid = append(pipesgrid, tk.M{"$unwind": "$MROElement"})
+			/*k.SetSession(d.Hypoid+"Total", total)
+			k.SetSession(d.Hypoid+"Summary", summary)*/
 
-			pipescount = append(pipescount, tk.M{"$unwind": "$MROElement"})
-
-			pipes = append(pipes, tk.M{"$unwind": "$MROElement"})
-
-			//where after unwind
-			if len(d.OrderType) > 0 {
-				pipes = append(pipes, tk.M{"$match": tk.M{"MROElement.MROOrderType": tk.M{"$in": d.OrderType}}})
-				pipesgrid = append(pipesgrid, tk.M{"$match": tk.M{"MROElement.MROOrderType": tk.M{"$in": d.OrderType}}})
-				pipescount = append(pipescount, tk.M{"$match": tk.M{"MROElement.MROOrderType": tk.M{"$in": d.OrderType}}})
-			}
-		} else if hypoid == "H17" {
-			pipesgrid = append(pipesgrid, tk.M{"$unwind": "$FailureNotification"})
-			pipescount = append(pipescount, tk.M{"$unwind": "$FailureNotification"})
-			pipes = append(pipes, tk.M{"$unwind": "$FailureNotification"})
-
-			//Where After Unwind
-			if len(d.FailureCode) > 0 {
-				pipes = append(pipes, tk.M{"$match": tk.M{"FailureNotification.FailureCode": tk.M{"$in": d.FailureCode}}})
-				pipesgrid = append(pipesgrid, tk.M{"$match": tk.M{"FailureNotification.FailureCode": tk.M{"$in": d.FailureCode}}})
-				pipescount = append(pipescount, tk.M{"$match": tk.M{"FailureNotification.FailureCode": tk.M{"$in": d.FailureCode}}})
-			}
-
-		} else if hypoid == "H16" {
-			pipesgrid = append(pipesgrid, tk.M{"$unwind": "$TurbineVibrations"})
-			pipescount = append(pipescount, tk.M{"$unwind": "$TurbineVibrations"})
-			pipes = append(pipes, tk.M{"$unwind": "$TurbineVibrations"})
-
-			ppr := tk.M{}
-			ppr.Set("Plant", 1)
-			ppr.Set("TurbineVibrations", 1)
-
-			pipesgrid = append(pipesgrid, tk.M{"$project": ppr})
-
-			/*if r.FormValue("From") != "" && r.FormValue("To") != "" {
-				FromPeriod := r.FormValue("From")
-				ToPeriod := r.FormValue("To")
-				var DFrom time.Time
-				var DTo time.Time
-				DFrom, _ = fmtdate.Parse("DD-MMM-YYYY hh:mm:ss", FromPeriod+" 00:00:00")
-				DTo, _ = fmtdate.Parse("DD-MMM-YYYY hh:mm:ss", ToPeriod+" 00:00:00")
-
-				delta := DTo.Sub(DFrom)
-				daydiff := delta.Hours() / 24
-
-				var queryweek []bson.M
-				for ; daydiff > 0; daydiff-- {
-
-					var queryAt []bson.M
-
-					d := DFrom.AddDate(0, 0, int(daydiff))
-					isoYear, isoWeek := d.ISOWeek()
-
-					queryAt = append(queryAt, bson.M{"TurbineVibrations.WeekNo": bson.M{"$eq": isoWeek}})
-					queryAt = append(queryAt, bson.M{"TurbineVibrations.Year": bson.M{"$eq": isoYear}})
-
-					queryweek = append(queryweek, bson.M{"$and": queryAt})
-
-				}
-
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{"$or": queryweek}})
-				pipescount = append(pipescount, bson.M{"$match": bson.M{"$or": queryweek}})
-				pipes = append(pipes, bson.M{"$match": bson.M{"$or": queryweek}})
-			}
-
-			if r.Form["UnitNo[]"] != nil {
-				old := r.Form["UnitNo[]"]
-				newi := make([]interface{}, len(old))
-				for i, v := range old {
-					newi[i] = v
-				}
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{"TurbineVibrations.UnitNo": bson.M{"$in": newi}}})
-				pipescount = append(pipescount, bson.M{"$match": bson.M{"TurbineVibrations.UnitNo": bson.M{"$in": newi}}})
-				pipes = append(pipes, bson.M{"$match": bson.M{"TurbineVibrations.UnitNo": bson.M{"$in": newi}}})
-
-			}*/
-
+			/*ret.Set("Total", total)
+			ret.Set("Summary", summary)*/
 		}
-
-		/*var filterindex = 0
-		var filterclause = ""
-		for r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") != "" {
-			var filteroperator = r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][operator]")
-
-			if filteroperator != "" && filteroperator == "eq" {
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$eq": r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][value]")}}})
-			} else if filteroperator != "" && filteroperator == "neq" {
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$ne": r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][value]")}}})
-			} else if filteroperator != "" && (filteroperator == "startswith" || filteroperator == "contains" || filteroperator == "endswith") {
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$regex": r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][value]")}}})
-			} else if filteroperator != "" && filteroperator == "doesnotcontain" {
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"not": bson.M{"$eq": "/." + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]"+"./")}}}})
-			} else if filteroperator != "" && filteroperator == "gt" {
-				var val, _ = strconv.ParseFloat(r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]"), 64)
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$gt": val}}})
-			} else if filteroperator != "" && filteroperator == "gte" {
-				var val, _ = strconv.ParseFloat(r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]"), 64)
-
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$gte": val}}})
-			} else if filteroperator != "" && filteroperator == "lte" {
-				var val, _ = strconv.ParseFloat(r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]"), 64)
-
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$lte": val}}})
-			} else if filteroperator != "" && filteroperator == "lt" {
-				var val, _ = strconv.ParseFloat(r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]"), 64)
-
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$lt": val}}})
-			}
-
-			filterindex += 1
-		}*/
-		pipescount = pipesgrid
-
-		// take, _ := strconv.Atoi(r.FormValue("take"))
-		skip := 1
-
-		pbuild.Set("_id", "")
-		pipes = append(pipes, tk.M{"$group": pbuild})
-		p.Set("pipe", pipes)
-		result := make([]tk.M, 0)
-
-		if len(fieldsdouble) == 0 {
-			ret.Set("Summary", result)
-		} else if skip == 0 {
-			curr, _ := this.DB().Connection.NewQuery().From("DataBrowser").Command("pipe", pipes).Cursor(nil)
-			defer curr.Close()
-
-			curr.Fetch(&result, 0, true)
-
-			k.SetSession(hypoid+"summary", result)
-			ret.Set("Summary", result)
-		} else {
-			ret.Set("Summary", k.Session(hypoid+"summary", nil))
-		}
-
-		/*sortfield := r.FormValue("sort[0][field]")
-		dir := r.FormValue("sort[0][dir]")
-		if sortfield == "" {
-			sortfield = "Plant.PlantName"
-		}
-		var sort int
-		sort = 1
-		if dir != "" && dir != "asc" {
-			sort = -1
-		}
-
-		var sortindex = 0
-		var sortclause = ""
-		for r.FormValue("sort["+strconv.Itoa(sortindex)+"][field]") != "" {
-			var sorttextdir = r.FormValue("sort[" + strconv.Itoa(sortindex) + "][dir]")
-			var sortdir = 1
-
-			if sorttextdir != "" && sorttextdir != "asc" {
-				sortdir = -1
-			}
-
-			sortclause += r.FormValue("sort["+strconv.Itoa(sortindex)+"][field]") + " : " + strconv.Itoa(sortdir) + ", "
-			pipesgrid = append(pipesgrid, bson.M{"$sort": bson.M{r.FormValue("sort[" + strconv.Itoa(sortindex) + "][field]"): sortdir}})
-			sortindex += 1
-		}
-
-		if sortclause == "" {
-			pipesgrid = append(pipesgrid, bson.M{"$sort": bson.M{sortfield: sort}})
+		/*} else {
+			ret.Set("Total", total)
+			ret.Set("Summary", summary)
 		}*/
 
-		// pipesgrid = append(pipesgrid, bson.M{"$skip": skip})
-		//pipesgrid = append(pipesgrid, bson.M{"$limit": 10})
-
-		pgrid.Set("pipe", pipesgrid)
-		datas := make([]tk.M, 0)
-
-		curr, _ := this.DB().Connection.NewQuery().From("DataBrowser").Command("pipe", pipesgrid).Cursor(nil)
-		defer curr.Close()
-
-		curr.Fetch(&datas, 0, true)
-		ret.Set("Datas", datas)
-
-		pipescount = append(pipescount, tk.M{"$group": tk.M{"_id": "", "count": tk.M{"$sum": 1}}})
-		pcount.Set("pipe", pipescount)
-		tot := make([]tk.M, 0)
-
-		if skip == 0 {
-			curr, _ := this.DB().Connection.NewQuery().From("DataBrowser").Command("pipe", pipescount).Cursor(nil)
-			defer curr.Close()
-
-			curr.Fetch(&tot, 0, true)
-
-			if len(tot) == 0 {
-				ret.Set("Total", 0)
-			} else {
-				ret.Set("Total", tot[0].GetInt("count"))
-				k.SetSession(hypoid+"count", tot[0].GetInt("count"))
-			}
-		} else {
-			ret.Set("Total", k.Session(hypoid+"count", nil))
-		}
 		DisplayTypeCount := d.DisplayTypeCount
 		DisplaySumList = []SumList{}
 		for i := 0; i < DisplayTypeCount; i++ {
 			sumData := SumList{}
 			sumData.field = d.DisplayTypeList[i].Get("field").(string)
-			sumData.tipe = d.DisplayTypeList[i].Get("tipe").(string)
+			sumData.tipe = d.DisplayTypeList[i].Get("type").(string)
 			DisplaySumList = append(DisplaySumList, sumData)
 		}
 
-		excelFile, e := this.GenExcelFile(headerList, selectedColumn, datas, result, DisplaySumList)
+		excelFile, e := this.GenExcelFile(d.HeaderList, selectedColumn, datas, summary, DisplaySumList)
 		return excelFile, e
 	}, nil)
 
@@ -864,7 +578,7 @@ func (this *DataBrowserController) SaveExcel(k *knot.WebContext) interface{} {
 
 func (this *DataBrowserController) GenExcelFile(header []string, selectedColumn []string, datas []tk.M, dataSummary []tk.M, DisplaySumList []SumList) (string, error) {
 	today := time.Now().UTC()
-	fileName := "static/files/databrowser_" + today.Format("2006-01-02T150405") + ".xlsx"
+	fileName := "files/databrowser_" + today.Format("2006-01-02T150405") + ".xlsx"
 	var file *xlsx.File
 	var sheet *xlsx.Sheet
 	var row *xlsx.Row
@@ -970,7 +684,7 @@ func getSQLScript(path string, params tk.M) (script string) {
 			script += string(line[:len(line)])
 		}
 	} else {
-		fmt.Println(err.Error())
+		tk.Println(err.Error())
 	}
 
 	for idx, val := range params {
@@ -981,295 +695,3 @@ func getSQLScript(path string, params tk.M) (script string) {
 
 	return
 }
-
-/*func (this *DataBrowserController) GetFilter() {
-	var (
-		e              error
-		selectedColumn []string
-	)
-	r := new(tk.Result)
-	r.Run(func(in interface{}) (interface{}, error) {
-
-		r := this.Ctx.Request
-		hypoid := r.FormValue("hypoid")
-
-		var (
-			pipesgrid []bson.M
-			pipes     []bson.M
-			query     []bson.M
-		)
-
-		pgrid := tk.M{}
-		ret := tk.M{}
-		pbuildgrid := tk.M{}
-		pbuild := tk.M{}
-
-		if hypoid == "H16" {
-			FromPeriod := r.FormValue("From")
-			ToPeriod := r.FormValue("To")
-			var DFrom time.Time
-			var DTo time.Time
-			DFrom, _ = fmtdate.Parse("DD-MMM-YYYY hh:mm:ss", FromPeriod+" 00:00:00")
-			DTo, _ = fmtdate.Parse("DD-MMM-YYYY hh:mm:ss", ToPeriod+" 00:00:00")
-
-			y, _ := DFrom.ISOWeek()
-			yy, _ := DTo.ISOWeek()
-
-			var wy []bson.M
-			wy = append(wy, bson.M{"Period.Year": bson.M{"$eq": y}})
-			wy = append(wy, bson.M{"Period.Year": bson.M{"$eq": yy}})
-
-			query = append(query, bson.M{"$or": wy})
-		} else if r.FormValue("Period") == "" {
-			query = append(query, bson.M{"Period.Year": bson.M{"$eq": 2014}})
-		} else if r.FormValue("Period") != "" {
-			selectedPeriod, _ := strconv.Atoi(r.FormValue("Period"))
-			query = append(query, bson.M{"Period.Year": bson.M{"$eq": selectedPeriod}})
-		} else {
-			PeriodFrom, _ := strconv.Atoi(r.FormValue("PeriodFrom"))
-			PeriodTo, _ := strconv.Atoi(r.FormValue("PeriodTo"))
-			query = append(query, bson.M{"Period.Year": bson.M{"$gte": PeriodFrom}})
-			query = append(query, bson.M{"Period.Year": bson.M{"$lte": PeriodTo}})
-		}
-
-		if r.Form["EQType[]"] != nil {
-			query = append(query, bson.M{"EquipmentType": bson.M{"$in": r.Form["EQType[]"]}})
-		} else {
-			query = append(query, bson.M{"EquipmentType": bson.M{"$ne": "xxx"}})
-			// query = append(query, bson.M{"isTurbine": bson.M{"$eq": true}})
-		}
-
-		if r.Form["Plant[]"] != nil {
-			query = append(query, bson.M{"Plant.PlantName": bson.M{"$in": r.Form["Plant[]"]}})
-		} else {
-			query = append(query, bson.M{"Plant.PlantName": bson.M{"$ne": ""}})
-		}
-
-		//Cek Hypo Where
-		if hypoid == "H2" {
-			query = append(query, bson.M{"Maintenance": bson.M{"$ne": nil}})
-			query = append(query, bson.M{"AssetType": bson.M{"$eq": "Steam"}})
-		} else if hypoid == "H3" || hypoid == "H6" || hypoid == "H15" || hypoid == "H18" || hypoid == "H1" || hypoid == "H7" || hypoid == "H4" {
-			query = append(query, bson.M{"Maintenance": bson.M{"$ne": nil}})
-		} else if hypoid == "H8" || hypoid == "H10" {
-			query = append(query, bson.M{"MROElement": bson.M{"$ne": nil}})
-		} else if hypoid == "H17" {
-			query = append(query, bson.M{"FailureNotification": bson.M{"$ne": nil}})
-		} else if hypoid == "H16" {
-			query = append(query, bson.M{"TurbineVibrations": bson.M{"$ne": nil}})
-		}
-
-		if query != nil && len(query) > 0 {
-			pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{"$and": query}})
-			pipes = append(pipes, bson.M{"$match": bson.M{"$and": query}})
-		}
-
-		fields := r.Form["fields[]"]
-		fieldsdouble := r.Form["fieldsdouble[]"]
-
-		for _, fi := range fields {
-			pbuildgrid.Set(fi, 1)
-			selectedColumn = append(selectedColumn, fi)
-		}
-
-		for _, fi := range fieldsdouble {
-			pbuild.Set(strings.Replace(fi, ".", "", -1)+"sum", bson.M{"$sum": "$" + fi})
-			pbuild.Set(strings.Replace(fi, ".", "", -1)+"avg", bson.M{"$avg": "$" + fi})
-		}
-
-		//Cek Hypo Unwind
-
-		if hypoid == "H2" || hypoid == "H3" || hypoid == "H6" || hypoid == "H15" || hypoid == "H18" || hypoid == "H1" || hypoid == "H4" {
-
-			pipesgrid = append(pipesgrid, bson.M{"$unwind": "$Maintenance"})
-
-			pipes = append(pipes, bson.M{"$unwind": "$Maintenance"})
-
-			//where after unwind
-			if r.Form["OrderType[]"] != nil {
-				pipes = append(pipes, bson.M{"$match": bson.M{"Maintenance.WorkOrderType": bson.M{"$in": r.Form["OrderType[]"]}}})
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{"Maintenance.WorkOrderType": bson.M{"$in": r.Form["OrderType[]"]}}})
-
-			}
-
-		} else if hypoid == "H8" || hypoid == "H10" {
-
-			pipesgrid = append(pipesgrid, bson.M{"$unwind": "$MROElement"})
-
-			pipes = append(pipes, bson.M{"$unwind": "$MROElement"})
-
-			//where after unwind
-			if r.Form["OrderType[]"] != nil {
-				pipes = append(pipes, bson.M{"$match": bson.M{"MROElement.MROOrderType": bson.M{"$in": r.Form["OrderType[]"]}}})
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{"MROElement.MROOrderType": bson.M{"$in": r.Form["OrderType[]"]}}})
-			}
-		} else if hypoid == "H17" {
-			pipesgrid = append(pipesgrid, bson.M{"$unwind": "$FailureNotification"})
-			pipes = append(pipes, bson.M{"$unwind": "$FailureNotification"})
-
-			//Where After Unwind
-			if r.Form["FailureCode[]"] != nil {
-				pipes = append(pipes, bson.M{"$match": bson.M{"FailureNotification.FailureCode": bson.M{"$in": r.Form["FailureCode[]"]}}})
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{"FailureNotification.FailureCode": bson.M{"$in": r.Form["FailureCode[]"]}}})
-			}
-
-		} else if hypoid == "H16" {
-			pipesgrid = append(pipesgrid, bson.M{"$unwind": "$TurbineVibrations"})
-			pipes = append(pipes, bson.M{"$unwind": "$TurbineVibrations"})
-
-			ppr := tk.M{}
-			ppr.Set("Plant", 1)
-			ppr.Set("TurbineVibrations", 1)
-
-			pipesgrid = append(pipesgrid, bson.M{"$project": ppr})
-
-			if r.FormValue("From") != "" && r.FormValue("To") != "" {
-				FromPeriod := r.FormValue("From")
-				ToPeriod := r.FormValue("To")
-				var DFrom time.Time
-				var DTo time.Time
-				DFrom, _ = fmtdate.Parse("DD-MMM-YYYY hh:mm:ss", FromPeriod+" 00:00:00")
-				DTo, _ = fmtdate.Parse("DD-MMM-YYYY hh:mm:ss", ToPeriod+" 00:00:00")
-
-				delta := DTo.Sub(DFrom)
-				daydiff := delta.Hours() / 24
-
-				var queryweek []bson.M
-				for ; daydiff > 0; daydiff-- {
-
-					var queryAt []bson.M
-
-					d := DFrom.AddDate(0, 0, int(daydiff))
-					isoYear, isoWeek := d.ISOWeek()
-
-					queryAt = append(queryAt, bson.M{"TurbineVibrations.WeekNo": bson.M{"$eq": isoWeek}})
-					queryAt = append(queryAt, bson.M{"TurbineVibrations.Year": bson.M{"$eq": isoYear}})
-
-					queryweek = append(queryweek, bson.M{"$and": queryAt})
-
-				}
-
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{"$or": queryweek}})
-				pipes = append(pipes, bson.M{"$match": bson.M{"$or": queryweek}})
-			}
-
-			if r.Form["UnitNo[]"] != nil {
-				old := r.Form["UnitNo[]"]
-				newi := make([]interface{}, len(old))
-				for i, v := range old {
-					newi[i] = v
-				}
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{"TurbineVibrations.UnitNo": bson.M{"$in": newi}}})
-				pipes = append(pipes, bson.M{"$match": bson.M{"TurbineVibrations.UnitNo": bson.M{"$in": newi}}})
-
-			}
-
-		}
-
-		var filterindex = 0
-		var filterclause = ""
-		for r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") != "" {
-			var filteroperator = r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][operator]")
-
-			if filteroperator != "" && filteroperator == "eq" {
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$eq": r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][value]")}}})
-			} else if filteroperator != "" && filteroperator == "neq" {
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$ne": r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][value]")}}})
-			} else if filteroperator != "" && (filteroperator == "startswith" || filteroperator == "contains" || filteroperator == "endswith") {
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$regex": r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][value]")}}})
-			} else if filteroperator != "" && filteroperator == "doesnotcontain" {
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"not": bson.M{"$eq": "/." + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]"+"./")}}}})
-			} else if filteroperator != "" && filteroperator == "gt" {
-				var val, _ = strconv.ParseFloat(r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]"), 64)
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$gt": val}}})
-			} else if filteroperator != "" && filteroperator == "gte" {
-				var val, _ = strconv.ParseFloat(r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]"), 64)
-
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$gte": val}}})
-			} else if filteroperator != "" && filteroperator == "lte" {
-				var val, _ = strconv.ParseFloat(r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]"), 64)
-
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$lte": val}}})
-			} else if filteroperator != "" && filteroperator == "lt" {
-				var val, _ = strconv.ParseFloat(r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]"), 64)
-
-				filterclause += r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][field]") + " : " + r.FormValue("filter[filters]["+strconv.Itoa(filterindex)+"][value]") + ", "
-				pipesgrid = append(pipesgrid, bson.M{"$match": bson.M{r.FormValue("filter[filters][" + strconv.Itoa(filterindex) + "][field]"): bson.M{"$lt": val}}})
-			}
-
-			filterindex += 1
-		}
-
-		active_field := r.FormValue("active_field")
-
-		// switch active_field {
-		// case "Plant.PlantName":
-		// 	pipesgrid = append(pipesgrid, bson.M{"$group": bson.M{"_id": "$" + active_field}})
-		// 	break
-		// default:
-		// 	break
-		// }
-		pipesgrid = append(pipesgrid, bson.M{"$group": bson.M{"_id": "$" + active_field}})
-		pgrid.Set("pipe", pipesgrid)
-		datas := make([]tk.M, 0)
-		csr := this.Db.Table("DataBrowser", pgrid)
-		_ = csr.FetchAll(&datas, true)
-		csr.Close()
-		switch active_field {
-		case "Plant.PlantName":
-			for _, i := range datas {
-				plant := make(tk.M)
-				i.Set("Plant", plant.Set("PlantName", i.Get("_id")))
-			}
-			break
-		case "Maintenance.WorkOrderType":
-			for _, i := range datas {
-				wotype := make(tk.M)
-				i.Set("Maintenance", wotype.Set("WorkOrderType", i.Get("_id")))
-			}
-			break
-		// case "Maintenance.MaintenanceOrder":
-		// 	for _, i := range datas {
-		// 		mo := make(tk.M)
-		// 		i.Set("Maintenance", mo.Set("MaintenanceOrder", i.Get("_id")))
-		// 	}
-		// 	break
-		// case "Maintenance.MaintenanceDescription":
-		// 	for _, i := range datas {
-		// 		md := make(tk.M)
-		// 		i.Set("Maintenance", md.Set("MaintenanceDescription", i.Get("_id")))
-		// 	}
-		// 	break
-
-		// case "EquipmentType":
-		// 	for _, i := range datas {
-		// 		i.Set("EquipmentType", i.Get("_id"))
-		// 	}
-		// 	break
-		// case "EquipmentTypeDescription":
-		// 	for _, i := range datas {
-		// 		i.Set("EquipmentTypeDescription", i.Get("_id"))
-		// 	}
-		// 	break
-		// case "FLDescription":
-		// 	for _, i := range datas {
-		// 		i.Set("FLDescription", i.Get("_id"))
-		// 	}
-		// 	break
-		default:
-			break
-		}
-		ret.Set("Datas", datas)
-
-		return datas, e
-	}, nil)
-	this.Json(r)
-
-}*/
