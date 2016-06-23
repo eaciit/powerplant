@@ -45,7 +45,7 @@ func (c *LoginController) Do(k *knot.WebContext) interface{} {
 	return tk.M{}.Set("IsLogged", Found).Set("Message", msg).Set("success", true)
 }
 
-func (c *LoginController) DoLogout(k *knot.WebContext) interface{} {
+func (c *LoginController) Logout(k *knot.WebContext) interface{} {
 	k.Config.NoLog = true
 	k.Config.OutputType = knot.OutputNone
 	k.SetSession("userid", nil)
