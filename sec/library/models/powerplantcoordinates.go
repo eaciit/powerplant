@@ -24,7 +24,7 @@ type PowerPlantCoordinates struct {
 	SteamUnit             int     `bson:"SteamUnit" json:"SteamUnit"`
 	SteamCapacity         float64 `bson:"SteamCapacity" json:"SteamCapacity"`
 	DieselUnit            int     `bson:"DieselUnit" json:"DieselUnit"`
-	DieselCapacity        int     `bson:"DieselCapacity" json:"DieselCapacity"`
+	DieselCapacity        float64 `bson:"DieselCapacity" json:"DieselCapacity"`
 	CombinedCycleUnit     int     `bson:"CombinedCycleUnit" json:"CombinedCycleUnit"`
 	CombinedCycleCapacity float64 `bson:"CombinedCycleCapacity" json:"CombinedCycleCapacity"`
 	Longitude             float64 `bson:"Longitude" json:"Longitude"`

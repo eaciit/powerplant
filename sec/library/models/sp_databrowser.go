@@ -51,13 +51,13 @@ type SPDataBrowser struct {
 	PlantFuelTypes_Diesel      bool    `bson:"PlantFuelTypes_Diesel" json:"PlantFuelTypes_Diesel"`
 	PlantFuelTypes_Gas         bool    `bson:"PlantFuelTypes_Gas" json:"PlantFuelTypes_Gas"`
 	PlantGasTurbineUnit        int     `bson:"PlantGasTurbineUnit" json:"PlantGasTurbineUnit"`
-	PlantGasTurbineCapacity    int     `bson:"PlantGasTurbineCapacity" json:"PlantGasTurbineCapacity"`
+	PlantGasTurbineCapacity    float64 `bson:"PlantGasTurbineCapacity" json:"PlantGasTurbineCapacity"`
 	PlantSteamUnit             int     `bson:"PlantSteamUnit" json:"PlantSteamUnit"`
-	PlantSteamCapacity         int     `bson:"PlantSteamCapacity" json:"PlantSteamCapacity"`
+	PlantSteamCapacity         float64 `bson:"PlantSteamCapacity" json:"PlantSteamCapacity"`
 	PlantDieselUnit            int     `bson:"PlantDieselUnit" json:"PlantDieselUnit"`
-	PlantDieselCapacity        int     `bson:"PlantDieselCapacity" json:"PlantDieselCapacity"`
+	PlantDieselCapacity        float64 `bson:"PlantDieselCapacity" json:"PlantDieselCapacity"`
 	PlantCombinedCycleUnit     int     `bson:"PlantCombinedCycleUnit" json:"PlantCombinedCycleUnit"`
-	PlantCombinedCycleCapacity int     `bson:"PlantCombinedCycleCapacity" json:"PlantCombinedCycleCapacity"`
+	PlantCombinedCycleCapacity float64 `bson:"PlantCombinedCycleCapacity" json:"PlantCombinedCycleCapacity"`
 	PlantLongitude             float64 `bson:"PlantLongitude" json:"PlantLongitude"`
 	PlantLatitude              float64 `bson:"PlantLatitude" json:"PlantLatitude"`
 
@@ -104,8 +104,8 @@ type SPDataBrowser struct {
 	ActualDuration         float64   `bson:"ActualDuration" json:"ActualDuration"`
 	LastMaintenanceDate    time.Time `bson:"LastMaintenanceDate" json:"LastMaintenanceDate"`
 	MaintenanceInterval    float64   `bson:"MaintenanceInterval" json:"MaintenanceInterval"`
-	MaintenanceIntervalTmp float64   `bson:"MaintenanceIntervalTmp" json:"MaintenanceIntervalTmp"`
-	MaintenanceCost        float64   `bson:"MaintenanceCost" json:"MaintenanceCost"`
+	// MaintenanceIntervalTmp float64   `bson:"MaintenanceIntervalTmp" json:"MaintenanceIntervalTmp"`
+	MaintenanceCost float64 `bson:"MaintenanceCost" json:"MaintenanceCost"`
 }
 
 /*func (m *SPDataBrowser) TableName() string {

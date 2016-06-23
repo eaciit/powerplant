@@ -24,5 +24,5 @@ type PreventiveCorrectiveSummary struct {
 }
 
 func (m *PreventiveCorrectiveSummary) TableName() string {
-	return "PreventiveCorrectiveSummary"
+	return "PreventiveCorrectiveSummaryTest"
 }
