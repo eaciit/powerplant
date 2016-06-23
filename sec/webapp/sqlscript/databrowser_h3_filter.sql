@@ -26,6 +26,7 @@ CTE_PLANT as
 ),
 CTE_WO as 
 (
+
     SELECT * from  
     (   SELECT 
             WO.Type as WorkOrderType,
@@ -89,6 +90,7 @@ CTE_WO as
 )
 
 SELECT 
-    @Summary
+    @GROUP 
     FROM CTE_MAIN 
-    @FILTERS_MAIN
+    @FILTERS_MAIN 
+    GROUP BY @GROUP 
