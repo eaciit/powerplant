@@ -4,10 +4,10 @@ import (
 	"github.com/eaciit/crowd"
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/orm"
+	. "github.com/eaciit/powerplant/sec/consoleapp/generator/helpers"
 	. "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
 	"log"
-	"math"
 	"strconv"
 	"strings"
 )
@@ -87,13 +87,14 @@ func (r *PreventiveSummary) GeneratePreventiveCorrectiveSummary(ctx *orm.DataCon
 
 						if len(ActType) > 0 {
 							MaintActivityTypes := crowd.From(&ActType).Group(func(x interface{}) interface{} {
-								return x.(tk.M).GetString("maintactivitytype")
+								return x.(tk.M).GetString("maintenanceactivitytype")
 							}, nil).Exec().Result.Data().([]crowd.KV)
 
 							for _, act := range MaintActivityTypes {
 								MaintActivityType := act.Key.(string)
+
 								OrderType := crowd.From(&ActType).Where(func(x interface{}) interface{} {
-									return x.(tk.M).GetString("maintactivitytype") == MaintActivityType
+									return x.(tk.M).GetString("maintenanceactivitytype") == MaintActivityType
 								}).Exec().Result.Data().([]tk.M)
 
 								if len(OrderType) > 0 {
@@ -102,11 +103,10 @@ func (r *PreventiveSummary) GeneratePreventiveCorrectiveSummary(ctx *orm.DataCon
 									}, nil).Exec().Result.Data().([]crowd.KV)
 
 									for _, order := range OrderTypes {
-										OrderType := order.Key.(string)
-										OrderNo := crowd.From(&OrderTypes).Where(func(x interface{}) interface{} {
-											return x.(tk.M).GetString("ordertype") == OrderType
+										OrderTypeString := order.Key.(string)
+										OrderNo := crowd.From(&OrderType).Where(func(x interface{}) interface{} {
+											return x.(tk.M).GetString("ordertype") == OrderTypeString
 										}).Exec().Result.Data().([]tk.M)
-
 										if len(OrderNo) > 0 {
 											Equipment := crowd.From(&OrderNo).Group(func(x interface{}) interface{} {
 												return x.(tk.M).GetString("equipment")
@@ -115,9 +115,10 @@ func (r *PreventiveSummary) GeneratePreventiveCorrectiveSummary(ctx *orm.DataCon
 											for _, eqNo := range Equipment {
 												eqNoString := eqNo.Key.(string)
 												for _, element := range MROElements {
+													_ = element
 													pcs := new(PreventiveCorrectiveSummary)
 													pcs.PeriodYear = year
-													pcs.OrderType = OrderType
+													pcs.OrderType = OrderTypeString
 													pcs.EquipmentNo = eqNoString
 
 													equipmentDescription := crowd.From(&OrderNo).Where(func(x interface{}) interface{} {
@@ -135,30 +136,35 @@ func (r *PreventiveSummary) GeneratePreventiveCorrectiveSummary(ctx *orm.DataCon
 														pcs.EquipmentType = EquipmentType
 														pcs.EquipmentTypeDescription = equipmentDescription[0].GetString("equipmenttypedesc")
 													}
+
 													pcs.ActivityType = MaintActivityType
-													pcs.Plant = r.PlantNormalization(plant)
+													pcs.Plant = PlantNormalization(plant)
 													pcs.Element = element.GetString("element")
 
-													result := float64(len(equipmentDescription[0].GetString("maintenanceorder")) / len(MROElements))
-													pcs.MOCount = int(r.Round(result, .5, 2))
+													result := float64(len(equipmentDescription) / len(MROElements))
+													pcs.MOCount = int(Round(result, .5, 2))
 
-													switch element {
+													switch element.GetString("element") {
 													case "Internal Labor":
 														pcs.Value = crowd.From(&equipmentDescription).Sum(func(x interface{}) interface{} {
-															return x.(tk.M).GetString("internallaboractual")
+															return x.(tk.M).GetFloat64("internallaboractual")
 														}).Exec().Result.Sum
+														break
 													case "Internal Material":
 														pcs.Value = crowd.From(&equipmentDescription).Sum(func(x interface{}) interface{} {
-															return x.(tk.M).GetString("internalmaterialactual")
+															return x.(tk.M).GetFloat64("internalmaterialactual")
 														}).Exec().Result.Sum
+														break
 													case "Direct Material":
 														pcs.Value = crowd.From(&equipmentDescription).Sum(func(x interface{}) interface{} {
-															return x.(tk.M).GetString("directmaterialactual")
+															return x.(tk.M).GetFloat64("directmaterialactual")
 														}).Exec().Result.Sum
+														break
 													case "External Service":
 														pcs.Value = crowd.From(&equipmentDescription).Sum(func(x interface{}) interface{} {
-															return x.(tk.M).GetString("externalserviceactual")
+															return x.(tk.M).GetFloat64("externalserviceactual")
 														}).Exec().Result.Sum
+														break
 													}
 
 													_, e := ctx.InsertOut(pcs)
@@ -183,78 +189,4 @@ func (r *PreventiveSummary) GeneratePreventiveCorrectiveSummary(ctx *orm.DataCon
 	}
 
 	return e
-}
-
-func (r *PreventiveSummary) Round(val float64, roundOn float64, places int) (newVal float64) {
-	var round float64
-	pow := math.Pow(10, float64(places))
-	digit := pow * val
-	_, div := math.Modf(digit)
-	if div >= roundOn {
-		round = math.Ceil(digit)
-	} else {
-		round = math.Floor(digit)
-	}
-	newVal = round / pow
-	return
-}
-
-func (r *PreventiveSummary) PlantNormalization(PlantName string) string {
-	retVal := ""
-	//switch (PlantName)
-	//{
-	//    case "Rabigh PP": retVal = "Rabigh"; break;
-	//    case "QURAYYAH": retVal = "Qurayyah"; break;
-	//    case "GHZLAN": retVal = "Ghazlan"; break;
-	//    case "QURAYYAH CC": retVal = "Qurayyah CC"; break;
-	//    case "Shuaiba Power Plant": retVal = "Shoaiba"; break;
-	//    case "RABIGH POWER PLANT": retVal = "Rabigh"; break;
-	//    case "Qurayyah Power Plant": retVal = "Qurayyah"; break;
-	//    case "Qurayyah Steam": retVal = "Qurayyah"; break;
-	//    case "GHAZLAN POWER PLANT": retVal = "Ghazlan"; break;
-	//    default: retVal = PlantName; break;
-	//}
-
-	switch PlantName {
-	case "POWER PLANT #9":
-		retVal = "PP9"
-	case "RABIGH POWER PLANT":
-		retVal = "Rabigh"
-	case "Rabigh 2":
-		retVal = "Rabigh"
-	case "Rabigh PP":
-		retVal = "Rabigh"
-	case "Shuaiba Power Plant":
-		retVal = "Shoaiba"
-	case "Sha'iba (CC)":
-		retVal = "Shoaiba"
-	case "Sha'iba (SEC)":
-		retVal = "Shoaiba"
-	case "GHAZLAN POWER PLANT":
-		retVal = "Ghazlan"
-	case "GHZLAN":
-		retVal = "Ghazlan"
-	case "Qurayyah Power Plant":
-		retVal = "Qurayyah"
-	case "Qurayyah -Steam":
-		retVal = "Qurayyah"
-	case "Qurayyah Combined Cycle Power Plant":
-		retVal = "Qurayyah CC"
-	case "Qurayyah- Combined Cycle":
-		retVal = "Qurayyah CC"
-	case "QurayyahCC":
-		retVal = "Qurayyah CC"
-	case "QURAYYAH CC":
-		retVal = "Qurayyah CC"
-	case "QurayyahPP":
-		retVal = "Qurayyah"
-	case "Qurayyah Steam":
-		retVal = "Qurayyah"
-	case "QURAYYAH":
-		retVal = "Qurayyah"
-	default:
-		retVal = PlantName
-	}
-
-	return retVal
 }
