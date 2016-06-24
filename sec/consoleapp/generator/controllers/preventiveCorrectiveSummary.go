@@ -1,36 +1,60 @@
-package models
+package controllers
 
 import (
-	"github.com/eaciit/crowd"
-	"github.com/eaciit/dbox"
-	"github.com/eaciit/orm"
-	. "github.com/eaciit/powerplant/sec/consoleapp/generator/helpers"
-	. "github.com/eaciit/powerplant/sec/library/models"
-	tk "github.com/eaciit/toolkit"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/eaciit/crowd"
+	"github.com/eaciit/dbox"
+	. "github.com/eaciit/powerplant/sec/consoleapp/generator/helpers"
+	. "github.com/eaciit/powerplant/sec/library/models"
+	tk "github.com/eaciit/toolkit"
 )
 
-type PreventiveSummary struct {
+// GenPreventiveCorrectiveSummary
+type GenPreventiveCorrectiveSummary struct {
+	*BaseController
 }
 
-func (r *PreventiveSummary) GeneratePreventiveCorrectiveSummary(ctx *orm.DataContext) error {
+// Generate
+func (s *GenPreventiveCorrectiveSummary) Generate(base *BaseController) {
+	if base != nil {
+		s.BaseController = base
+	}
+
+	tk.Println("##Generating PreventiveCorrectiveSummary..")
+	e := s.generatePreventiveCorrectiveSummary()
+	if e != nil {
+		tk.Println(e)
+	}
+	tk.Println("##PreventiveCorrectiveSummary : DONE\n")
+}
+
+// generatePreventiveCorrectiveSummary
+func (s *GenPreventiveCorrectiveSummary) generatePreventiveCorrectiveSummary() error {
 	var e error
+	ctx := s.BaseController.Ctx
 	c := ctx.Connection
 
 	years := [3]int{2013, 2014, 2015}
 	sintax := "select Distinct(Element) from MORSummary"
 	csr, e := c.NewQuery().Command("freequery", tk.M{}.Set("syntax", sintax)).Cursor(nil)
+	defer csr.Close()
 
 	if e != nil {
 		return e
-	} else {
-		defer csr.Close()
 	}
 
 	MROElements := []tk.M{}
 	e = csr.Fetch(&MROElements, 0, false)
+
+	csr1, e := c.NewQuery().From(new(MasterEquipmentType).TableName()).Cursor(nil)
+	defer csr1.Close()
+
+	if e != nil {
+		return e
+	}
 
 	query := []*dbox.Filter{}
 
@@ -44,11 +68,10 @@ func (r *PreventiveSummary) GeneratePreventiveCorrectiveSummary(ctx *orm.DataCon
 		query = append(query, dbox.And(dbox.Gte("Period", yearFirst), dbox.Lte("Period", yearLast)))
 
 		csr2, e := c.NewQuery().From(new(MaintenanceCost).TableName()).Where(query...).Cursor(nil)
+		defer csr2.Close()
 
 		if e != nil {
 			return e
-		} else {
-			defer csr2.Close()
 		}
 
 		datas := []tk.M{}
@@ -159,7 +182,7 @@ func (r *PreventiveSummary) GeneratePreventiveCorrectiveSummary(ctx *orm.DataCon
 														break
 													}
 
-													_, e := ctx.InsertOut(pcs)
+													e := ctx.InsertOut(pcs)
 
 													if e != nil {
 														log.Println(e.Error())

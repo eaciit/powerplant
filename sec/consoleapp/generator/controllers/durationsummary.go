@@ -7,8 +7,9 @@ import (
 	//. "github.com/eaciit/powerplant/sec/consoleapp/generator/helpers"
 	. "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
-	//"log"
+	"log"
 	"strconv"
+	"time"
 	//"strings"
 )
 
@@ -65,26 +66,71 @@ func (d *DurationIntervalSummary) GenerateDurationIntervalSummary() error {
 
 		if len(datas) > 0 {
 			for _, data := range datas {
-				_ = data
-				/*woles := new(WOListSummary)
-				  woles.PeriodYear = year
-				  woles.OrderType = data.Type
-				  woles.FunctionalLocation = data.FunctionalLocation
+				woles := new(WOListSummary)
+				woles.PeriodYear = year
+				woles.OrderType = data.GetString("type")
+				woles.FunctionalLocation = data.GetString("functionallocation")
 
-				  query = nil
-				  query = append(query, dbox.Eq("FunctionalLocationCode", data.FunctionalLocation))
+				query = nil
+				query = append(query, dbox.Eq("FunctionalLocationCode", data.GetString("functionallocation")))
 
-				  csr2, e := c.NewQuery().From(new(FunctionalLocation).TableName()).Where(query...).Select("CatProf").Cursor(nil)
+				csr2, e := c.NewQuery().From(new(FunctionalLocation).TableName()).Where(query...).Select("CatProf").Cursor(nil)
 
-				  if e != nil {
-				     return e
-				  } else {
-				     defer csr1.Close()
-				  }*/
+				if e != nil {
+					return e
+				} else {
+					defer csr2.Close()
+				}
 
-				//datas := []tk.M{}
-				//e = csr1.Fetch(&datas, 0, false)
-				//woles.EquipmentType = DataHelper.Populate<FunctionalLocation>("FunctionalLocation", Query.EQ("FunctionalLocationCode", data.FunctionalLocation)).Select(x => x.CatProf).FirstOrDefault();
+				tempResult := []tk.M{}
+				e = csr2.Fetch(&tempResult, 0, false)
+
+				if e != nil {
+					return e
+				}
+
+				if len(tempResult) > 0 {
+					woles.EquipmentType = tempResult[0].GetString("catprof")
+				}
+
+				woles.MainenanceOrderCode = data.GetString("ordercode")
+				woles.NotificationCode = data.GetString("notificationcode")
+
+				query = nil
+				query = append(query, dbox.Eq("FunctionalLocationCode", data.GetString("plant")))
+
+				csr3, e := c.NewQuery().From(new(FunctionalLocation).TableName()).Where(query...).Select("Description").Cursor(nil)
+
+				if e != nil {
+					return e
+				} else {
+					defer csr3.Close()
+				}
+
+				tempResult = []tk.M{}
+				e = csr3.Fetch(&tempResult, 0, false)
+
+				if e != nil {
+					return e
+				}
+
+				if len(tempResult) > 0 {
+					woles.Plant = tempResult[0].GetString("description")
+				}
+
+				timeNow := time.Now()
+				_ = timeNow
+				layout := "2006-01-02T00:00:00Z"
+				_ = layout
+				timeTemp := data["scheduledstart"].(string)
+				woles.PlanStart, e = time.Parse(layout, timeTemp)
+
+				if e != nil {
+					log.Println("kkkkkkkkkkkkkk: ", e.Error())
+				} else {
+					log.Println("kkkkkkkkkkkkkk: ", woles.PlanStart)
+				}
+				//woles.PlanEnd = data.GetString("scheduledfinish")
 			}
 		}
 	}
