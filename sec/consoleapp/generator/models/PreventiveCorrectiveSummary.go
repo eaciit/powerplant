@@ -32,14 +32,6 @@ func (r *PreventiveSummary) GeneratePreventiveCorrectiveSummary(ctx *orm.DataCon
 	MROElements := []tk.M{}
 	e = csr.Fetch(&MROElements, 0, false)
 
-	csr1, e := c.NewQuery().From(new(MasterEquipmentType).TableName()).Cursor(nil)
-
-	if e != nil {
-		return e
-	} else {
-		defer csr1.Close()
-	}
-
 	query := []*dbox.Filter{}
 
 	for _, year := range years {
@@ -183,9 +175,6 @@ func (r *PreventiveSummary) GeneratePreventiveCorrectiveSummary(ctx *orm.DataCon
 				}
 			}
 		}
-
-		/*_ = year
-		_ = csr2*/
 	}
 
 	return e

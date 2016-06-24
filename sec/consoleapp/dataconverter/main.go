@@ -89,9 +89,9 @@ func main() {
 	// convert(new(MasterActivityType), base) // 			done
 	// convert(new(MasterUnitPlant), base) // 				done
 
-	/*migrate := new(MigrateData)
+	migrate := new(MigrateData)
 	migrate.BaseController = base
-	migrate.GenerateMasterUnit()
+	/*migrate.GenerateMasterUnit()
 	// migrate := new(MigrateData)
 	// migrate.BaseController = base
 	// migrate.GenerateMasterUnit()
@@ -113,6 +113,7 @@ func main() {
 	// migrate.DoGenerateAssetClass()
 	// migrate.DoGenerateAssetType()
 	// migrate.DoGenerateAssetLevel()
+	migrate.DoGenerateTempMstPlant()
 
 	// check := DataChecker{base}
 	// check.CheckDetailData()

@@ -28,8 +28,8 @@ func main() {
 	defer base.Ctx.Close()
 
 	// Generate DataMaster
-	Mst := DataMaster{base}
-	Mst.Generate()
+	//Mst := DataMaster{base}
+	//Mst.Generate()
 
 	// Generate MOR
 	// MOR := DataMOR{base}
@@ -38,6 +38,10 @@ func main() {
 	// Generate Summary
 	// Summary := DataSummary{base}
 	// Summary.Generate()
+
+	// Generate DurationSummary
+	Duration := DurationIntervalSummary{base}
+	Duration.Generate()
 
 	tk.Println("Application closed..")
 
