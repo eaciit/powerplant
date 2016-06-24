@@ -46,11 +46,12 @@ func (m *GenMOR) generateMORSummary() error {
 
 	PowerPlantInfos := []PowerPlantInfo{}
 	csr, e := c.NewQuery().From(new(PowerPlantInfo).TableName()).Cursor(nil)
+	defer csr.Close()
+
 	if e != nil {
 		return e
 	}
 	e = csr.Fetch(&PowerPlantInfos, 0, false)
-	csr.Close()
 	if e != nil {
 		return e
 	}
@@ -61,7 +62,6 @@ func (m *GenMOR) generateMORSummary() error {
 		return e
 	}
 	e = csr.Fetch(&OperationalDatas, 0, false)
-	csr.Close()
 	if e != nil {
 		return e
 	}
@@ -72,7 +72,6 @@ func (m *GenMOR) generateMORSummary() error {
 		return e
 	}
 	e = csr.Fetch(&MaintenanceCostFLList, 0, false)
-	csr.Close()
 	if e != nil {
 		return e
 	}
@@ -957,12 +956,13 @@ func (m *GenMOR) generateMORFlatCalculationSummary() error {
 
 	MORSummaryList := []MORSummary{}
 	csr, e := c.NewQuery().Select("Element").From(new(MORSummary).TableName()).Where(query...).Group("Element").Cursor(nil)
+	defer csr.Close()
 
 	if e != nil {
 		return e
 	}
+
 	e = csr.Fetch(&MORSummaryList, 0, false)
-	csr.Close()
 	if e != nil {
 		return e
 	}
@@ -974,11 +974,11 @@ func (m *GenMOR) generateMORFlatCalculationSummary() error {
 
 		MaintenanceCostList := []MaintenanceCost{}
 		csr, e := c.NewQuery().From(new(MaintenanceCost).TableName()).Where(query...).Cursor(nil)
+
 		if e != nil {
 			return e
 		}
 		e = csr.Fetch(&MaintenanceCostList, 0, false)
-		csr.Close()
 		if e != nil {
 			return e
 		}

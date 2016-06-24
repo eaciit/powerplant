@@ -39,11 +39,13 @@ func (s *GenSummaryData) generateSummaryData() error {
 
 	//FunctionalLocationList
 	csr, err := c.NewQuery().Command("procedure", tk.M{}.Set("name", "GetFunctionalLocation")).Cursor(nil)
+	defer csr.Close()
+
 	err = csr.Fetch(&FunctionLocationList, 0, false)
+
 	if err != nil {
 		tk.Println(err.Error())
 	}
-	defer csr.Close()
 
 	//PowerPlantInfo
 	csr, err = c.NewQuery().Select().From(new(PowerPlantInfo).TableName()).Cursor(nil)
@@ -51,7 +53,6 @@ func (s *GenSummaryData) generateSummaryData() error {
 	if err != nil {
 		tk.Println(err.Error())
 	}
-	defer csr.Close()
 
 	for _, loc := range FunctionLocationList {
 		SummaryInfo.FunctionalLocation = loc.FunctionalLocationCode
@@ -71,7 +72,6 @@ func (s *GenSummaryData) generateSummaryData() error {
 		if err != nil {
 			//tk.Println(err.Error())
 		}
-		defer csr.Close()
 
 		if SummaryInfo.SortField == "PP9" {
 			tk.Printf("%#v,", SummaryInfo.SortField)
@@ -162,7 +162,6 @@ func (s *GenSummaryData) generateSummaryData() error {
 		if err != nil {
 			tk.Println(err.Error())
 		}
-		csr.Close()
 
 		SummaryInfo = SummaryData{}
 
