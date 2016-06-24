@@ -9,20 +9,20 @@
         DataBrowser.EquipmentTypeDescription as EquipmentTypeDescription,
         DataBrowser.PlantCode as PlantCode
     FROM DataBrowser 
-    WHERE 
-        1=1 
+    WHERE  
         @PeriodYear 
         @EquipmentType 
+        @FILTERS_DB
 ),
 CTE_PLANT as
 (
-    SELECT
+    SELECT * FROM( 
+        SELECT 
         Plant.PlantCode as PlantPlantCode,
-        Plant.PlantName as PlantPlantName
-    FROM PowerPlantCoordinates as Plant
-    WHERE 
-        1=1 
-        @PlantName 
+        Plant.PlantName as PlantPlantName 
+        FROM PowerPlantCoordinates as Plant 
+    ) res 
+    @PlantName 
 ),
 CTE_WO as 
 (
@@ -63,31 +63,35 @@ CTE_WO as
             (select cast(WO.ActualStart as datetime)) >= (select cast(@PeriodFrom as datetime)) 
             and 
             (select cast(WO.ActualStart as datetime)) < (select cast(@PeriodTo as datetime)) 
-    ) as qr
-    WHERE 1=1
+    ) as RESULT 
+    @FILTERS_WO 
+), CTE_MAIN as (
+    SELECT
+        *,
+        (SELECT case
+            when WO.ActualStart IS NOT NULL AND (Select top 1 wl.ActualFinish 	
+                        from WOList as wl 
+                        where 
+                            wl.FunctionalLocation = DataBrowser.FunctionalLocation and 
+                            wl.ActualStart < WO.ActualStart 
+                        order by wl.ActualStart desc 
+                    ) IS NOT NULL
+            then (SELECT CAST((DATEDIFF(
+                    SECOND,
+                    (Select top 1 wl.ActualFinish from WOList as wl where wl.FunctionalLocation = DataBrowser.FunctionalLocation and wl.ActualStart < WO.ActualStart order by wl.ActualStart desc),
+                    WO.ActualStart) / 86400.000000000000000) as float ))
+            else 0
+        END) as MaintenanceInterval
+        
+        from CTE_DB DataBrowser, CTE_Plant as Plant, CTE_WO as WO 
+        WHERE 
+            DataBrowser.FunctionalLocation = WO.MaintenanceFunctionalLocation  
+            and DataBrowser.PlantCode = Plant.PlantPlantCode 
 )
-Select
-    *,
-    (Select case
-        when WO.ActualStart IS NOT NULL AND (Select top 1 wl.ActualFinish 	
-					from WOList as wl 
-					where 
-						wl.FunctionalLocation = DataBrowser.FunctionalLocation and 
-						wl.ActualStart < WO.ActualStart 
-					order by wl.ActualStart desc 
-				) IS NOT NULL
-        then (SELECT CAST((DATEDIFF(
-                SECOND,
-                (Select top 1 wl.ActualFinish from WOList as wl where wl.FunctionalLocation = DataBrowser.FunctionalLocation and wl.ActualStart < WO.ActualStart order by wl.ActualStart desc),
-                WO.ActualStart) / 86400.000000000000000) as float ))
-        else 0
-    END) as MaintenanceInterval
-    
-    from CTE_DB DataBrowser, CTE_Plant as Plant, CTE_WO as WO 
-    WHERE 
-        DataBrowser.FunctionalLocation = WO.MaintenanceFunctionalLocation and 
-        DataBrowser.PlantCode = Plant.PlantPlantCode  
 
-ORDER BY @ORDERBY 
-OFFSET @Offset ROWS 
-FETCH NEXT @Limit ROWS ONLY
+SELECT * 
+    FROM CTE_MAIN 
+        @FILTERS_MAIN 
+    ORDER BY @ORDERBY 
+        OFFSET @Offset ROWS 
+        FETCH NEXT @Limit ROWS ONLY

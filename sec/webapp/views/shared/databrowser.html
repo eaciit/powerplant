@@ -178,9 +178,9 @@ function GenerateDataBrowser(){
         //build Columns
         if(f.type=="string"){
             var URLFilter = "/databrowser/getfilter";
-            URLFilter += "?active_field="+f.field;
+            URLFilter += "?type="+f.type+"&active_field="+f.field;
             // if (f.field == "Plant.PlantName" /*|| f.field == "Maintenance.WorkOrderType"*/){
-            if (f.field == "PlantPlantName" /*|| f.field == "Maintenance.WorkOrderType"*/){
+            if (f.field == "PlantPlantName" || f.field == "WorkOrderType"){
                 var cols = {
                     "field":f.field,
                     "title":f.alias,
@@ -191,7 +191,7 @@ function GenerateDataBrowser(){
                         dataSource: {
                             schema: {
                                 data: function(response) {
-                                    return response.Data;
+                                    return response.Data.Data;
                                 }
                             },
                             transport: {

@@ -252,7 +252,7 @@
         <script>
             function Logout(){
                 localStorage.clear();
-                window.location.href = "/Login/Logout";
+                window.location.href = "/login/logout";
             }
             function UserManagementMenu(){
                 localStorage.clear();
@@ -346,7 +346,7 @@
                 // ]},
                 {_id:"DataBrowser",Url:"/databrowser/default",Title:"Data Browser",Submenus:[]},
                 //{_id:"DataBrowser",Url:"/databrowserve",Title:"Data Browser",Submenus:[]},
-                {_id:"UploadData",Url:"/uploaddata/default",Title:"Upload Data",Submenus:[]},
+                // {_id:"UploadData",Url:"/uploaddata/default",Title:"Upload Data",Submenus:[]},
             ]
             model.UserMenus = ko.observableArray([]);
 

@@ -197,7 +197,7 @@
                                     </div>
                                     <div class="clearfix"></div>
                                     <div data-bind="visible:model.modalProcessing()">
-                                        @Html.Partial("_processing")
+                                        {{template "processing.html"}}
                                     </div>
                                 </div>
 
@@ -262,12 +262,12 @@
         var validator = coalesce($("#resetPasswordForm").data("kendoValidator"), $("#resetPasswordForm").kendoValidator().data("kendoValidator"));
         if (validator.validate()) {
             model.modalProcessing(true);
-            ajaxPost("Account/ForgetPassword", {
+            ajaxPost("/account/forgotpassword", {
                 UserEmail: $("#email").val()
             },
             function (data) {
                 model.modalProcessing(false);
-                switch (data.Result) {
+                switch (data.Data) {
                     case "OK":
                         alert("Please kindly check your email!");
                         $('#modalForgetPassword').modal("hide");

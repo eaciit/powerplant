@@ -43,12 +43,14 @@ func init() {
 	app.Register(&HypothesisController{baseCont})
 	app.Register(&ScenarioSimulation{baseCont})
 	app.Register(&UploadDataController{baseCont})
+	app.Register(&AccountController{baseCont})
 	/*app.Register(&InitController{baseCont})
 	app.Register(&OrganizationController{baseCont})
 	app.Register(&InventoryController{baseCont})
 	app.Register(&UomController{baseCont})*/
 
 	app.Static("static", wd+"assets")
+	app.Static("files", wd+"files")
 	app.LayoutTemplate = "shared/layout.html"
 	app.DefaultOutputType = knot.OutputJson
 	knot.RegisterApp(app)
