@@ -1,11 +1,12 @@
 package main
 
 import (
+	"os"
+
 	_ "github.com/eaciit/dbox/dbc/mssql"
 	"github.com/eaciit/orm"
 	. "github.com/eaciit/powerplant/sec/consoleapp/generator/controllers"
 	tk "github.com/eaciit/toolkit"
-	"os"
 )
 
 var (
@@ -21,6 +22,15 @@ func main() {
 	sql, e := PrepareConnection()
 	if e != nil {
 		tk.Println(e)
+	} else {
+		base := new(BaseController)
+		base.Ctx = orm.New(sql)
+		defer base.Ctx.Close()
+
+		// new(GenPlantMaster).Generate(base)
+		// new(GenMOR).Generate(base)
+		// new(GenSummaryData).Generate(base)
+		// new(GenPreventiveCorrectiveSummary).Generate(base)
 	}
 
 	base := new(BaseController)
@@ -28,8 +38,8 @@ func main() {
 	defer base.Ctx.Close()
 
 	// Generate DataMaster
-	Mst := DataMaster{base}
-	Mst.Generate()
+	//Mst := DataMaster{base}
+	//Mst.Generate()
 
 	// Generate MOR
 	// MOR := DataMOR{base}
@@ -39,6 +49,9 @@ func main() {
 	// Summary := DataSummary{base}
 	// Summary.Generate()
 
-	tk.Println("Application closed..")
+	// Generate DurationSummary
+	Duration := DurationIntervalSummary{base}
+	Duration.Generate()
 
+	tk.Println("Application closed..")
 }
