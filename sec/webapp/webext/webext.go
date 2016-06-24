@@ -50,6 +50,7 @@ func init() {
 	app.Register(&UomController{baseCont})*/
 
 	app.Static("static", wd+"assets")
+	app.Static("files", wd+"files")
 	app.LayoutTemplate = "shared/layout.html"
 	app.DefaultOutputType = knot.OutputJson
 	knot.RegisterApp(app)

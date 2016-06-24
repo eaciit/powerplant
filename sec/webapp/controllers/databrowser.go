@@ -76,7 +76,6 @@ func (this *DataBrowserController) Default(k *knot.WebContext) interface{} {
 
 	result := make([]tk.M, 0)
 	cursor, _ := this.DB().Connection.NewQuery().From(new(DataBrowserSelectedFields).TableName()).Where(dbox.Eq("Hypothesis", "H3")).Cursor(nil)
-
 	_ = cursor.Fetch(&result, 0, true)
 
 	result1 := &Result{}
@@ -464,13 +463,13 @@ type SumList struct {
 }
 
 func (this *DataBrowserController) SaveExcel(k *knot.WebContext) interface{} {
+	k.Config.OutputType = knot.OutputJson
 
 	d := DataBrowserInput{}
 
 	_ = k.GetPayload(&d)
 
 	var (
-		selectedColumn []string
 		DisplaySumList []SumList
 	)
 
@@ -479,26 +478,6 @@ func (this *DataBrowserController) SaveExcel(k *knot.WebContext) interface{} {
 	r.Run(func(in interface{}) (interface{}, error) {
 
 		params, e := getDataBrowser(d)
-
-		// get datas
-
-		script := getSQLScript(SQLScript+"/databrowser_h3.sql", params)
-
-		// tk.Printf("---\n%#v \n----\n", script)
-		cursor, e := this.DB().Connection.NewQuery().
-			Command("freequery", tk.M{}.Set("syntax", script)).
-			Cursor(nil)
-
-		defer cursor.Close()
-
-		// datas := []SPDataBrowser{}
-		datas := []tk.M{}
-
-		e = cursor.Fetch(&datas, 0, true)
-
-		if e != nil && e.Error() == "No more data to fetched!" {
-			e = nil
-		}
 
 		// ret.Set("Datas", datas)
 
@@ -520,7 +499,7 @@ func (this *DataBrowserController) SaveExcel(k *knot.WebContext) interface{} {
 
 		params.Set("@Summary", summaryStr)
 
-		script = getSQLScript(SQLScript+"/databrowser_h3_summary.sql", params)
+		script := getSQLScript(SQLScript+"/databrowser_h3_summary.sql", params)
 		// tk.Printf("---\n%#v \n----\n", script)
 		cursorTotal, e := this.DB().Connection.NewQuery().
 			Command("freequery", tk.M{}.Set("syntax", script)).
@@ -539,7 +518,6 @@ func (this *DataBrowserController) SaveExcel(k *knot.WebContext) interface{} {
 		if len(resSum) > 0 {
 			tmp := resSum[0]
 			total = tmp.GetInt("total")
-			_ = total
 			tmpSummary := tk.M{}
 
 			for _, val := range d.Fieldsdouble {
@@ -548,17 +526,28 @@ func (this *DataBrowserController) SaveExcel(k *knot.WebContext) interface{} {
 			}
 
 			summary = []tk.M{tmpSummary}
-
-			/*k.SetSession(d.Hypoid+"Total", total)
-			k.SetSession(d.Hypoid+"Summary", summary)*/
-
-			/*ret.Set("Total", total)
-			ret.Set("Summary", summary)*/
 		}
-		/*} else {
-			ret.Set("Total", total)
-			ret.Set("Summary", summary)
-		}*/
+
+		params.Set("@Offset", 0)
+		params.Set("@Limit", total)
+
+		script = getSQLScript(SQLScript+"/databrowser_h3.sql", params)
+
+		// tk.Printf("---\n%#v \n----\n", script)
+		cursor, e := this.DB().Connection.NewQuery().
+			Command("freequery", tk.M{}.Set("syntax", script)).
+			Cursor(nil)
+
+		defer cursor.Close()
+
+		// datas := []SPDataBrowser{}
+		datas := make([]tk.M, 0)
+
+		e = cursor.Fetch(&datas, 0, true)
+
+		if e != nil && e.Error() == "No more data to fetched!" {
+			e = nil
+		}
 
 		DisplayTypeCount := d.DisplayTypeCount
 		DisplaySumList = []SumList{}
@@ -569,14 +558,16 @@ func (this *DataBrowserController) SaveExcel(k *knot.WebContext) interface{} {
 			DisplaySumList = append(DisplaySumList, sumData)
 		}
 
-		excelFile, e := this.GenExcelFile(d.HeaderList, selectedColumn, datas, summary, DisplaySumList)
-		return excelFile, e
+		excelFile, e := this.genExcelFile(d.HeaderList, d.Fields, datas, summary, DisplaySumList)
+		return "../" + excelFile, e
 	}, nil)
+
+	tk.Printf("%#v \n", r)
 
 	return r
 }
 
-func (this *DataBrowserController) GenExcelFile(header []string, selectedColumn []string, datas []tk.M, dataSummary []tk.M, DisplaySumList []SumList) (string, error) {
+func (this *DataBrowserController) genExcelFile(header []string, selectedColumn []string, datas []tk.M, dataSummary []tk.M, DisplaySumList []SumList) (string, error) {
 	today := time.Now().UTC()
 	fileName := "files/databrowser_" + today.Format("2006-01-02T150405") + ".xlsx"
 	var file *xlsx.File
@@ -599,7 +590,7 @@ func (this *DataBrowserController) GenExcelFile(header []string, selectedColumn 
 		row = sheet.AddRow()
 		for _, field := range selectedColumn {
 			cell = row.AddCell()
-			cell.SetValue(this.GetExcelValue(data, field))
+			cell.SetValue(this.getExcelValue(data, field))
 		}
 	}
 	if DisplaySumList != nil && len(DisplaySumList) > 0 {
@@ -651,20 +642,20 @@ func (this *DataBrowserController) GenExcelFile(header []string, selectedColumn 
 	return fileName, err
 }
 
-func (this *DataBrowserController) GetExcelValue(data tk.M, field string) interface{} {
+func (this *DataBrowserController) getExcelValue(data tk.M, field string) (result interface{}) {
+	field = strings.ToLower(field)
 	numberOfDot := strings.Count(field, ".")
-	var result interface{}
 	if numberOfDot > 0 {
 		d := data.Get(field[0:strings.Index(field, ".")]).(tk.M)
-		new_field := field[strings.Index(field, ".")+1 : len(field)]
-		result = this.GetExcelValue(d, new_field)
+		newField := field[strings.Index(field, ".")+1 : len(field)]
+		result = this.getExcelValue(d, newField)
 	} else {
 		result = data.Get(field)
 	}
 	if result == nil {
 		result = ""
 	}
-	return result
+	return
 }
 
 func getSQLScript(path string, params tk.M) (script string) {
@@ -688,7 +679,7 @@ func getSQLScript(path string, params tk.M) (script string) {
 	}
 
 	for idx, val := range params {
-		script = strings.Replace(script, idx, val.(string), -1)
+		script = strings.Replace(script, idx, tk.ToString(val), -1)
 	}
 
 	script = strings.Replace(script, "\t", "", -1)
