@@ -7,15 +7,10 @@ import (
 	"github.com/eaciit/orm"
 	. "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
-<<<<<<< HEAD:sec/consoleapp/controllers/migratedata.go
-	//"gopkg.in/mgo.v2/bson"
-=======
-	"gopkg.in/mgo.v2/bson"
 	"reflect"
 	"strconv"
 	"sync"
 	"time"
->>>>>>> 02ecbfc7ae41e6be10955c7861891632c237fcdf:sec/consoleapp/dataconverter/controllers/migratedata.go
 )
 
 type MigrateData struct {
@@ -778,108 +773,7 @@ func (m *MigrateData) DoGenerateDataBrowserFields() error {
 	return nil
 }
 
-func (m *MigrateData) DoScenarioSimulation() error {
-<<<<<<< HEAD:sec/consoleapp/controllers/migratedata.go
-	tStart := time.Now()
-	tk.Println("Starting DoScenarioSimulation..")
-	mod := new(ScenarioSimulation)
-
-	c, e := m.BaseController.MongoCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
-
-	if e != nil {
-		return e
-	}
-
-	defer c.Close()
-
-	result := []tk.M{}
-	e = c.Fetch(&result, 0, false)
-
-	for _, val := range result {
-		plants := val.Get("SelectedPlant").(interface{}).([]interface{})
-		val.Set("SelectedPlant", nil)
-		units := val.Get("SelectedUnit").(interface{}).([]interface{})
-		val.Set("SelectedUnit", nil)
-		scenarios := val.Get("SelectedScenario").(interface{}).([]interface{})
-		val.Set("SelectedScenario", nil)
-
-		historicresult := val.Get("HistoricResult").(tk.M)
-		val.Set("HistoricResultRevenue", historicresult["Revenue"])
-		val.Set("HistoricResultLaborCost", historicresult["LaborCost"])
-		val.Set("HistoricResultMaterialCost", historicresult["MaterialCost"])
-		val.Set("HistoricResultServiceCost", historicresult["ServiceCost"])
-		val.Set("HistoricResultOperatingCost", historicresult["OperatingCost"])
-		val.Set("HistoricResultMaintenanceCost", historicresult["MaintenanceCost"])
-		val.Set("HistoricResultValueEquation", historicresult["ValueEquation"])
-
-		futureresult := val.Get("FutureResult").(tk.M)
-		val.Set("FutureResultRevenue", futureresult["Revenue"])
-		val.Set("FutureResultLaborCost", futureresult["LaborCost"])
-		val.Set("FutureResultMaterialCost", futureresult["MaterialCost"])
-		val.Set("FutureResultServiceCost", futureresult["ServiceCost"])
-		val.Set("FutureResultOperatingCost", futureresult["OperatingCost"])
-		val.Set("FutureResultMaintenanceCost", futureresult["MaintenanceCost"])
-		val.Set("FutureResultValueEquation", futureresult["ValueEquation"])
-
-		differential := val.Get("Differential").(tk.M)
-		val.Set("DifferentialRevenue", differential["Revenue"])
-		val.Set("DifferentialLaborCost", differential["LaborCost"])
-		val.Set("DifferentialMaterialCost", differential["MaterialCost"])
-		val.Set("DifferentialServiceCost", differential["ServiceCost"])
-		val.Set("DifferentialOperatingCost", differential["OperatingCost"])
-		val.Set("DifferentialMaintenanceCost", differential["MaintenanceCost"])
-		val.Set("DifferentialValueEquation", differential["ValueEquation"])
-
-		var id int64
-		var e error
-
-		id, e = m.InsertOut(val, new(ScenarioSimulation))
-		if e != nil {
-			tk.Println(e.Error())
-		}
-
-		for _, plant := range plants {
-			p := tk.M{}
-			p.Set("SSId", id)
-			p.Set("Plant", plant)
-			_, e = m.InsertOut(p, new(ScenarioSimulationSelectedPlant))
-			if e != nil {
-				tk.Println(e.Error())
-			}
-		}
-
-		for _, unit := range units {
-			u := tk.M{}
-			u.Set("SSId", id)
-			u.Set("Unit", unit)
-			_, e = m.InsertOut(u, new(ScenarioSimulationSelectedUnit))
-			if e != nil {
-				tk.Println(e.Error())
-			}
-		}
-
-		for _, scenario := range scenarios {
-			s := scenario.(tk.M)
-			s.Set("SSId", id)
-			_, e = m.InsertOut(s, new(ScenarioSimulationSelectedScenario))
-			if e != nil {
-				tk.Println(e.Error())
-			}
-		}
-
-	}
-
-	cr, e := m.BaseController.SqlCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
-	ctn := cr.Count()
-	cr.Close()
-
-	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
-	return nil
-}
-
-/*func (m *MigrateData) GenerateMasterUnit() error {
-=======
->>>>>>> 02ecbfc7ae41e6be10955c7861891632c237fcdf:sec/consoleapp/dataconverter/controllers/migratedata.go
+/*func (m *MigrateData) DoScenarioSimulation() error {
 	tStart := time.Now()
 	tk.Println("Starting DoScenarioSimulation..")
 	mod := new(ScenarioSimulation)
@@ -975,7 +869,7 @@ func (m *MigrateData) DoScenarioSimulation() error {
 
 	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
 	return nil
-}
+}*/
 
 func (m *MigrateData) DoGenerateAssetClass() error {
 	tStart := time.Now()
@@ -1080,7 +974,43 @@ func (m *MigrateData) DoGenerateAssetLevel() error {
 
 	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
 	return nil
-}*/
+}
+
+func (m *MigrateData) DoGenerateTempMstPlant() error {
+	tStart := time.Now()
+	tk.Println("Starting DoGenerateTempMstPlant..")
+	mod := new(TempMstPlant)
+
+	c, e := m.BaseController.MongoCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+
+	if e != nil {
+		return e
+	}
+
+	defer c.Close()
+
+	result := []tk.M{}
+	e = c.Fetch(&result, 0, false)
+
+	_ = tStart
+	for _, val := range result {
+		for {
+			_, e := m.InsertOut(val, new(TempMstPlant))
+			if e == nil {
+				break
+			} else {
+				m.SqlCtx.Connection.Connect()
+			}
+		}
+	}
+
+	cr, e := m.BaseController.SqlCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+	ctn := cr.Count()
+	cr.Close()
+
+	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
+	return nil
+}
 
 func (m *MigrateData) InsertOut(in tk.M, mod orm.IModel) (out int64, e error) {
 	muinsert := &sync.Mutex{}

@@ -198,9 +198,6 @@ func (s *GenPreventiveCorrectiveSummary) generatePreventiveCorrectiveSummary() e
 				}
 			}
 		}
-
-		/*_ = year
-		_ = csr2*/
 	}
 
 	return e

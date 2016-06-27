@@ -33,5 +33,25 @@ func main() {
 		// new(GenPreventiveCorrectiveSummary).Generate(base)
 	}
 
+	base := new(BaseController)
+	base.Ctx = orm.New(sql)
+	defer base.Ctx.Close()
+
+	// Generate DataMaster
+	//Mst := DataMaster{base}
+	//Mst.Generate()
+
+	// Generate MOR
+	// MOR := DataMOR{base}
+	// MOR.Generate()
+
+	// Generate Summary
+	// Summary := DataSummary{base}
+	// Summary.Generate()
+
+	// Generate DurationSummary
+	Duration := DurationIntervalSummary{base}
+	Duration.Generate()
+
 	tk.Println("Application closed..")
 }
