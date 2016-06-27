@@ -75,7 +75,7 @@ func (this *DataBrowserController) Default(k *knot.WebContext) interface{} {
 	k.Config.OutputType = knot.OutputTemplate
 
 	result := make([]tk.M, 0)
-	cursor, _ := this.DB().Connection.NewQuery().From(new(DataBrowserSelectedFields).TableName()).Where(dbox.Eq("Hypothesis", "H3")).Cursor(nil)
+	cursor, _ := this.DB().Connection.NewQuery().From(new(DataBrowserSelectedFields).TableName()).Where(dbox.Eq("Hypothesis", "H3")).Order("Orders").Cursor(nil)
 	_ = cursor.Fetch(&result, 0, true)
 
 	result1 := &Result{}
