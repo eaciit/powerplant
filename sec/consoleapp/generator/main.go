@@ -46,12 +46,11 @@ func main() {
 	// MOR.Generate()
 
 	// Generate Summary
-	// Summary := DataSummary{base}
-	// Summary.Generate()
-
+	Summary := GenSummaryData{base}
+	Summary.Generate(base)
 	// Generate DurationSummary
-	Duration := DurationIntervalSummary{base}
-	Duration.Generate()
+	// Duration := DurationIntervalSummary{base}
+	// Duration.Generate()
 
 	tk.Println("Application closed..")
 }

@@ -31,5 +31,5 @@ type WOListSummary struct {
 }
 
 func (m *WOListSummary) TableName() string {
-	return "WOListSummaryTest"
+	return "WOListSummary"
 }
