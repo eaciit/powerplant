@@ -182,7 +182,7 @@ func (s *GenPreventiveCorrectiveSummary) generatePreventiveCorrectiveSummary() e
 														break
 													}
 
-													e := ctx.InsertOut(pcs)
+													e := ctx.Insert(pcs)
 
 													if e != nil {
 														log.Println(e.Error())
