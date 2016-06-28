@@ -50,8 +50,10 @@ func main() {
 	// Summary.Generate()
 
 	// Generate DurationSummary
-	Duration := DurationIntervalSummary{base}
-	Duration.Generate()
+	/*Duration := DurationIntervalSummary{base}
+	Duration.Generate()*/
+	VE := ValueEquationGenerator{base}
+	VE.Generate()
 
 	tk.Println("Application closed..")
 }

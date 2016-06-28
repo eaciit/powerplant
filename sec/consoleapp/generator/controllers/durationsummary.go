@@ -7,7 +7,6 @@ import (
 	//. "github.com/eaciit/powerplant/sec/consoleapp/generator/helpers"
 	. "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -172,10 +171,13 @@ func (d *DurationIntervalSummary) GenerateDurationIntervalSummary() error {
 					woles.PlantType = plantTypes[0].GetString("plantcode")
 				}
 
-				_, e = d.Ctx.InsertOut(woles)
-
-				if e != nil {
-					log.Println(e.Error())
+				for {
+					e = d.Ctx.Insert(woles)
+					if e == nil {
+						break
+					} else {
+						d.Ctx.Connection.Connect()
+					}
 				}
 			}
 		}
