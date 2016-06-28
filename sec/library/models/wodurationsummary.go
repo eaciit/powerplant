@@ -27,5 +27,5 @@ type WODurationSummary struct {
 }
 
 func (m *WODurationSummary) TableName() string {
-	return "WODurationSummary"
+	return "WODurationSummaryTest"
 }

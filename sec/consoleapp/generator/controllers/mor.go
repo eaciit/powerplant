@@ -46,7 +46,6 @@ func (m *GenMOR) generateMORSummary() error {
 
 	PowerPlantInfos := []PowerPlantInfo{}
 	csr, e := c.NewQuery().From(new(PowerPlantInfo).TableName()).Cursor(nil)
-	defer csr.Close()
 
 	if e != nil {
 		return e
@@ -55,6 +54,7 @@ func (m *GenMOR) generateMORSummary() error {
 	if e != nil {
 		return e
 	}
+	csr.Close()
 
 	OperationalDatas := []OperationalData{}
 	csr, e = c.NewQuery().From(new(OperationalData).TableName()).Cursor(nil)
@@ -65,6 +65,7 @@ func (m *GenMOR) generateMORSummary() error {
 	if e != nil {
 		return e
 	}
+	csr.Close()
 
 	MaintenanceCostFLList := []MaintenanceCostFL{}
 	csr, e = c.NewQuery().From(new(MaintenanceCostFL).TableName()).Take(5).Cursor(nil)
@@ -75,7 +76,7 @@ func (m *GenMOR) generateMORSummary() error {
 	if e != nil {
 		return e
 	}
-
+	csr.Close()
 	// Maintenance
 	for _, cost := range MaintenanceCostFLList {
 
@@ -956,7 +957,6 @@ func (m *GenMOR) generateMORFlatCalculationSummary() error {
 
 	MORSummaryList := []MORSummary{}
 	csr, e := c.NewQuery().Select("Element").From(new(MORSummary).TableName()).Where(query...).Group("Element").Cursor(nil)
-	defer csr.Close()
 
 	if e != nil {
 		return e
@@ -966,6 +966,7 @@ func (m *GenMOR) generateMORFlatCalculationSummary() error {
 	if e != nil {
 		return e
 	}
+	csr.Close()
 
 	for _, year := range Years {
 		query = []*dbox.Filter{}
@@ -978,10 +979,12 @@ func (m *GenMOR) generateMORFlatCalculationSummary() error {
 		if e != nil {
 			return e
 		}
+
 		e = csr.Fetch(&MaintenanceCostList, 0, false)
 		if e != nil {
 			return e
 		}
+		csr.Close()
 
 		Plants := crowd.From(&MaintenanceCostList).Group(func(x interface{}) interface{} {
 			return x.(MaintenanceCost).Plant
