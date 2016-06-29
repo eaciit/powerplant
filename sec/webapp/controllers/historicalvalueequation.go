@@ -6,10 +6,11 @@ import (
 	// tk "github.com/eaciit/toolkit"
 	// "strconv"
 	// "gopkg.in/mgo.v2/bson"
+	"time"
+
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/orm"
 	tk "github.com/eaciit/toolkit"
-	"time"
 )
 
 type HistoricalValueEquationController struct {
@@ -214,7 +215,9 @@ func (m *HistoricalValueEquation) GetMaintenanceData(ctx *orm.DataContext, k *kn
 		Aggr(dbox.AggrSum, "TotalLabourCost", "LaborCost").
 		Aggr(dbox.AggrSum, "TotalMaterialCost", "MaterialCost").
 		Aggr(dbox.AggrSum, "TotalServicesCost", "ServiceCost").
-		From(new(ValueEquation).TableName()).Group(groupBy).Order("-" + groupBy).Cursor(nil)
+		From(new(ValueEquation).TableName()).Group(groupBy).Order("-" + groupBy).
+		Order("DataSource").
+		Cursor(nil)
 	if e != nil {
 		return nil, e
 	}
@@ -260,7 +263,9 @@ func (m *HistoricalValueEquation) GetMaintenanceData(ctx *orm.DataContext, k *kn
 		Aggr(dbox.AggrSum, "LaborCost", "LaborCost").
 		Aggr(dbox.AggrSum, "MaterialCost", "MaterialCost").
 		Aggr(dbox.AggrSum, "ServiceCost", "ServiceCost").
-		From(new(ValueEquationDetails).TableName()).Group("DataSource", "WorkOrderType").Cursor(nil)
+		From(new(ValueEquationDetails).TableName()).Group("DataSource", "WorkOrderType").
+		Order("DataSource").
+		Cursor(nil)
 	if e != nil {
 		return nil, e
 	}
