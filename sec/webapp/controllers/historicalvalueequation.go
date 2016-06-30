@@ -114,7 +114,7 @@ func (m *HistoricalValueEquation) GetSummaryData(ctx *orm.DataContext, k *knot.W
 		Aggr(dbox.AggrSum, "Revenue", "Revenue").
 		Aggr(dbox.AggrSum, "MaintenanceCost", "MaintenanceCost").
 		Aggr(dbox.AggrSum, "OperatingCost", "OperatingCost").
-		From(ve.TableName()).Group("Plant").Order("-Plant").Cursor(nil)
+		From(ve.TableName()).Group("Plant").Order("Plant").Cursor(nil)
 	if e != nil {
 		return nil, e
 	}
@@ -142,7 +142,7 @@ func (m *HistoricalValueEquation) GetSummaryData(ctx *orm.DataContext, k *knot.W
 			Aggr(dbox.AggrSum, "Revenue", "Revenue").
 			Aggr(dbox.AggrSum, "MaintenanceCost", "MaintenanceCost").
 			Aggr(dbox.AggrSum, "OperatingCost", "OperatingCost").
-			From(ve.TableName()).Group(groupBy).Order("-" + groupBy).Cursor(nil)
+			From(ve.TableName()).Group(groupBy).Order(groupBy).Cursor(nil)
 		if csr != nil {
 			e = csr.Fetch(&DataDetail, 0, false)
 		}
@@ -214,7 +214,7 @@ func (m *HistoricalValueEquation) GetMaintenanceData(ctx *orm.DataContext, k *kn
 		Aggr(dbox.AggrSum, "TotalLabourCost", "LaborCost").
 		Aggr(dbox.AggrSum, "TotalMaterialCost", "MaterialCost").
 		Aggr(dbox.AggrSum, "TotalServicesCost", "ServiceCost").
-		From(new(ValueEquation).TableName()).Group(groupBy).Order("-" + groupBy).Cursor(nil)
+		From(new(ValueEquation).TableName()).Group(groupBy).Order(groupBy).Cursor(nil)
 	if e != nil {
 		return nil, e
 	}
@@ -311,8 +311,16 @@ func (m *HistoricalValueEquation) GetOperatingData(ctx *orm.DataContext, k *knot
 		NetGeneration     float64 `json:'NetGeneration'`
 	}
 
+	type DataTableType struct {
+		IsPrimaryFuel         bool    `json:'IsPrimaryFuel'`
+		FuelType              string  `json:'FuelType'`
+		ConvertedFuelConsumed float64 `json:'ConvertedFuelConsumed'`
+		FuelCostPerUnit       float64 `json:'FuelCostPerUnit'`
+		FuelCost              float64 `json:'FuelCost'`
+	}
+
 	m.SetPayLoad(k)
-	result, DataChart, DataTable, DataTotal, DataDetail := tk.M{}, []tk.M{}, []tk.M{}, []*DataValue{}, []*DataValue{}
+	result, DataChart, DataTable, DataTotal, DataDetail := tk.M{}, []tk.M{}, []*DataTableType{}, []*DataValue{}, []*DataValue{}
 	c := ctx.Connection
 	ve := ValueEquation{}
 	query := []*dbox.Filter{}
@@ -345,7 +353,20 @@ func (m *HistoricalValueEquation) GetOperatingData(ctx *orm.DataContext, k *knot
 	}
 
 	// Getting "DataTable" - skip, need $unwind [ $Fuel ]
+	tempValueEquation := []ValueEquation{}
 	csr, e := c.NewQuery().
+		Where(query...).Select("Id").
+		From(ve.TableName()).Cursor(nil)
+	if csr != nil {
+		e = csr.Fetch(&tempValueEquation, 0, false)
+	}
+	csr.Close()
+	VEId := []interface{}{}
+	for _, i := range tempValueEquation {
+		VEId = append(VEId, i.Id)
+	}
+
+	csr, e = c.NewQuery().
 		Where(query...).
 		Aggr(dbox.AggrSum, "OperatingCost", "OperatingCost").
 		Aggr(dbox.AggrSum, "FuelTransportCost", "FuelTransportCost").
@@ -379,6 +400,22 @@ func (m *HistoricalValueEquation) GetOperatingData(ctx *orm.DataContext, k *knot
 				i.ID = i.Plant
 			}
 		}
+	}
+
+	query = append(query[0:0], dbox.In("VEId", VEId...))
+	csr, e = c.NewQuery().
+		Where(query...).
+		Select("IsPrimaryFuel", "FuelType").
+		Aggr(dbox.AggrSum, "ConvertedFuelConsumed", "ConvertedFuelConsumed").
+		Aggr(dbox.AggrSum, "FuelCostPerUnit", "FuelCostPerUnit").
+		Aggr(dbox.AggrSum, "FuelCost", "FuelCost").
+		From(new(ValueEquationFuel).TableName()).Group("IsPrimaryFuel", "FuelType").Order("IsPrimaryFuel", "FuelType").Cursor(nil)
+	if csr != nil {
+		e = csr.Fetch(&DataTable, 0, false)
+	}
+	csr.Close()
+	if e != nil {
+		return nil, e
 	}
 
 	result.Set("DataChart", DataChart).Set("DataTable", DataTable).Set("DataTotal", DataTotal).Set("DataDetail", DataDetail)
@@ -455,7 +492,7 @@ func (m *HistoricalValueEquation) GetRevenueData(ctx *orm.DataContext, k *knot.W
 		Aggr(dbox.AggrSum, "PenaltyAmount", "PenaltyAmount").
 		Aggr(dbox.AggrSum, "Incentive", "Incentive").
 		Aggr(dbox.AggrSum, "Revenue", "Revenue").
-		From(ve.TableName()).Group(groupBy).Order("-" + groupBy).Cursor(nil)
+		From(ve.TableName()).Group(groupBy).Order(groupBy).Cursor(nil)
 	if csr != nil {
 		e = csr.Fetch(&DataChartRevenueEx, 0, false)
 	}
@@ -565,7 +602,7 @@ func (m *HistoricalValueEquation) GetDataQuality(ctx *orm.DataContext, k *knot.W
 			Aggr(dbox.AggrSum, "PrimaryFuel2nd_Data", "PrimaryFuel2nd_Data").
 			Aggr(dbox.AggrSum, "BackupFuel_Data", "BackupFuel_Data").
 			Aggr(dbox.AggrSum, "FuelTransport_Data", "FuelTransport_Data").
-			From(vedq.TableName()).Group(groupBy).Order("-" + groupBy).Cursor(nil)
+			From(vedq.TableName()).Group(groupBy).Order(groupBy).Cursor(nil)
 		if csr != nil {
 			e = csr.Fetch(&result, 0, false)
 		}
@@ -716,7 +753,7 @@ func (m *HistoricalValueEquation) GetPerformanceData(ctx *orm.DataContext, k *kn
 	csr, e := c.NewQuery().
 		Where(query...).Select(groupBy).
 		Aggr(dbox.AggrSum, "NetGeneration", "NetGeneration").
-		Aggr(dbox.AggrSum, "PrctWAF", "PrctWAF").
+		Aggr(dbox.AggrAvr, "PrctWAF", "PrctWAF").
 		From(ve.TableName()).Group(groupBy).Order(groupBy).Cursor(nil)
 	if csr != nil {
 		e = csr.Fetch(&result, 0, false)
