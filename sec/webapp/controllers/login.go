@@ -35,7 +35,9 @@ func (c *LoginController) Do(k *knot.WebContext) interface{} {
 	User := new(UserModel)
 	User, Found := User.LoginDo(c.Ctx, p.UserName, p.Password)
 
-	if Found {
+	if User.Enable == false {
+		msg = "Your User is Not Active, Please Contact your Admin!"
+	} else if Found {
 		k.SetSession("userid", User.UserName)
 		k.SetSession("username", User.FullName)
 		k.SetSession("userrole", "ADMIN")
