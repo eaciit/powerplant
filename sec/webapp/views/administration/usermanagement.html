@@ -137,7 +137,7 @@ UserManagement.Edit = function(email){
 	$('#modalForm').modal("show");
 }
 UserManagement.Deactivate = function(email){
-	if(!confirm("Area you sure to deactivate this user?")){
+	if(!confirm("Are you sure to Deactivate this user?")){
 		return false;
 	}
 	var d = Enumerable.From(UserManagement.DataSource()).Where(function(x){return x.Email == email}).ToArray()[0];
@@ -153,6 +153,24 @@ UserManagement.Deactivate = function(email){
 		}
 	});
 }
+UserManagement.Reactivate = function(email){
+	if(!confirm("Are you sure to Activated this user?")){
+		return false;
+	}
+	var d = Enumerable.From(UserManagement.DataSource()).Where(function(x){return x.Email == email}).ToArray()[0];
+	var url = "/administration/reactivateuser";
+	var parm = d;
+	ajaxPost(url,parm,function(res){
+		if(!res.IsError){
+			alert("User has been deactivate.")
+			UserManagement.Refresh();
+			return false;
+		}else{
+			alert(res.Message);
+		}
+	});
+}
+
 </script>
 <div data-bind="with:UserManagement">
 	<div class="panel panel-default">

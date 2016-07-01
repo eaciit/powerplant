@@ -7,6 +7,7 @@ import (
 	"github.com/eaciit/knot/knot.v1"
 	. "github.com/eaciit/powerplant/sec/webapp/helpers"
 	. "github.com/eaciit/powerplant/sec/webapp/models"
+	"github.com/eaciit/toolkit"
 )
 
 type AdministrationController struct {
@@ -79,14 +80,18 @@ func (c *AdministrationController) DeactivateUser(k *knot.WebContext) interface{
 	d := struct {
 		Email string
 	}{}
+
 	e := k.GetPayload(&d)
+
 	if e != nil {
 		return ResultInfo(nil, e)
 	}
-	csr, e := c.Ctx.Connection.NewQuery().From(new(UserModel).TableName()).Where(dbox.Eq("Email", d.Email)).Cursor(nil)
+
+	/*csr, e := c.Ctx.Connection.NewQuery().From(new(UserModel).TableName()).Where(dbox.Eq("Email", d.Email)).Cursor(nil)
 	result := new(UserModel)
 	e = csr.Fetch(&result, 1, false)
-	csr.Close()
+	defer csr.Close()
+
 	e = c.Ctx.Connection.NewQuery().From(new(UserModel).TableName()).Where(dbox.Eq("Email", d.Email)).Delete().Exec(nil)
 	if e != nil {
 		return ResultInfo(nil, e)
@@ -94,10 +99,19 @@ func (c *AdministrationController) DeactivateUser(k *knot.WebContext) interface{
 
 	data := result
 	data.Enable = false
-	e = c.Ctx.Save(data)
+
+	e = c.Ctx.Save(data)*/
+
+	e = c.Ctx.Connection.NewQuery().
+		Update().
+		From(new(UserModel).TableName()).
+		Where(dbox.Contains("email", d.Email)).
+		Exec(toolkit.M{}.Set("data", toolkit.M{}.Set("enable", false)))
+
 	if e != nil {
 		return ResultInfo(nil, e)
 	}
+
 	return ResultInfo(nil, e)
 }
 
@@ -106,13 +120,16 @@ func (c *AdministrationController) ReactivateUser(k *knot.WebContext) interface{
 		Email string
 	}{}
 	e := k.GetPayload(&d)
+
 	if e != nil {
 		return ResultInfo(nil, e)
 	}
-	csr, e := c.Ctx.Connection.NewQuery().From(new(UserModel).TableName()).Where(dbox.Eq("Email", d.Email)).Cursor(nil)
+
+	/*csr, e := c.Ctx.Connection.NewQuery().From(new(UserModel).TableName()).Where(dbox.Eq("Email", d.Email)).Cursor(nil)
 	result := new(UserModel)
 	e = csr.Fetch(&result, 1, false)
-	csr.Close()
+	defer csr.Close()
+
 	e = c.Ctx.Connection.NewQuery().From(new(UserModel).TableName()).Where(dbox.Eq("Email", d.Email)).Delete().Exec(nil)
 	if e != nil {
 		return ResultInfo(nil, e)
@@ -120,9 +137,17 @@ func (c *AdministrationController) ReactivateUser(k *knot.WebContext) interface{
 
 	data := result
 	data.Enable = true
-	e = c.Ctx.Save(data)
+	e = c.Ctx.Save(data)*/
+
+	e = c.Ctx.Connection.NewQuery().
+		Update().
+		From(new(UserModel).TableName()).
+		Where(dbox.Contains("email", d.Email)).
+		Exec(toolkit.M{}.Set("data", toolkit.M{}.Set("enable", true)))
+
 	if e != nil {
 		return ResultInfo(nil, e)
 	}
+
 	return ResultInfo(nil, e)
 }
