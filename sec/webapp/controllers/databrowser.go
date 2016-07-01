@@ -187,17 +187,11 @@ func getDataBrowser(d DataBrowserInput) (params tk.M, e error) {
 	}
 
 	if len(d.EQType) > 0 {
-		str := strings.Join(d.EQType, ",")
+		str := strings.Join(d.EQType, "','")
+		str = "'" + str + "'"
 		params.Set("@EquipmentType", " AND EquipmentType IN ("+str+")")
 	} else {
 		params.Set("@EquipmentType", " AND EquipmentType <> 'xxx'")
-	}
-
-	if len(d.Plant) > 0 {
-		str := strings.Join(d.Plant, ",")
-		params.Set("@PlantName", " WHERE PlantName IN ("+str+")")
-	} else {
-		params.Set("@PlantName", " WHERE PlantName <> ''")
 	}
 
 	if d.Page != 0 {
@@ -274,13 +268,17 @@ func getDataBrowser(d DataBrowserInput) (params tk.M, e error) {
 		params.Set("@FILTERS_MAIN", "")
 	}
 
-	if len(FilPlant) > 0 {
+	if len(d.Plant) > 0 {
+		str := strings.Join(d.Plant, "','")
+		str = "'" + str + "'"
+		params.Set("@PlantName", " WHERE PlantPlantName IN ("+str+")")
+	} else if len(FilPlant) > 0 {
 		tmpFilter := strings.Split(FilPlant[0], " ")
 		FilPlant[0] = strings.Join(tmpFilter[2:], " ")
 		strFilter := strings.Join(FilPlant, " ")
 		params.Set("@PlantName", " WHERE "+strFilter)
 	} else {
-		params.Set("@PlantName", "")
+		params.Set("@PlantName", " WHERE PlantPlantName <> ''")
 	}
 
 	if len(d.Sort) > 0 {
