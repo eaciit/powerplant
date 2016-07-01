@@ -312,15 +312,13 @@ func (this *DataBrowserController) GetGridDb(k *knot.WebContext) interface{} {
 		script := getSQLScript(SQLScript+"/databrowser_h3.sql", params)
 
 		// tk.Printf("---\n%#v \n----\n", script)
+		datas := []SPDataBrowser{}
 		cursor, e := this.DB().Connection.NewQuery().
 			Command("freequery", tk.M{}.Set("syntax", script)).
 			Cursor(nil)
-
-		defer cursor.Close()
-
-		datas := []SPDataBrowser{}
-
 		e = cursor.Fetch(&datas, 0, true)
+
+		cursor.Close()
 
 		if e != nil && e.Error() == "No more data to fetched!" {
 			e = nil
@@ -348,15 +346,12 @@ func (this *DataBrowserController) GetGridDb(k *knot.WebContext) interface{} {
 
 		script = getSQLScript(SQLScript+"/databrowser_h3_summary.sql", params)
 		// tk.Printf("---\n%#v \n----\n", script)
+		resSum := []tk.M{}
 		cursorTotal, e := this.DB().Connection.NewQuery().
 			Command("freequery", tk.M{}.Set("syntax", script)).
 			Cursor(nil)
-
-		defer cursorTotal.Close()
-
-		resSum := []tk.M{}
-
 		e = cursorTotal.Fetch(&resSum, 0, true)
+		cursorTotal.Close()
 
 		if e != nil && e.Error() == "No more data to fetched!" {
 			e = nil
@@ -384,7 +379,6 @@ func (this *DataBrowserController) GetGridDb(k *knot.WebContext) interface{} {
 			ret.Set("Total", total)
 			ret.Set("Summary", summary)
 		}*/
-
 		return ret, e
 	}, nil)
 
