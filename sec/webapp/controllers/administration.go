@@ -1,11 +1,12 @@
 package controllers
 
 import (
+	"time"
+
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/knot/knot.v1"
 	. "github.com/eaciit/powerplant/sec/webapp/helpers"
 	. "github.com/eaciit/powerplant/sec/webapp/models"
-	"time"
 )
 
 type AdministrationController struct {
@@ -13,9 +14,9 @@ type AdministrationController struct {
 }
 
 func (c *AdministrationController) UserManagement(k *knot.WebContext) interface{} {
-	// if k.Session("userid") == nil {
-	// 	c.Redirect(k, "login", "default")
-	// }
+	if k.Session("userid") == nil {
+		c.Redirect(k, "login", "default")
+	}
 	c.LoadPartial(k, "administration/usermanagement.html")
 	k.Config.OutputType = knot.OutputTemplate
 

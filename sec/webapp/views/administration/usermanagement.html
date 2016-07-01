@@ -101,7 +101,7 @@ UserManagement.Reset = function(){
 	UserManagement.Data.ConfirmPassword("");
 }
 UserManagement.Save = function(){
-	if(UserManagement.Data.UserName.trim()==""||UserManagement.Data.Password.trim()==""||UserManagement.Data.Email.trim()==""){
+	if(UserManagement.Data.UserName().trim()==""||UserManagement.Data.Password().trim()==""||UserManagement.Data.Email().trim()==""){
 		alert("Please complete your form before submitting the data.");
 		return false;
 	}
