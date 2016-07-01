@@ -47,6 +47,9 @@ type SeleScenario struct {
 }
 
 func (s *ScenarioSimulation) Default(k *knot.WebContext) interface{} {
+	if k.Session("userid") == nil {
+		s.Redirect(k, "login", "default")
+	}
 	k.Config.OutputType = knot.OutputTemplate
 	s.LoadPartial(k)
 	infos := PageInfo{}
