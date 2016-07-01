@@ -3,11 +3,12 @@ package controllers
 import (
 	"time"
 
+	"strings"
+
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/knot/knot.v1"
 	. "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
-	"strings"
 )
 
 type DashboardController struct {
@@ -176,6 +177,7 @@ func (c *DashboardController) GetNumberOfTurbines(k *knot.WebContext) interface{
 			Where(filter...).
 			Group("UnitType").
 			Aggr(dbox.AggrSum, 1, "count").
+			Order("count").
 			Cursor(nil)
 
 		defer cursor.Close()
@@ -265,9 +267,9 @@ func (c *DashboardController) GetNumberOfWorkOrder(k *knot.WebContext) interface
 		result := make([]tk.M, 0)
 
 		if filter == "" {
-			sintax = "select dbo.ValueEquation_Dashboard.Year as period, dbo.VEDTop10.WorkOrderType, count(*) as count, sum(dbo.VEDTop10.MaintenanceCost) as cost from dbo.ValueEquation_Dashboard inner join dbo.VEDTop10 on dbo.ValueEquation_Dashboard.Id = dbo.VEDTop10.VEId group by dbo.ValueEquation_Dashboard.Year, dbo.VEDTop10.WorkOrderType"
+			sintax = "select dbo.ValueEquation_Dashboard.Year as period, dbo.VEDTop10.WorkOrderType, count(*) as count, sum(dbo.VEDTop10.MaintenanceCost) as cost from dbo.ValueEquation_Dashboard inner join dbo.VEDTop10 on dbo.ValueEquation_Dashboard.Id = dbo.VEDTop10.VEId group by dbo.ValueEquation_Dashboard.Year, dbo.VEDTop10.WorkOrderType order by period asc, cost asc"
 		} else {
-			sintax = "select dbo.ValueEquation_Dashboard.Year as period, dbo.VEDTop10.WorkOrderType, count(*) as count, sum(dbo.VEDTop10.MaintenanceCost) as cost from dbo.ValueEquation_Dashboard inner join dbo.VEDTop10 on dbo.ValueEquation_Dashboard.Id = dbo.VEDTop10.VEId where dbo.ValueEquation_Dashboard.Plant = '" + filter + "' group by dbo.ValueEquation_Dashboard.Year, dbo.VEDTop10.WorkOrderType"
+			sintax = "select dbo.ValueEquation_Dashboard.Year as period, dbo.VEDTop10.WorkOrderType, count(*) as count, sum(dbo.VEDTop10.MaintenanceCost) as cost from dbo.ValueEquation_Dashboard inner join dbo.VEDTop10 on dbo.ValueEquation_Dashboard.Id = dbo.VEDTop10.VEId where dbo.ValueEquation_Dashboard.Plant = '" + filter + "' group by dbo.ValueEquation_Dashboard.Year, dbo.VEDTop10.WorkOrderType order by period asc, cost asc"
 		}
 
 		cursor, e := c.DB().Connection.NewQuery().

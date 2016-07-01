@@ -103,9 +103,9 @@
 	</thead>
 	<tbody data-bind="foreach:DataTable">
 		<tr>
-			<td data-bind="text:ID.isPrimaryFuel?'Primary':'Backup'"></td>
-			<td data-bind="text: ID.FuelType"></td>
-			<td class="align-right" data-bind="text: kendo.toString(ConvertedFuelConsumed, 'N2'), css: {'mmbtu-currency' : ID.FuelType == 'GAS', 'litre-currency' : ID.FuelType != 'GAS'}"></td>
+			<td data-bind="text:IsPrimaryFuel?'Primary':'Backup'"></td>
+			<td data-bind="text: FuelType"></td>
+			<td class="align-right" data-bind="text: kendo.toString(ConvertedFuelConsumed, 'N2'), css: {'mmbtu-currency' : FuelType == 'GAS', 'litre-currency' : FuelType != 'GAS'}"></td>
 			<td class="align-right sar-currency" data-bind="text: kendo.toString(FuelCostPerUnit, 'N3')"></td>
 			<td class="align-right sar-currency" data-bind="text: kendo.toString(FuelCost, 'N0')"></td>
 		</tr>
