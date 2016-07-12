@@ -11,8 +11,8 @@
     FROM DataBrowser 
     WHERE  
         @PeriodYear 
-        @EquipmentType 
-        @FILTERS_DB
+        @EquipmentType  
+        @FILTERS_DB 
 ),
 CTE_PLANT as
 (

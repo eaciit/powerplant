@@ -76,7 +76,7 @@ func PrepareConnection() (dbox.IConnection, error) {
 
 func ReadConfig() map[string]string {
 	ret := make(map[string]string)
-	fmt.Println(wd, "conf/app.conf")
+	// fmt.Println(wd, "conf/app.conf")
 	file, err := os.Open(wd + "conf/app.conf")
 	if err == nil {
 		defer file.Close()
