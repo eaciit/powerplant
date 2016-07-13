@@ -46,8 +46,8 @@ func main() {
 	// MOR.Generate()
 
 	// Generate Summary
-	Summary := GenSummaryData{base}
-	Summary.Generate(base)
+	//Summary := GenSummaryData{base}
+	//Summary.Generate(base)
 	// Generate DurationSummary
 	/*Duration := DurationIntervalSummary{base}
 	Duration.Generate()*/
