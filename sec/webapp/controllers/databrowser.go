@@ -187,17 +187,11 @@ func getDataBrowser(d DataBrowserInput) (params tk.M, e error) {
 	}
 
 	if len(d.EQType) > 0 {
-		str := strings.Join(d.EQType, ",")
+		str := strings.Join(d.EQType, "','")
+		str = "'" + str + "'"
 		params.Set("@EquipmentType", " AND EquipmentType IN ("+str+")")
 	} else {
 		params.Set("@EquipmentType", " AND EquipmentType <> 'xxx'")
-	}
-
-	if len(d.Plant) > 0 {
-		str := strings.Join(d.Plant, ",")
-		params.Set("@PlantName", " WHERE PlantName IN ("+str+")")
-	} else {
-		params.Set("@PlantName", " WHERE PlantName <> ''")
 	}
 
 	if d.Page != 0 {
@@ -274,13 +268,17 @@ func getDataBrowser(d DataBrowserInput) (params tk.M, e error) {
 		params.Set("@FILTERS_MAIN", "")
 	}
 
-	if len(FilPlant) > 0 {
+	if len(d.Plant) > 0 {
+		str := strings.Join(d.Plant, "','")
+		str = "'" + str + "'"
+		params.Set("@PlantName", " WHERE PlantPlantName IN ("+str+")")
+	} else if len(FilPlant) > 0 {
 		tmpFilter := strings.Split(FilPlant[0], " ")
 		FilPlant[0] = strings.Join(tmpFilter[2:], " ")
 		strFilter := strings.Join(FilPlant, " ")
 		params.Set("@PlantName", " WHERE "+strFilter)
 	} else {
-		params.Set("@PlantName", "")
+		params.Set("@PlantName", " WHERE PlantPlantName <> ''")
 	}
 
 	if len(d.Sort) > 0 {
@@ -314,15 +312,13 @@ func (this *DataBrowserController) GetGridDb(k *knot.WebContext) interface{} {
 		script := getSQLScript(SQLScript+"/databrowser_h3.sql", params)
 
 		// tk.Printf("---\n%#v \n----\n", script)
+		datas := []SPDataBrowser{}
 		cursor, e := this.DB().Connection.NewQuery().
 			Command("freequery", tk.M{}.Set("syntax", script)).
 			Cursor(nil)
-
-		defer cursor.Close()
-
-		datas := []SPDataBrowser{}
-
 		e = cursor.Fetch(&datas, 0, true)
+
+		cursor.Close()
 
 		if e != nil && e.Error() == "No more data to fetched!" {
 			e = nil
@@ -350,15 +346,12 @@ func (this *DataBrowserController) GetGridDb(k *knot.WebContext) interface{} {
 
 		script = getSQLScript(SQLScript+"/databrowser_h3_summary.sql", params)
 		// tk.Printf("---\n%#v \n----\n", script)
+		resSum := []tk.M{}
 		cursorTotal, e := this.DB().Connection.NewQuery().
 			Command("freequery", tk.M{}.Set("syntax", script)).
 			Cursor(nil)
-
-		defer cursorTotal.Close()
-
-		resSum := []tk.M{}
-
 		e = cursorTotal.Fetch(&resSum, 0, true)
+		cursorTotal.Close()
 
 		if e != nil && e.Error() == "No more data to fetched!" {
 			e = nil
@@ -386,7 +379,6 @@ func (this *DataBrowserController) GetGridDb(k *knot.WebContext) interface{} {
 			ret.Set("Total", total)
 			ret.Set("Summary", summary)
 		}*/
-
 		return ret, e
 	}, nil)
 
