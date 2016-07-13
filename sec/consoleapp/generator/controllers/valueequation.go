@@ -4,20 +4,21 @@ import (
 	"github.com/eaciit/crowd"
 	"github.com/eaciit/dbox"
 	// . "github.com/eaciit/powerplant/sec/consoleapp/generator/helpers"
-	. "github.com/eaciit/powerplant/sec/library/models"
-	tk "github.com/eaciit/toolkit"
 	"log"
 	"strconv"
 	"strings"
 	"time"
+
+	. "github.com/eaciit/powerplant/sec/library/models"
+	tk "github.com/eaciit/toolkit"
 )
 
-// GenValueEquation
+// GenValueEquation ...
 type GenValueEquation struct {
 	*BaseController
 }
 
-// Generate
+// Generate ...
 func (d *GenValueEquation) Generate(base *BaseController) {
 	var (
 		e error
@@ -26,11 +27,16 @@ func (d *GenValueEquation) Generate(base *BaseController) {
 		d.BaseController = base
 	}
 
-	//e = d.generateValueEquationDataQuality(2014, "Qurayyah CC")
 	e = d.generateValueEquation()
 	if e != nil {
 		tk.Println(e)
 	}
+
+	e = d.generateValueEquationDataQuality(2014, "Qurayyah CC")
+	if e != nil {
+		tk.Println(e)
+	}
+
 	tk.Println("##Value Equation Data : DONE\n")
 }
 
