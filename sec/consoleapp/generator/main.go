@@ -54,8 +54,12 @@ func main() {
 	// Duration.Generate(base)
 
 	// Generate ValueEquation
-	ValueEquation := GenValueEquation{base}
-	ValueEquation.Generate(base)
+	// ValueEquation := GenValueEquation{base}
+	// ValueEquation.Generate(base)
+
+	// Generate ReadExcel
+	FunctionalLocation := REFunctionalLocation{base}
+	FunctionalLocation.Generate(base)
 
 	tk.Println("Application closed..")
 }
