@@ -5,28 +5,31 @@ import (
 	"github.com/eaciit/dbox"
 	//"github.com/eaciit/orm"
 	//. "github.com/eaciit/powerplant/sec/consoleapp/generator/helpers"
-	. "github.com/eaciit/powerplant/sec/library/models"
-	tk "github.com/eaciit/toolkit"
-	"log"
 	"strconv"
 	"strings"
 	"time"
+
+	. "github.com/eaciit/powerplant/sec/library/models"
+	tk "github.com/eaciit/toolkit"
 )
 
-type DurationIntervalSummary struct {
+// GenWOListSummary ...
+type GenWOListSummary struct {
 	*BaseController
 }
 
-func (d *DurationIntervalSummary) Generate() {
+// Generate ...
+func (d *GenWOListSummary) Generate() {
 	tk.Println("##Generating Summary Data..")
-	e := d.GenerateDurationIntervalSummary()
+	e := d.generateDurationIntervalSummary()
 	if e != nil {
 		tk.Println(e)
 	}
 	tk.Println("##Summary Data : DONE\n")
 }
 
-func (d *DurationIntervalSummary) GenerateDurationIntervalSummary() error {
+// generateDurationIntervalSummary ...
+func (d *GenWOListSummary) generateDurationIntervalSummary() error {
 	years := [3]int{2013, 2014, 2015}
 
 	c := d.Ctx.Connection
@@ -172,10 +175,13 @@ func (d *DurationIntervalSummary) GenerateDurationIntervalSummary() error {
 					woles.PlantType = plantTypes[0].GetString("plantcode")
 				}
 
-				_, e = d.Ctx.InsertOut(woles)
-
-				if e != nil {
-					log.Println(e.Error())
+				for {
+					e = d.Ctx.Insert(woles)
+					if e == nil {
+						break
+					} else {
+						d.Ctx.Connection.Connect()
+					}
 				}
 			}
 		}
