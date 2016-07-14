@@ -27,15 +27,17 @@ func main() {
 		base.Ctx = orm.New(sql)
 		defer base.Ctx.Close()
 
-		new(GenSummaryData).Generate(base)
+		/*new(GenSummaryData).Generate(base)
 		new(GenMOR).Generate(base)
 		new(GenPreventiveCorrectiveSummary).Generate(base)
 		new(GenWODurationSummary).Generate(base)
 		new(GenWOListSummary).Generate(base)
 
-		new(GenPlantMaster).Generate(base)
+		new(GenPlantMaster).Generate(base)*/
 
-		new(GenValueEquation).Generate(base)
+		new(GenDataBrowser).Generate(base)
+
+		// new(GenValueEquation).Generate(base)
 	}
 
 	tk.Println("Application Close..")
