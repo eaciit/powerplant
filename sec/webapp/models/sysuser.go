@@ -5,11 +5,14 @@ import (
 	// "gopkg.in/mgo.v2/bson"
 	"github.com/eaciit/dbox"
 	. "github.com/eaciit/powerplant/sec/webapp/helpers"
+	"sync"
 	"time"
 )
 
 type UserModel struct {
-	orm.ModelBase     `bson:"-",json:"-"`
+	sync.RWMutex
+	orm.ModelBase `bson:"-",json:"-"`
+	// Id                int       `json:Id`
 	UserName          string    `json:"UserName"`
 	FullName          string    `json:"FullName"`
 	Enable            bool      `json:"Enable"`
@@ -18,8 +21,8 @@ type UserModel struct {
 	ConfirmedAtUtc    time.Time `json:"ConfirmedAtUtc"`
 	Email             string    `json:"Email"`
 	PasswordHash      string    `json:"PasswordHash"`
-	HasChangePassword bool      `json:HasChangePassword`
-	SecretToken       string    `json:SecretToken`
+	HasChangePassword bool      `json:"HasChangePassword"`
+	SecretToken       string    `json:"SecretToken`
 }
 
 func (u *UserModel) TableName() string {

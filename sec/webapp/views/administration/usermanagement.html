@@ -1,0 +1,256 @@
+<style>
+input[type='password'] {
+    height: 23px;
+}
+</style>
+<script>
+model.PageId("{{.PageId}}");
+model.PageTitle("{{.PageTitle}}");
+model.BreadCrumbs.push(new BreadCrumb("{{.PageId}}", "{{.PageTitle}}", "#", "active", ""));
+var UserManagement = {
+	Processing:ko.observable(false),
+	IsFormActive:ko.observable(false),
+	Data:{
+		Id:ko.observable(""),
+		UserName:ko.observable(""),
+		FullName:ko.observable(""),
+		Enable:ko.observable(true),
+		ADUser:ko.observable(true),
+		HasChangePassword:ko.observable(false),
+		HasChangePassword:ko.observable(false),
+		Email:ko.observable(""),
+		Password:ko.observable(""),
+		ConfirmPassword:ko.observable(""),
+	},
+	DataSource:ko.observableArray([])
+}
+UserManagement.Initiate = function(){
+  console.log("Initiate")
+}
+UserManagement.AddNew = function(){
+	UserManagement.Reset();
+	UserManagement.Data.Id("");
+	UserManagement.IsFormActive(true);
+	$('#modalForm').modal("show");
+}
+UserManagement.Cancel = function(){
+	UserManagement.IsFormActive(true);
+	UserManagement.Refresh();
+	$('#modalForm').modal("hide");
+}
+UserManagement.Refresh = function(){
+	UserManagement.DataSource([]);
+	var url = "/administration/getuserlist";
+	var parm = {}
+	ajaxPost(url,parm,function(res){
+		if(!res.IsError){
+			UserManagement.DataSource(res.Data);
+			for(var i in res.Data){
+				if(res.Data[i].Enable){
+					res.Data[i].Status = "ACTIVE";
+				}else{
+					res.Data[i].Status = "NOT ACTIVE";
+				}
+				if(res.Data[i].HasChangePassword){
+					res.Data[i].ChangedPasswordStatus = "YES";
+				}else{
+					res.Data[i].ChangedPasswordStatus = "NOT YET";
+				}
+				
+			}
+			$("#UserList").html("");
+			$("#UserList").kendoGrid({
+				dataSource:{
+					data:res.Data
+				},
+				columns:[
+				{field:"UserName",title:"User Name"},
+				{field:"FullName",title:"Full Name"},
+				{field:"Email",title:"Email"},
+				{field:"ChangedPasswordStatus",title:"Has Changed Password"},
+				{field:"Status",title:"Status"},
+				{title:"",
+					template:"<button class='btn btn-xs btn-default' title='Edit' onclick='UserManagement.Edit(\"#:Email#\")'><span class='fa fa-edit'></span></button>"+
+					"&nbsp;"+
+					"#if(Enable){#"+
+					"<button class='btn btn-xs btn-danger' title='Deactivate' onclick='UserManagement.Deactivate(\"#:Email#\")'><span class='fa fa-ban'></span></button>"+
+					"#}else{#"+
+					"<button class='btn btn-xs btn-info' title='Reactivate' onclick='UserManagement.Reactivate(\"#:Email#\")'><span class='fa fa-check-circle'></span></button>"+
+					"#}#",
+					width:70,
+					attributes:{style:"text-align:center;"}
+				},
+				],
+				sortable: true,
+				filterable: true,
+			})
+		}else{
+			alert(res.Message);
+		}
+	});
+}
+UserManagement.Reset = function(){
+	UserManagement.Data.Id("");
+	UserManagement.Data.UserName("");
+	UserManagement.Data.FullName("");
+	UserManagement.Data.Enable(true);
+	UserManagement.Data.ADUser(true);
+	UserManagement.Data.HasChangePassword(false);
+	UserManagement.Data.Email("");
+	UserManagement.Data.Password("");
+	UserManagement.Data.ConfirmPassword("");
+}
+UserManagement.Save = function(){
+	if(UserManagement.Data.UserName().trim()==""||UserManagement.Data.Password().trim()==""||UserManagement.Data.Email().trim()==""){
+		alert("Please complete your form before submitting the data.");
+		return false;
+	}
+	if(!confirm("Area you sure to submit this data?")){
+		return false;
+	}
+	var url = "/administration/saveuser";
+	var parm = UserManagement.Data;
+	ajaxPost(url,parm,function(res){
+		if(!res.IsError){
+			alert("Data has been save.")
+			$('#modalForm').modal("hide");
+			UserManagement.Reset();
+			UserManagement.Refresh();
+			return false;
+		}else{
+			alert(res.Message);
+		}
+	});
+	return false;
+}
+UserManagement.Edit = function(email){
+	var d = Enumerable.From(UserManagement.DataSource()).Where(function(x){return x.Email == email}).ToArray()[0];
+	UserManagement.Data.Id(d.Email);
+	UserManagement.Data.UserName(d.UserName);
+	UserManagement.Data.FullName(d.FullName);
+	UserManagement.Data.Enable(d.Enable);
+	UserManagement.Data.ADUser(d.ADUser);
+	UserManagement.Data.HasChangePassword(d.HasChangePassword);
+	UserManagement.Data.Email(d.Email);
+	UserManagement.Data.Password("");
+	UserManagement.Data.ConfirmPassword("");
+	$('#modalForm').modal("show");
+}
+UserManagement.Deactivate = function(email){
+	if(!confirm("Are you sure to Deactivate this user?")){
+		return false;
+	}
+	var d = Enumerable.From(UserManagement.DataSource()).Where(function(x){return x.Email == email}).ToArray()[0];
+	var url = "/administration/deactivateuser";
+	var parm = d;
+	ajaxPost(url,parm,function(res){
+		if(!res.IsError){
+			alert("User has been deactivate.")
+			UserManagement.Refresh();
+			return false;
+		}else{
+			alert(res.Message);
+		}
+	});
+}
+UserManagement.Reactivate = function(email){
+	if(!confirm("Are you sure to Activated this user?")){
+		return false;
+	}
+	var d = Enumerable.From(UserManagement.DataSource()).Where(function(x){return x.Email == email}).ToArray()[0];
+	var url = "/administration/reactivateuser";
+	var parm = d;
+	ajaxPost(url,parm,function(res){
+		if(!res.IsError){
+			alert("User has been deactivate.")
+			UserManagement.Refresh();
+			return false;
+		}else{
+			alert(res.Message);
+		}
+	});
+}
+
+</script>
+<div data-bind="with:UserManagement">
+	<div class="panel panel-default">
+	  <div class="panel-body collapse in left-mar">
+	  	<div class="row">
+	  		<div class="col-sm-12 align-right">
+				<button type="button" class="btn btn-primary btn-sm" data-bind="click:AddNew">
+				<span class="fa fa-plus"></span>
+				Add New
+				</button>
+	  		</div>
+	  	</div>
+	  	<div class="row"><div class="col-sm-12">&nbsp;</div></div>
+	  	<div class="row">
+	  		<div class="col-sm-12">
+	  			<div id="UserList"></div>
+	  		</div>
+	  	</div>
+	  </div>
+	</div>
+
+	<div class="modal fade modal-fade-in-scale-up" id="modalForm" aria-hidden="true" aria-labelledby="modalTitle" role="dialog" tabindex="-1">
+		<div class="modal-dialog">
+	  		<div class="modal-content">
+	  			<div class="modal-header">
+				  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">×</span>
+				  </button>
+				  <h4 class="modal-title">Add/Edit Account</h4>
+				</div>
+				<div class="modal-body" data-bind="with:Data">
+					<div class="row">
+						<label class="control-label col-md-4">User Name</label>
+						<div class="control-input col-md-6">
+							<input type="text" class="input-sm form-control" placeholder="Input user name" data-bind="value: UserName" required />
+						</div>
+					</div>
+					<div class="row"><div class="col-sm-12">&nbsp;</div></div>
+					<div class="row">
+						<label class="control-label col-md-4">Full Name</label>
+						<div class="control-input col-md-6">
+							<input type="text" class="input-sm form-control" placeholder="Input full name" data-bind="value: FullName" required />
+						</div>
+					</div>
+					<div class="row"><div class="col-sm-12">&nbsp;</div></div>
+					<div class="row">
+						<label class="control-label col-md-4">Email</label>
+						<div class="control-input col-md-6">
+							<input type="text" class="input-sm form-control" placeholder="Input email" data-bind="value: Email,attr:{disabled:UserManagement.Data.Id()!==''?true:false}" required />
+						</div>
+					</div>
+					<div class="row"><div class="col-sm-12">&nbsp;</div></div>
+					<div class="row">
+						<label class="control-label col-md-4">Password</label>
+						<div class="control-input col-md-6">
+							<input type="password" class="input-sm form-control" placeholder="Input password" data-bind="value: Password" required />
+						</div>
+					</div>
+					<div class="row"><div class="col-sm-12">&nbsp;</div></div>
+					<div class="row">
+						<label class="control-label col-md-4">Confirm Password</label>
+						<div class="control-input col-md-6">
+							<input type="password" class="input-sm form-control" placeholder="Input your password" data-bind="value: ConfirmPassword" required />
+						</div>
+					</div>
+				</div> 
+				<div class="modal-footer">
+				  <button type="button" class="btn btn-sm btn-default margin-0" data-dismiss="modal">Close</button>
+				  <button type="button" class="btn btn-sm btn-warning" onclick="UserManagement.Reset()">Reset</button>
+				  <button type="button" class="btn btn-sm btn-primary" onclick="UserManagement.Save()">Save</button>
+				</div>
+
+	  		</div>
+		</div>
+	</div>
+
+</div>
+<script type="text/javascript">
+$(document).ready(function(){
+  // UserManagement.Initiate();
+  UserManagement.Refresh();
+})
+</script>

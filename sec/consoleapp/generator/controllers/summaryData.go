@@ -1,17 +1,36 @@
-package models
+package controllers
 
 import (
-	//"github.com/eaciit/dbox"
-	"github.com/eaciit/orm"
 	. "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
 	"strings"
 )
 
-type Summary struct {
+// GenSummaryData ...
+type GenSummaryData struct {
+	*BaseController
 }
 
-func (s *Summary) GenerateSummaryData(ctx *orm.DataContext) error {
+// Generate ...
+func (s *GenSummaryData) Generate(base *BaseController) {
+	var (
+		e error
+	)
+	if base != nil {
+		s.BaseController = base
+	}
+
+	tk.Println("##Generating Summary Data..")
+	e = s.generateSummaryData()
+	if e != nil {
+		tk.Println(e)
+	}
+	tk.Println("##Summary Data : DONE\n")
+}
+
+// GenerateSummaryData
+func (s *GenSummaryData) generateSummaryData() error {
+	ctx := s.BaseController.Ctx
 	c := ctx.Connection
 
 	FunctionLocationList := []FunctionalLocation{}
@@ -22,11 +41,13 @@ func (s *Summary) GenerateSummaryData(ctx *orm.DataContext) error {
 
 	//FunctionalLocationList
 	csr, err := c.NewQuery().Command("procedure", tk.M{}.Set("name", "GetFunctionalLocation")).Cursor(nil)
+	defer csr.Close()
+
 	err = csr.Fetch(&FunctionLocationList, 0, false)
+
 	if err != nil {
 		tk.Println(err.Error())
 	}
-	defer csr.Close()
 
 	//PowerPlantInfo
 	csr, err = c.NewQuery().Select().From(new(PowerPlantInfo).TableName()).Cursor(nil)
@@ -34,7 +55,6 @@ func (s *Summary) GenerateSummaryData(ctx *orm.DataContext) error {
 	if err != nil {
 		tk.Println(err.Error())
 	}
-	defer csr.Close()
 
 	for _, loc := range FunctionLocationList {
 		SummaryInfo.FunctionalLocation = loc.FunctionalLocationCode
@@ -54,7 +74,6 @@ func (s *Summary) GenerateSummaryData(ctx *orm.DataContext) error {
 		if err != nil {
 			//tk.Println(err.Error())
 		}
-		defer csr.Close()
 
 		if SummaryInfo.SortField == "PP9" {
 			tk.Printf("%#v,", SummaryInfo.SortField)
@@ -143,9 +162,8 @@ func (s *Summary) GenerateSummaryData(ctx *orm.DataContext) error {
 		res := tk.M{}
 		err = csr.Fetch(&res, 0, false)
 		if err != nil {
-			//tk.Printf("#")
+			tk.Println(err.Error())
 		}
-		csr.Close()
 
 		SummaryInfo = SummaryData{}
 

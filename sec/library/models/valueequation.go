@@ -9,8 +9,8 @@ import (
 
 type ValueEquation struct {
 	sync.RWMutex
-	orm.ModelBase `bson:"-" json:"-"`
-	//Id                   int64 `bson:"Id" json:"Id"`
+	orm.ModelBase        `bson:"-" json:"-"`
+	Id                   int       `bson:"Id" json:"Id"`
 	Dates                time.Time `bson:"PeriodDates" json:"Dates"`
 	Year                 int       `bson:"PeriodYear" json:"Year"`
 	Month                int       `bson:"PeriodMonth" json:"Month"`
@@ -81,7 +81,7 @@ type ValueEquationFuel struct {
 	orm.ModelBase `bson:"-" json:"-"`
 	// Id            int64  `bson:"Id" json:"Id"`
 	VEId                  int64   `bson:"VEId" json:"VEId"`
-	IsPrimaryFuel         bool    `bson:"isPrimaryFuel" json:"isPrimaryFuel"`
+	IsPrimaryFuel         bool    `bson:"isPrimaryFuel" json:"IsPrimaryFuel"`
 	FuelType              string  `bson:"FuelType" json:"FuelType"`
 	FuelCostPerUnit       float64 `bson:"FuelCostPerUnit" json:"FuelCostPerUnit"`
 	FuelConsumed          float64 `bson:"FuelConsumed" json:"FuelConsumed"`

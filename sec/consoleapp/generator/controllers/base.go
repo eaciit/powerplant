@@ -9,6 +9,7 @@ import (
 	. "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
 	// "math"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
@@ -306,4 +307,15 @@ func ReadConfig() map[string]string {
 	}
 
 	return ret
+}
+
+func (b *BaseController) GetDataSource(dataSourceFolder string) ([]os.FileInfo, string) {
+	config := ReadConfig()
+	source := config["datasource"]
+	files, e := ioutil.ReadDir(source + "\\" + dataSourceFolder)
+	if e != nil {
+		tk.Println(e)
+		os.Exit(0)
+	}
+	return files, source + "\\" + dataSourceFolder
 }

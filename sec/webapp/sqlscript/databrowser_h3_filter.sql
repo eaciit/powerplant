@@ -11,8 +11,8 @@
     FROM DataBrowser 
     WHERE  
         @PeriodYear 
-        @EquipmentType  
-        @FILTERS_DB 
+        @EquipmentType 
+        @FILTERS_DB
 ),
 CTE_PLANT as
 (
@@ -46,7 +46,7 @@ CTE_WO as
                                     else 0 
                                 END)
                             Else 0 
-            END ) as float ) 
+            END ) as float) 
             ) as PlanDuration,
             (Select CAST((Select case 
                             when WO.ActualFinish IS NOT NULL AND WO.ActualStart IS NOT NULL 
@@ -56,8 +56,8 @@ CTE_WO as
                                     else 0 
                                 END) 
                             Else 0 
-            END) as float ) 
-            ) as ActualDuration 
+            END) as float) 
+            ) as ActualDuration  
         FROM WOList as WO 
         WHERE 
             (select cast(WO.ActualStart as datetime)) >= (select cast(@PeriodFrom as datetime)) 
@@ -89,9 +89,8 @@ CTE_WO as
             and DataBrowser.PlantCode = Plant.PlantPlantCode 
 )
 
-SELECT * 
+SELECT 
+    @GROUP 
     FROM CTE_MAIN 
-        @FILTERS_MAIN 
-    ORDER BY @ORDERBY 
-        OFFSET @Offset ROWS 
-        FETCH NEXT @Limit ROWS ONLY
+    @FILTERS_MAIN 
+    GROUP BY @GROUP 
