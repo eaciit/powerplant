@@ -5,27 +5,31 @@ import (
 	"github.com/eaciit/dbox"
 	//"github.com/eaciit/orm"
 	//. "github.com/eaciit/powerplant/sec/consoleapp/generator/helpers"
-	. "github.com/eaciit/powerplant/sec/library/models"
-	tk "github.com/eaciit/toolkit"
 	"strconv"
 	"strings"
 	"time"
+
+	. "github.com/eaciit/powerplant/sec/library/models"
+	tk "github.com/eaciit/toolkit"
 )
 
-type DurationIntervalSummary struct {
+// GenWOListSummary ...
+type GenWOListSummary struct {
 	*BaseController
 }
 
-func (d *DurationIntervalSummary) Generate() {
+// Generate ...
+func (d *GenWOListSummary) Generate() {
 	tk.Println("##Generating Summary Data..")
-	e := d.GenerateDurationIntervalSummary()
+	e := d.generateDurationIntervalSummary()
 	if e != nil {
 		tk.Println(e)
 	}
 	tk.Println("##Summary Data : DONE\n")
 }
 
-func (d *DurationIntervalSummary) GenerateDurationIntervalSummary() error {
+// generateDurationIntervalSummary ...
+func (d *GenWOListSummary) generateDurationIntervalSummary() error {
 	years := [3]int{2013, 2014, 2015}
 
 	c := d.Ctx.Connection

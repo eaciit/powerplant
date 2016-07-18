@@ -27,35 +27,19 @@ func main() {
 		base.Ctx = orm.New(sql)
 		defer base.Ctx.Close()
 
-		// new(GenPlantMaster).Generate(base)
-		// new(GenMOR).Generate(base)
 		// new(GenSummaryData).Generate(base)
+		// new(GenMOR).Generate(base)
 		// new(GenPreventiveCorrectiveSummary).Generate(base)
+		// new(GenWODurationSummary).Generate(base)
+		// new(GenWOListSummary).Generate(base)
+
+		// new(GenPlantMaster).Generate(base)
+
+		// new(GenValueEquation).Generate(base)
+		// new(REFunctionalLocation).Generate(base)
+		new(REWOList).Generate(base)
+
 	}
 
-	base := new(BaseController)
-	base.Ctx = orm.New(sql)
-	defer base.Ctx.Close()
-
-	// Generate DataMaster
-	//Mst := DataMaster{base}
-	//Mst.Generate()
-
-	// Generate MOR
-	// MOR := DataMOR{base}
-	// MOR.Generate()
-
-	// Generate Summary
-	// Summary := GenSummaryData{base}
-	// Summary.Generate(base)
-
-	// Generate DurationSummary
-	// Duration := DurationIntervalSummary{base}
-	// Duration.Generate(base)
-
-	// Generate ValueEquation
-	ValueEquation := GenValueEquation{base}
-	ValueEquation.Generate(base)
-
-	tk.Println("Application closed..")
+	tk.Println("Application Close..")
 }
