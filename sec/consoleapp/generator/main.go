@@ -38,6 +38,8 @@ func main() {
 		new(GenDataBrowser).Generate(base)
 
 		// new(GenValueEquation).Generate(base)
+		// new(REFunctionalLocation).Generate(base)
+		// new(REWOList).Generate(base)
 	}
 
 	tk.Println("Application Close..")
