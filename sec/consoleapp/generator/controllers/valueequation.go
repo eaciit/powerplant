@@ -10,9 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	. "github.com/eaciit/powerplant/sec/library/models"
-	tk "github.com/eaciit/toolkit"
 )
 
 // GenValueEquation ...
@@ -29,7 +26,7 @@ func (d *GenValueEquation) Generate(base *BaseController) {
 		d.BaseController = base
 	}
 
-	e = d.generateValueEquation()
+	e = d.generateValueEquation(2014, "Qurayyah CC")
 	if e != nil {
 		tk.Println(e)
 	}
