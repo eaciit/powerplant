@@ -1,12 +1,13 @@
 package main
 
 import (
+	"os"
+	"runtime"
+
 	_ "github.com/eaciit/dbox/dbc/mssql"
 	"github.com/eaciit/orm"
 	. "github.com/eaciit/powerplant/sec/consoleapp/generator/controllers"
 	tk "github.com/eaciit/toolkit"
-	"os"
-	"runtime"
 )
 
 var (
@@ -28,14 +29,16 @@ func main() {
 		base.Ctx = orm.New(sql)
 		defer base.Ctx.Close()
 
-		// new(GenSummaryData).Generate(base)
-		// new(GenMOR).Generate(base)
-		// new(GenPreventiveCorrectiveSummary).Generate(base)
-		// new(GenWODurationSummary).Generate(base)
-		// new(GenWOListSummary).Generate(base)
+		/*new(GenSummaryData).Generate(base)
+		new(GenMOR).Generate(base)
+		new(GenPreventiveCorrectiveSummary).Generate(base)
+		new(GenWODurationSummary).Generate(base)
+		new(GenWOListSummary).Generate(base)
 
-		// new(GenPlantMaster).Generate(base)
+		new(GenPlantMaster).Generate(base)*/
 
+		// new(GenDataBrowser).Generate(base)
+		// new(REFunctionalLocation).Generate(base)
 		// new(GenValueEquation).Generate(base)
 		// new(REFunctionalLocation).Generate(base)
 		// new(REWOList).Generate(base)

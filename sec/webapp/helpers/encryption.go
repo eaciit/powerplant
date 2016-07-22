@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/gob"
 	"encoding/hex"
+	"fmt"
 	"time"
 )
 
@@ -33,4 +34,10 @@ func GetMD5Hash(text string) string {
 	hasher := md5.New()
 	hasher.Write([]byte(text))
 	return hex.EncodeToString(hasher.Sum(nil))
+}
+
+func ErrorHandler(e error, function string) {
+	if e != nil {
+		fmt.Printf("ERROR ON '%v' : %#v \n", function, e)
+	}
 }

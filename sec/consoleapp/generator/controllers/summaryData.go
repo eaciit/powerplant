@@ -1,9 +1,13 @@
 package controllers
 
 import (
+	"strings"
+
+	// . "github.com/eaciit/powerplant/sec/consoleapp/generator/helpers"
+	"strings"
+
 	. "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
-	"strings"
 )
 
 // GenSummaryData ...

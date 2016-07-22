@@ -57,7 +57,7 @@ type DataBrowser struct {
 }
 
 func (m *DataBrowser) TableName() string {
-	return "DataBrowser"
+	return "DataBrowser_temp"
 }
 
 type AssetMaintenance struct {
