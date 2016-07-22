@@ -6,13 +6,10 @@ import (
 	// . "github.com/eaciit/powerplant/sec/consoleapp/generator/helpers"
 	. "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
-	//"log"
+	"log"
 	"strconv"
 	"strings"
 	"time"
-
-	. "github.com/eaciit/powerplant/sec/library/models"
-	tk "github.com/eaciit/toolkit"
 )
 
 // GenValueEquation ...
@@ -29,12 +26,19 @@ func (d *GenValueEquation) Generate(base *BaseController) {
 		d.BaseController = base
 	}
 
-	e = d.generateValueEquation()
+	/*e = d.generateValueEquation()
 	if e != nil {
 		tk.Println(e)
 	}
 
 	e = d.generateValueEquationDataQuality(2014, "Qurayyah CC")
+	if e != nil {
+		tk.Println(e)
+	}
+	*/
+
+	Plant := []string{"PP9"}
+	e = d.generateValueEquationAllMaintenance(2014, Plant)
 	if e != nil {
 		tk.Println(e)
 	}
@@ -1129,5 +1133,792 @@ func (d *GenValueEquation) generateValueEquation(Year int, Plant string) error {
 		}
 	}
 
+	return e
+}
+
+func (d *GenValueEquation) generateValueEquationAllMaintenance(Year int, Plants []string) error {
+	ctx := d.BaseController.Ctx
+	c := ctx.Connection
+	var (
+		query []*dbox.Filter
+		e     error
+	)
+
+	YearFirst := strconv.Itoa(Year) + "-01-01"
+	YearLast := strconv.Itoa(Year+1) + "-01-01"
+
+	for _, Plant := range Plants {
+		query = append(query, dbox.Eq("Plant", Plant))
+		csr, _ := c.NewQuery().From(new(PerformanceFactors).TableName()).Where(query...).Cursor(nil)
+		pfs := []tk.M{}
+		e = csr.Fetch(&pfs, 0, false)
+		csr.Close()
+
+		csr, _ = c.NewQuery().From(new(Consolidated).TableName()).Where(query...).Cursor(nil)
+		cons := []tk.M{}
+		e = csr.Fetch(&cons, 0, false)
+		csr.Close()
+
+		query = append(query, dbox.And(dbox.Gte("DatePerformed", YearFirst), dbox.Lt("DatePerformed", YearLast)))
+		csr, _ = c.NewQuery().From(new(PrevMaintenanceValueEquation).TableName()).Where(query...).Cursor(nil)
+		lists := []tk.M{}
+		e = csr.Fetch(&lists, 0, false)
+		csr.Close()
+
+		if Plant == "Qurayyah" || Plant == "Qurayyah CC" {
+			query = append(query[0:0], dbox.And(dbox.Eq("Plant", "Qurayyah"), dbox.Eq("Year", Year)))
+		} else {
+			query = append(query[0:0], dbox.And(dbox.Eq("Plant", Plant), dbox.Eq("Year", Year)))
+		}
+
+		csr, _ = c.NewQuery().From(new(PowerPlantOutages).TableName()).Where(query...).Cursor(nil)
+		outages := []tk.M{}
+		e = csr.Fetch(&outages, 0, false)
+		csr.Close()
+
+		query = append(query[0:0], dbox.And(dbox.Eq("Plant", Plant), dbox.Eq("Year", Year)))
+		csr, _ = c.NewQuery().From(new(StartupPaymentAndPenalty).TableName()).Where(query...).Cursor(nil)
+		start := []tk.M{}
+		e = csr.Fetch(&start, 0, false)
+		csr.Close()
+
+		query = append(query[0:0], dbox.And(dbox.Eq("Plant", Plant), dbox.Eq("Year", Year)))
+		csr, _ = c.NewQuery().From(new(FuelCost).TableName()).Where(query...).Cursor(nil)
+		fuelcosts := []tk.M{}
+		e = csr.Fetch(&fuelcosts, 0, false)
+		csr.Close()
+
+		query = append(query[0:0], dbox.Eq("Plant", Plant))
+		query = append(query, dbox.And(dbox.Gte("ScheduledStart", YearFirst), dbox.Lt("ScheduledStart", YearLast)))
+		csr, _ = c.NewQuery().From(new(SyntheticPM).TableName()).Where(query...).Cursor(nil)
+		syn := []tk.M{}
+		e = csr.Fetch(&syn, 0, false)
+		csr.Close()
+
+		query = append(query[0:0], dbox.And(dbox.Eq("Plant", Plant), dbox.Eq("Year", Year)))
+		csr, _ = c.NewQuery().From(new(FuelTransport).TableName()).Where(query...).Cursor(nil)
+		trans := []tk.M{}
+		e = csr.Fetch(&trans, 0, false)
+		csr.Close()
+
+		sintax := "select * from DataBrowser inner join PowerPlantCoordinates on DataBrowser.PlantCode = PowerPlantCoordinates.PlantCode where PeriodYear = " + strconv.Itoa(Year) + " and PowerPlantCoordinates.PlantName = '" + Plant + "'"
+		csr, e = c.NewQuery().Command("freequery", tk.M{}.Set("syntax", sintax)).Cursor(nil)
+		databrowser := []tk.M{}
+		e = csr.Fetch(&databrowser, 0, false)
+		csr.Close()
+
+		csr, _ = c.NewQuery().From(new(GenerationAppendix).TableName()).Cursor(nil)
+		genA := []tk.M{}
+		e = csr.Fetch(&genA, 0, false)
+		csr.Close()
+
+		csr, _ = c.NewQuery().From(new(Availability).TableName()).Cursor(nil)
+		avail := []tk.M{}
+		e = csr.Fetch(&avail, 0, false)
+		csr.Close()
+
+		csr, _ = c.NewQuery().From(new(UnitPower).TableName()).Cursor(nil)
+		unitpower := []tk.M{}
+		e = csr.Fetch(&unitpower, 0, false)
+		csr.Close()
+
+		UnitsData := crowd.From(&fuelcosts).Group(func(x interface{}) interface{} {
+			unitId := x.(tk.M).GetString("unitid")
+			return strings.Replace(strings.TrimSpace(unitId), " ", "", -1)
+		}, nil).Exec().Result.Data().([]crowd.KV)
+
+		var Units []string
+		for _, unit := range UnitsData {
+			Units = append(Units, unit.Key.(string))
+		}
+
+		DieselData := crowd.From(&fuelcosts).Where(func(x interface{}) interface{} {
+			return x.(tk.M).GetString("primaryfueltype") == "DIESEL"
+		}).Exec().Result.Data().([]tk.M)
+
+		DieselConsumptions := 0.0
+		if len(DieselData) > 0 {
+			DieselConsumptions = crowd.From(&DieselData).Sum(func(x interface{}) interface{} {
+				return x.(tk.M).GetFloat64("primaryfuelconsumed")
+			}).Exec().Result.Sum
+
+			DieselConsumptions = DieselConsumptions * 1000
+		}
+
+		TransportCosts := 0.0
+		if DieselConsumptions != 0.0 {
+			TransportCosts = trans[0].GetFloat64("transportcost") / DieselConsumptions
+		}
+
+		UnitsTemp := crowd.From(&Units).Where(func(x interface{}) interface{} {
+			return !strings.Contains(x.(string), "CS")
+		}).Exec().Result.Data().([]string)
+
+		for _, unit := range UnitsTemp {
+			var NormalizedUnit string
+
+			if len(unit) < 3 {
+				if Plant == "PP9" {
+					NormalizedUnit = "GT" + unit
+				}
+			} else {
+				NormalizedUnit = strings.Replace(strings.Replace(strings.Replace(strings.Replace(unit, ".", "", -1), " ", "", -1), "GT0", "GT", -1), "ST0", "ST", -1)
+			}
+
+			tempunit := strings.Replace(strings.Replace(NormalizedUnit, ".", "", -1), " ", "", -1)
+
+			if len(tempunit) == 3 && !strings.Contains(tempunit, "ST") {
+				tempunit = "GT0" + strings.Replace(tempunit, "GT", "", -1)
+			}
+
+			val := new(ValueEquation)
+			val.Plant = Plant
+			val.Dates = time.Date(Year, 1, 1, 0, 0, 0, 0, time.UTC)
+			val.Month = 1
+			val.Year = Year
+			val.Unit = strings.Replace(strings.Replace(NormalizedUnit, ".", "", -1), " ", "", -1)
+			val.UnitGroup = val.Unit[0:2]
+
+			tempLists := crowd.From(&lists).Where(func(x interface{}) interface{} {
+				return x.(tk.M).GetString("unit") == tempunit
+			}).Exec().Result.Data().([]tk.M)
+
+			if len(tempLists) > 0 {
+				val.Phase = tempLists[0].GetString("phase")
+			}
+
+			tempCons := crowd.From(&cons).Where(func(x interface{}) interface{} {
+				return strings.Replace(x.(tk.M).GetString("unit"), "ST0", "ST", -1) == strings.Replace(val.Unit, "ST0", "ST", -1)
+			}).Exec().Result.Data().([]tk.M)
+
+			val.Capacity = crowd.From(&tempCons).Sum(func(x interface{}) interface{} {
+				return x.(tk.M).GetFloat64("capacity")
+			}).Exec().Result.Sum
+
+			val.NetGeneration = crowd.From(&tempCons).Sum(func(x interface{}) interface{} {
+				return x.(tk.M).GetFloat64("energynet")
+			}).Exec().Result.Sum
+
+			val.AvgNetGeneration = crowd.From(&tempCons).Avg(func(x interface{}) interface{} {
+				return x.(tk.M).GetFloat64("energynet")
+			}).Exec().Result.Avg
+
+			if Plant == "PP9" || Plant == "Qurayyah" || Plant == "Qurayyah CC" {
+				tempAvail := crowd.From(&avail).Where(func(x interface{}) interface{} {
+					return x.(tk.M).GetString("powerplant") == Plant && x.(tk.M).GetString("turbine") == strings.Replace(strings.Replace(val.Unit, "GT0", "GT", -1), "ST0", "ST", -1)
+				}).Exec().Result.Data().([]tk.M)
+				if len(tempAvail) > 0 {
+					val.PrctWAF = tempAvail[0].GetFloat64("prctwaf")
+					val.PrctWUF = tempAvail[0].GetFloat64("prctwuf")
+				}
+			} else if Plant == "Rabigh" {
+				if strings.Contains(val.Unit, "GT") {
+					tempAvail := crowd.From(&avail).Where(func(x interface{}) interface{} {
+						return strings.Contains(x.(tk.M).GetString("powerplant"), Plant) && x.(tk.M).GetString("turbine") == strings.Replace(strings.Replace(val.Unit, "GT0", "GT", -1), "ST0", "ST", -1)
+					}).Exec().Result.Data().([]tk.M)
+
+					if len(tempAvail) > 0 {
+						val.PrctWAF = tempAvail[0].GetFloat64("prctwaf")
+						val.PrctWUF = tempAvail[0].GetFloat64("prctwuf")
+					}
+				} else if strings.Contains(val.Unit, "ST") {
+					tempAvail := crowd.From(&avail).Where(func(x interface{}) interface{} {
+						return x.(tk.M).GetString("powerplant") == "Rabigh Steam" && x.(tk.M).GetString("turbine") == strings.Replace(strings.Replace(val.Unit, "GT0", "GT", -1), "ST0", "ST", -1)
+					}).Exec().Result.Data().([]tk.M)
+
+					if len(tempAvail) > 0 {
+						val.PrctWAF = tempAvail[0].GetFloat64("prctwaf")
+						val.PrctWUF = tempAvail[0].GetFloat64("prctwuf")
+					}
+				}
+			} else if Plant == "Shoaiba" || Plant == "Ghazlan" {
+				tempAvail := crowd.From(&avail).Where(func(x interface{}) interface{} {
+					return strings.Contains(x.(tk.M).GetString("powerplant"), Plant) && x.(tk.M).GetString("turbine") == strings.Replace(strings.Replace(val.Unit, "GT0", "GT", -1), "ST0", "ST", -1)
+				}).Exec().Result.Data().([]tk.M)
+
+				if len(tempAvail) > 0 {
+					val.PrctWAF = tempAvail[0].GetFloat64("prctwaf")
+					val.PrctWUF = tempAvail[0].GetFloat64("prctwuf")
+				}
+			}
+
+			//#endregion
+
+			//#region Revenue
+			tempAppendix := []tk.M{}
+			if strings.Contains(val.Unit, "ST") {
+				if Plant == "Qurayyah" {
+					tempAppendix = crowd.From(&genA).Where(func(x interface{}) interface{} {
+						return x.(tk.M).GetString("plant") == "QRPP"
+					}).Exec().Result.Data().([]tk.M)
+				} else if Plant == "Qurayyah CC" {
+					tempAppendix = crowd.From(&genA).Where(func(x interface{}) interface{} {
+						return x.(tk.M).GetString("plant") == "QCCP"
+					}).Exec().Result.Data().([]tk.M)
+				} else if Plant == "Ghazlan" {
+					unittemp, _ := strconv.Atoi(strings.Replace(val.Unit, "ST", "", -1))
+					if unittemp <= 4 {
+						tempAppendix = crowd.From(&genA).Where(func(x interface{}) interface{} {
+							return x.(tk.M).GetString("plant") == "Ghazlan I (1-4)"
+						}).Exec().Result.Data().([]tk.M)
+					} else if unittemp <= 8 {
+						tempAppendix = crowd.From(&genA).Where(func(x interface{}) interface{} {
+							return x.(tk.M).GetString("plant") == "Ghazlan II (5-8)"
+						}).Exec().Result.Data().([]tk.M)
+					}
+				} else if Plant == "Shoaiba" {
+					tempAppendix = crowd.From(&genA).Where(func(x interface{}) interface{} {
+						return x.(tk.M).GetString("plant") == "Shoaiba Steam"
+					}).Exec().Result.Data().([]tk.M)
+				} else if Plant == "Rabigh" {
+					tempAppendix = crowd.From(&genA).Where(func(x interface{}) interface{} {
+						return x.(tk.M).GetString("plant") == "Rabigh Steam"
+					}).Exec().Result.Data().([]tk.M)
+				} else if Plant == "PP9" {
+					tempAppendix = crowd.From(&genA).Where(func(x interface{}) interface{} {
+						return x.(tk.M).GetString("plant") == "PP9 CC"
+					}).Exec().Result.Data().([]tk.M)
+				}
+			} else {
+				if Plant == "Qurayyah" {
+					tempAppendix = crowd.From(&genA).Where(func(x interface{}) interface{} {
+						return x.(tk.M).GetString("plant") == "QRPP"
+					}).Exec().Result.Data().([]tk.M)
+				} else if Plant == "Qurayyah CC" {
+					tempAppendix = crowd.From(&genA).Where(func(x interface{}) interface{} {
+						return x.(tk.M).GetString("plant") == "QCCP"
+					}).Exec().Result.Data().([]tk.M)
+				} else if Plant == "Rabigh" {
+					unittemp, _ := strconv.Atoi(strings.Replace(val.Unit, "GT", "", -1))
+					if unittemp <= 12 {
+						tempAppendix = crowd.From(&genA).Where(func(x interface{}) interface{} {
+							return x.(tk.M).GetString("plant") == "Rabigh Combined"
+						}).Exec().Result.Data().([]tk.M)
+					} else if unittemp <= 40 {
+						tempAppendix = crowd.From(&genA).Where(func(x interface{}) interface{} {
+							return x.(tk.M).GetString("plant") == "Rabigh Gas" && x.(tk.M).GetFloat64("units") == 28
+						}).Exec().Result.Data().([]tk.M)
+					}
+				} else if Plant == "PP9" {
+					unittemp, _ := strconv.Atoi(strings.Replace(val.Unit, "GT", "", -1))
+					if unittemp <= 16 {
+						tempAppendix = crowd.From(&genA).Where(func(x interface{}) interface{} {
+							return x.(tk.M).GetString("plant") == "PP9 CC"
+						}).Exec().Result.Data().([]tk.M)
+					} else if unittemp <= 24 {
+						tempAppendix = crowd.From(&genA).Where(func(x interface{}) interface{} {
+							return x.(tk.M).GetString("plant") == "PPEXT" && x.(tk.M).GetFloat64("units") == 8
+						}).Exec().Result.Data().([]tk.M)
+					} else if unittemp <= 56 {
+						tempAppendix = crowd.From(&genA).Where(func(x interface{}) interface{} {
+							return x.(tk.M).GetString("plant") == "PPEXT" && x.(tk.M).GetFloat64("units") == 32
+						}).Exec().Result.Data().([]tk.M)
+					}
+				}
+			}
+
+			totalDays := (time.Date(Year, 12, 31, 0, 0, 0, 0, time.UTC).Sub(time.Date(Year-1, 12, 31, 0, 0, 0, 0, time.UTC)).Seconds()) / 86400
+			if len(tempAppendix) > 0 {
+				val.CapacityPayment = tempAppendix[0].GetFloat64("contractedcapacity") * (tempAppendix[0].GetFloat64("fomr") + tempAppendix[0].GetFloat64("ccr")) * totalDays * 10
+			}
+
+			tempCons = crowd.From(&cons).Where(func(x interface{}) interface{} {
+				return strings.Replace(x.(tk.M).GetString("unit"), "STO", "ST", -1) == strings.Replace(val.Unit, "STO", "ST", -1)
+			}).Exec().Result.Data().([]tk.M)
+
+			val.EnergyPayment = crowd.From(&tempCons).Sum(func(x interface{}) interface{} {
+				return x.(tk.M).GetFloat64("energynet")
+			}).Exec().Result.Sum * tempAppendix[0].GetFloat64("vomr") * 10
+
+			val.VOMR = tempAppendix[0].GetFloat64("vomr")
+
+			tempPfs := crowd.From(&pfs).Where(func(x interface{}) interface{} {
+				return x.(tk.M).GetString("unit") == strings.Replace(val.Unit, "ST0", "ST", -1)
+			}).Exec().Result.Data().([]tk.M)
+
+			if len(tempPfs) > 0 {
+				val.SRF = tempPfs[0].GetFloat64("srf")
+			}
+
+			if Plant == "Rabigh" {
+				if len(outages) > 0 {
+					sintax := "select count(*) as Count from PowerPlantOutagesDetails inner join PowerPlantOutages on PowerPlantOutagesDetails.POId = PowerPlantOutages.Id where PowerPlantOutagesDetails.UnitNo = '" + val.Unit + "' and OutageType != 'PO' and PowerPlantOutages.Plant = 'Rabigh Steam'"
+					csr, e = c.NewQuery().Command("freequery", tk.M{}.Set("syntax", sintax)).Cursor(nil)
+					count := []tk.M{}
+					e = csr.Fetch(&count, 0, false)
+					csr.Close()
+
+					if len(count) > 0 {
+						val.UnplannedOutages = count[0].GetFloat64("count")
+					}
+
+					sintax = "select * from PowerPlantOutagesDetails inner join PowerPlantOutages on PowerPlantOutagesDetails.POId = PowerPlantOutages.Id where PowerPlantOutagesDetails.UnitNo = '" + val.Unit + "' and PowerPlantOutages.Plant = 'Rabigh Steam'"
+					csr, e = c.NewQuery().Command("freequery", tk.M{}.Set("syntax", sintax)).Cursor(nil)
+					tempOutages := []tk.M{}
+					e = csr.Fetch(&tempOutages, 0, false)
+					csr.Close()
+
+					if len(tempOutages) > 0 {
+						val.TotalOutageDuration = crowd.From(&tempOutages).Sum(func(x interface{}) interface{} {
+							return x.(tk.M).GetFloat64("totalhours")
+						}).Exec().Result.Sum
+					}
+				}
+			} else if Plant == "Qurayyah" || Plant == "Qurayyah CC" {
+				if len(outages) > 0 {
+					sintax := "select count(*) as Count from PowerPlantOutagesDetails inner join PowerPlantOutages on PowerPlantOutagesDetails.POId = PowerPlantOutages.Id where PowerPlantOutagesDetails.UnitNo = '" + val.Unit + "' and OutageType != 'PO' and PowerPlantOutages.Plant = '" + Plant + "'"
+					csr, e = c.NewQuery().Command("freequery", tk.M{}.Set("syntax", sintax)).Cursor(nil)
+					count := []tk.M{}
+					e = csr.Fetch(&count, 0, false)
+					csr.Close()
+
+					if len(count) > 0 {
+						val.UnplannedOutages = count[0].GetFloat64("count")
+					}
+
+					sintax = "select * from PowerPlantOutagesDetails inner join PowerPlantOutages on PowerPlantOutagesDetails.POId = PowerPlantOutages.Id where PowerPlantOutagesDetails.UnitNo = '" + val.Unit + "' and PowerPlantOutages.Plant = '" + Plant + "'"
+					csr, e = c.NewQuery().Command("freequery", tk.M{}.Set("syntax", sintax)).Cursor(nil)
+					tempOutages := []tk.M{}
+					e = csr.Fetch(&tempOutages, 0, false)
+					csr.Close()
+
+					if len(tempOutages) > 0 {
+						val.TotalOutageDuration = crowd.From(&tempOutages).Sum(func(x interface{}) interface{} {
+							return x.(tk.M).GetFloat64("totalhours")
+						}).Exec().Result.Sum
+					}
+				}
+			} else {
+				if len(outages) > 0 {
+					sintax := "select count(*) as Count from PowerPlantOutagesDetails inner join PowerPlantOutages on PowerPlantOutagesDetails.POId = PowerPlantOutages.Id where PowerPlantOutagesDetails.UnitNo = '" + val.Unit + "' and OutageType != 'PO'"
+					csr, e = c.NewQuery().Command("freequery", tk.M{}.Set("syntax", sintax)).Cursor(nil)
+					count := []tk.M{}
+					e = csr.Fetch(&count, 0, false)
+					csr.Close()
+
+					if len(count) > 0 {
+						val.UnplannedOutages = count[0].GetFloat64("count")
+					}
+
+					sintax = "select * from PowerPlantOutagesDetails inner join PowerPlantOutages on PowerPlantOutagesDetails.POId = PowerPlantOutages.Id where PowerPlantOutagesDetails.UnitNo = '" + val.Unit + "'"
+					csr, e = c.NewQuery().Command("freequery", tk.M{}.Set("syntax", sintax)).Cursor(nil)
+					tempOutages := []tk.M{}
+					e = csr.Fetch(&tempOutages, 0, false)
+					csr.Close()
+
+					if len(tempOutages) > 0 {
+						val.TotalOutageDuration = crowd.From(&tempOutages).Sum(func(x interface{}) interface{} {
+							return x.(tk.M).GetFloat64("totalhours")
+						}).Exec().Result.Sum
+					}
+				}
+			}
+
+			if val.SRF == 100 {
+				tempStart := crowd.From(&start).Where(func(x interface{}) interface{} {
+					return strings.Replace(x.(tk.M).GetString("unit"), "ST0", "ST", -1)
+				}).Exec().Result.Data().([]tk.M)
+
+				if len(tempStart) > 0 {
+					val.StartupPayment = tempStart[0].GetFloat64("startuppayment")
+					val.PenaltyAmount = 0
+				}
+			} else {
+				val.StartupPayment = 0
+				if len(tempAppendix) > 0 {
+					val.PenaltyAmount = tempAppendix[0].GetFloat64("deduct")
+				}
+			}
+
+			val.PenaltyAmount += tempAppendix[0].GetFloat64("deduct") * val.UnplannedOutages
+			val.Incentive = 0
+			val.Revenue = val.CapacityPayment + val.EnergyPayment + val.Incentive + val.StartupPayment - val.PenaltyAmount
+			//#endregion
+			//#region OperatingCost
+			//#region Primary Fuel
+			valueequationFuels := []ValueEquationFuel{}
+			tempFuelCosts := crowd.From(&fuelcosts).Where(func(x interface{}) interface{} {
+				return strings.Replace(strings.Replace(strings.Replace(strings.Replace(strings.Replace(x.(tk.M).GetString("unitid"), " ", "", -1), ".", "", -1), "ST0", "ST", -1), "GT0", "", -1), "GT", "", -1) == strings.Replace(strings.Replace(strings.Replace(strings.Replace(strings.Replace(val.Unit, " ", "", -1), ".", "", -1), "ST0", "ST", -1), "GT0", "", -1), "GT", "", -1)
+			}).Exec().Result.Data().([]tk.M)
+
+			PrimaryFuelType := tempFuelCosts[0].GetString("primaryfueltype")
+			if strings.TrimSpace(strings.ToLower(PrimaryFuelType)) == "hfo" {
+				//#region hfo
+				PrimaryFuelConsumed := crowd.From(&tempFuelCosts).Sum(func(x interface{}) interface{} {
+					return x.(tk.M).GetFloat64("primaryfuelconsumed")
+				}).Exec().Result.Sum
+
+				if strings.TrimSpace(strings.ToLower(val.Plant)) == "shoaiba" {
+					fuelconsumption := ValueEquationFuel{}
+					fuelconsumption.IsPrimaryFuel = true
+					fuelconsumption.FuelType = "CRUDE"
+					fuelconsumption.FuelCostPerUnit = 0.1
+					fuelconsumption.FuelConsumed = PrimaryFuelConsumed / 3
+					fuelconsumption.ConvertedFuelConsumed = fuelconsumption.FuelConsumed * 1000
+					fuelconsumption.FuelCost = fuelconsumption.FuelCostPerUnit * fuelconsumption.ConvertedFuelConsumed
+					valueequationFuels = append(valueequationFuels, fuelconsumption)
+
+					val.PrimaryFuelTotalCost += fuelconsumption.FuelCost
+
+					fuelconsumption.IsPrimaryFuel = true
+					fuelconsumption.FuelType = "CRUDE HEAVY"
+					fuelconsumption.FuelCostPerUnit = 0.049
+					fuelconsumption.FuelConsumed = PrimaryFuelConsumed / 3
+					fuelconsumption.ConvertedFuelConsumed = fuelconsumption.FuelConsumed * 1000
+					fuelconsumption.FuelCost = fuelconsumption.FuelCostPerUnit * fuelconsumption.ConvertedFuelConsumed
+					valueequationFuels = append(valueequationFuels, fuelconsumption)
+
+					val.PrimaryFuelTotalCost += fuelconsumption.FuelCost
+
+					fuelconsumption.IsPrimaryFuel = true
+					fuelconsumption.FuelType = "DIESEL"
+					fuelconsumption.FuelCostPerUnit = 0.085
+					fuelconsumption.FuelConsumed = PrimaryFuelConsumed / 3
+					fuelconsumption.ConvertedFuelConsumed = fuelconsumption.FuelConsumed * 1000
+					fuelconsumption.FuelCost = fuelconsumption.FuelCostPerUnit * fuelconsumption.ConvertedFuelConsumed
+					valueequationFuels = append(valueequationFuels, fuelconsumption)
+
+					val.PrimaryFuelTotalCost += fuelconsumption.FuelCost
+				} else if strings.TrimSpace(strings.ToLower(val.Plant)) == "Rabigh" {
+					fuelconsumption := ValueEquationFuel{}
+					fuelconsumption.IsPrimaryFuel = true
+					fuelconsumption.FuelType = "CRUDE"
+					fuelconsumption.FuelCostPerUnit = 0.1
+					fuelconsumption.FuelConsumed = PrimaryFuelConsumed / 3
+					fuelconsumption.ConvertedFuelConsumed = fuelconsumption.FuelConsumed * 1000
+					fuelconsumption.FuelCost = fuelconsumption.FuelCostPerUnit * fuelconsumption.ConvertedFuelConsumed
+					valueequationFuels = append(valueequationFuels, fuelconsumption)
+
+					val.PrimaryFuelTotalCost += fuelconsumption.FuelCost
+
+					fuelconsumption.IsPrimaryFuel = true
+					fuelconsumption.FuelType = "DIESEL"
+					fuelconsumption.FuelCostPerUnit = 0.085
+					fuelconsumption.FuelConsumed = PrimaryFuelConsumed / 3
+					fuelconsumption.ConvertedFuelConsumed = fuelconsumption.FuelConsumed * 1000
+					fuelconsumption.FuelCost = fuelconsumption.FuelCostPerUnit * fuelconsumption.ConvertedFuelConsumed
+					valueequationFuels = append(valueequationFuels, fuelconsumption)
+
+					val.PrimaryFuelTotalCost += fuelconsumption.FuelCost
+				}
+				//#endregion
+			} else {
+				fuelconsumption := ValueEquationFuel{}
+				fuelconsumption.IsPrimaryFuel = true
+				fuelconsumption.FuelType = tempFuelCosts[0].GetString("primaryfueltype")
+				if strings.Contains(strings.ToLower(fuelconsumption.FuelType), "gas") {
+					fuelconsumption.FuelCostPerUnit = 2.813
+				} else if strings.Contains(strings.ToLower(fuelconsumption.FuelType), "crude") {
+					fuelconsumption.FuelCostPerUnit = 0.1
+				} else if strings.Contains(strings.ToLower(fuelconsumption.FuelType), "diesel") {
+					fuelconsumption.FuelCostPerUnit = 0.085
+				}
+
+				fuelconsumption.FuelConsumed = crowd.From(&tempFuelCosts).Sum(func(x interface{}) interface{} {
+					return x.(tk.M).GetFloat64("primaryfuelconsumed")
+				}).Exec().Result.Sum
+
+				if strings.Contains(strings.ToLower(fuelconsumption.FuelType), "gas") {
+					fuelconsumption.ConvertedFuelConsumed = fuelconsumption.FuelConsumed * 0.0353
+				} else {
+					fuelconsumption.ConvertedFuelConsumed = fuelconsumption.FuelConsumed * 1000
+				}
+
+				fuelconsumption.FuelCost = fuelconsumption.FuelCostPerUnit * fuelconsumption.ConvertedFuelConsumed
+				valueequationFuels = append(valueequationFuels, fuelconsumption)
+
+				val.PrimaryFuelTotalCost += fuelconsumption.FuelCost
+
+				if Plant == "Qurayyah" {
+					fuelconsumption := ValueEquationFuel{}
+					fuelconsumption.IsPrimaryFuel = true
+					fuelconsumption.FuelType = tempFuelCosts[0].GetString("primary2fueltype")
+
+					if strings.Contains(strings.ToLower(fuelconsumption.FuelType), "gas") {
+						fuelconsumption.FuelCostPerUnit = 2.813
+					} else if strings.Contains(strings.ToLower(fuelconsumption.FuelType), "crude") {
+						fuelconsumption.FuelCostPerUnit = 0.1
+					} else if strings.Contains(strings.ToLower(fuelconsumption.FuelType), "diesel") {
+						fuelconsumption.FuelCostPerUnit = 0.085
+					}
+
+					fuelconsumption.FuelConsumed = crowd.From(&tempFuelCosts).Sum(func(x interface{}) interface{} {
+						return x.(tk.M).GetFloat64("primary2fuelconsumed")
+					}).Exec().Result.Sum
+
+					if strings.Contains(strings.ToLower(fuelconsumption.FuelType), "gas") {
+						fuelconsumption.ConvertedFuelConsumed = fuelconsumption.FuelConsumed * 0.0353
+					} else {
+						fuelconsumption.ConvertedFuelConsumed = fuelconsumption.FuelConsumed * 1000
+					}
+
+					fuelconsumption.FuelCost = fuelconsumption.FuelCostPerUnit * fuelconsumption.ConvertedFuelConsumed
+					valueequationFuels = append(valueequationFuels, fuelconsumption)
+
+					val.PrimaryFuelTotalCost += fuelconsumption.FuelCost
+				}
+				//#endregion
+			}
+			//#endregion
+			//#region backup fuel
+			BackupFuelType := tempFuelCosts[0].GetString("backupfueltype")
+
+			if strings.TrimSpace(strings.ToLower(BackupFuelType)) == "hfo" {
+				//#region hfo
+				BackupFuelConsumed := crowd.From(&tempFuelCosts).Sum(func(x interface{}) interface{} {
+					return x.(tk.M).GetFloat64("backupfuelconsumed")
+				}).Exec().Result.Sum
+
+				if strings.TrimSpace(strings.ToLower(val.Plant)) == "shoaiba" {
+					fuelconsumption := ValueEquationFuel{}
+					fuelconsumption.IsPrimaryFuel = false
+					fuelconsumption.FuelType = "CRUDE"
+					fuelconsumption.FuelCostPerUnit = 0.1
+					fuelconsumption.FuelConsumed = BackupFuelConsumed / 3
+					fuelconsumption.ConvertedFuelConsumed = fuelconsumption.FuelConsumed * 1000
+					fuelconsumption.FuelCost = fuelconsumption.FuelCostPerUnit * fuelconsumption.ConvertedFuelConsumed
+
+					valueequationFuels = append(valueequationFuels, fuelconsumption)
+					val.BackupFuelTotalCost += fuelconsumption.FuelCost
+
+					fuelconsumption = ValueEquationFuel{}
+					fuelconsumption.IsPrimaryFuel = false
+					fuelconsumption.FuelType = "CRUDE HEAVY"
+					fuelconsumption.FuelCostPerUnit = 0.049
+					fuelconsumption.FuelConsumed = BackupFuelConsumed / 3
+					fuelconsumption.ConvertedFuelConsumed = fuelconsumption.FuelConsumed * 1000
+					fuelconsumption.FuelCost = fuelconsumption.FuelCostPerUnit * fuelconsumption.ConvertedFuelConsumed
+
+					valueequationFuels = append(valueequationFuels, fuelconsumption)
+					val.BackupFuelTotalCost += fuelconsumption.FuelCost
+
+					fuelconsumption = ValueEquationFuel{}
+					fuelconsumption.IsPrimaryFuel = false
+					fuelconsumption.FuelType = "DIESEL"
+					fuelconsumption.FuelCostPerUnit = 0.085
+					fuelconsumption.FuelConsumed = BackupFuelConsumed / 3
+					fuelconsumption.ConvertedFuelConsumed = fuelconsumption.FuelConsumed * 1000
+					fuelconsumption.FuelCost = fuelconsumption.FuelCostPerUnit * fuelconsumption.ConvertedFuelConsumed
+
+					valueequationFuels = append(valueequationFuels, fuelconsumption)
+					val.BackupFuelTotalCost += fuelconsumption.FuelCost
+				} else if strings.TrimSpace(strings.ToLower(val.Plant)) == "rabigh" {
+					fuelconsumption := ValueEquationFuel{}
+					fuelconsumption.IsPrimaryFuel = false
+					fuelconsumption.FuelType = "CRUDE"
+					fuelconsumption.FuelCost = 0.1
+					fuelconsumption.FuelConsumed = BackupFuelConsumed / 3
+					fuelconsumption.ConvertedFuelConsumed = fuelconsumption.FuelConsumed * 1000
+
+					valueequationFuels = append(valueequationFuels, fuelconsumption)
+					val.BackupFuelTotalCost += fuelconsumption.FuelCost
+
+					fuelconsumption = ValueEquationFuel{}
+					fuelconsumption.IsPrimaryFuel = false
+					fuelconsumption.FuelType = "DIESEL"
+					fuelconsumption.FuelCost = 0.085
+					fuelconsumption.FuelConsumed = BackupFuelConsumed / 3
+					fuelconsumption.ConvertedFuelConsumed = fuelconsumption.FuelConsumed * 1000
+					fuelconsumption.FuelCost = fuelconsumption.FuelCostPerUnit * fuelconsumption.ConvertedFuelConsumed
+
+					valueequationFuels = append(valueequationFuels, fuelconsumption)
+					val.BackupFuelTotalCost += fuelconsumption.FuelCost
+				}
+				//#endregion
+			} else {
+				//#region not hfo
+				fuelconsumption := ValueEquationFuel{}
+				fuelconsumption.IsPrimaryFuel = false
+				fuelconsumption.FuelType = tempFuelCosts[0].GetString("backupfueltype")
+
+				if strings.Contains(strings.ToLower(fuelconsumption.FuelType), "gas") {
+					fuelconsumption.FuelCostPerUnit = 2.813
+				} else if strings.Contains(strings.ToLower(fuelconsumption.FuelType), "crude") {
+					fuelconsumption.FuelCostPerUnit = 0.1
+				} else if strings.Contains(strings.ToLower(fuelconsumption.FuelType), "diesel") {
+					fuelconsumption.FuelCostPerUnit = 0.085
+				}
+
+				fuelconsumption.FuelConsumed = crowd.From(&tempFuelCosts).Sum(func(x interface{}) interface{} {
+					return x.(tk.M).GetFloat64("backupfuelconsumed")
+				}).Exec().Result.Sum
+
+				if strings.Contains(strings.ToLower(fuelconsumption.FuelType), "gas") {
+					fuelconsumption.ConvertedFuelConsumed = fuelconsumption.FuelConsumed * 0.0353
+				} else {
+					fuelconsumption.ConvertedFuelConsumed = fuelconsumption.FuelConsumed * 1000
+				}
+
+				fuelconsumption.FuelCost = fuelconsumption.FuelCostPerUnit * fuelconsumption.ConvertedFuelConsumed
+
+				valueequationFuels = append(valueequationFuels, fuelconsumption)
+				val.BackupFuelTotalCost += fuelconsumption.FuelCost
+				//#endregion
+			}
+			//#endregion
+			totaldieselconsumed := 0.0
+			tempValueEquationFuels := crowd.From(&valueequationFuels).Where(func(x interface{}) interface{} {
+				return strings.TrimSpace(strings.ToLower(x.(ValueEquationFuel).FuelType)) == "diesel"
+			}).Exec().Result.Data().([]ValueEquationFuel)
+
+			totaldieselconsumed = crowd.From(&tempValueEquationFuels).Sum(func(x interface{}) interface{} {
+				return x.(ValueEquationFuel).ConvertedFuelConsumed
+			}).Exec().Result.Sum
+
+			val.FuelTransportCost = TransportCosts * totaldieselconsumed
+			val.TotalFuelCost = val.PrimaryFuelTotalCost + val.BackupFuelTotalCost
+			val.OperatingCost = val.FuelTransportCost + val.TotalFuelCost
+
+			//#endregion
+			//#region Maintenance
+			tempLists = crowd.From(&lists).Where(func(x interface{}) interface{} {
+				return x.(tk.M).GetString("unit") == tempunit
+			}).Exec().Result.Data().([]tk.M)
+
+			val.TotalLabourCost = crowd.From(&tempLists).Sum(func(x interface{}) interface{} {
+				return x.(tk.M).GetFloat64("skilledlabour") + x.(tk.M).GetFloat64("unskilledlabour")
+			}).Exec().Result.Sum
+
+			val.TotalMaterialCost = crowd.From(&tempLists).Sum(func(x interface{}) interface{} {
+				return x.(tk.M).GetFloat64("materials")
+			}).Exec().Result.Sum
+
+			val.TotalServicesCost = crowd.From(&tempLists).Sum(func(x interface{}) interface{} {
+				return x.(tk.M).GetFloat64("ContractMaintenance")
+			}).Exec().Result.Sum
+
+			details := []ValueEquationDetails{}
+			top10s := []ValueEquationTop10{}
+
+			tempGT := crowd.From(&lists).Where(func(x interface{}) interface{} {
+				return x.(tk.M).GetString("unit") == tempunit
+			}).Exec().Result.Data().([]tk.M)
+
+			if len(tempGT) > 0 {
+				for _, gt := range tempGT {
+					det := ValueEquationDetails{}
+					det.DataSource = "Paper Records"
+					det.WorkOrderType = gt.GetString("wotype")
+					det.LaborCost = gt.GetFloat64("skilledlabour") + gt.GetFloat64("unskilledlabour")
+					det.MaterialCost = gt.GetFloat64("materials")
+					det.ServiceCost = gt.GetFloat64("contractmaintenance")
+
+					details = append(details, det)
+
+					top10 := ValueEquationTop10{}
+					top10.WorkOrderID = gt.GetString("id")
+					top10.WorkOrderDescription = gt.GetString("description")
+					top10.EquipmentType = "Not Available"
+					top10.EquipmentTypeDescription = "Not Available"
+					top10.MaintenanceActivity = gt.GetString("description")
+					top10.Duration = gt.GetFloat64("days") * 24
+					top10.LaborCost = det.LaborCost
+					top10.MaterialCost = det.MaterialCost
+					top10.ServiceCost = det.ServiceCost
+					top10.MaintenanceCost = top10.LaborCost + top10.MaterialCost + top10.ServiceCost
+
+					top10s = append(top10s, top10)
+				}
+			}
+
+			tempbrowser := crowd.From(&databrowser).Where(func(x interface{}) interface{} {
+				//isTurbine, _ :=
+				return x.(tk.M).Get("isturbine").(bool) && strings.Replace(strings.Replace(strings.Replace(x.(tk.M).GetString("tinfshortname"), "GT0", "", -1), "GT", "", -1), "ST0", "ST", -1) == strings.Replace(strings.Replace(strings.Replace(val.Unit, "GT0", "", -1), "GT", "", -1), "ST0", "ST", -1)
+			}).Exec().Result.Data().([]tk.M)
+
+			var databrowse []interface{}
+
+			if len(tempbrowser) > 0 {
+				tempDataBrowser := crowd.From(&databrowser).Where(func(x interface{}) interface{} {
+					return x.(tk.M).GetString("turbineparent") == tempbrowser[0].GetString("functionallocation") || x.(tk.M).GetString("functionallocation") == tempbrowser[0].GetString("functionallocation")
+				}).Exec().Result.Data().([]tk.M)
+
+				tempDataBrowse := crowd.From(&tempDataBrowser).Group(func(x interface{}) interface{} {
+					return strings.TrimSpace(x.(tk.M).GetString("functionallocation"))
+				}, nil).Exec().Result.Data().([]crowd.KV)
+
+				if len(tempDataBrowse) > 0 {
+					for _, brow := range tempDataBrowse {
+						databrowse = append(databrowse, brow.Key.(string))
+					}
+				}
+			}
+
+			tempWoList := []tk.M{}
+
+			if len(databrowse) > 0 {
+				query = append(query[0:0], dbox.In("FunctionalLocation", databrowse...))
+				csr, e = c.NewQuery().From("WOList").Where(query...).Cursor(nil)
+				e = csr.Fetch(&tempWoList, 0, false)
+			}
+
+			tempWoList1 := []crowd.KV{}
+
+			if len(tempWoList) > 0 {
+				tempWoList1 = crowd.From(&tempWoList).Group(func(x interface{}) interface{} {
+					return x.(tk.M).GetString("ordercode")
+				}, nil).Exec().Result.Data().([]crowd.KV)
+			}
+
+			MaintenanceOrderList := []string{}
+			if len(tempWoList1) > 0 {
+				for _, wo := range tempWoList1 {
+					MaintenanceOrderList = append(MaintenanceOrderList, wo.Key.(string))
+				}
+			}
+
+			tempsyn := crowd.From(&syn).Where(func(x interface{}) interface{} {
+				if len(MaintenanceOrderList) > 0 {
+					tempMain := crowd.From(&MaintenanceOrderList).Where(func(y interface{}) interface{} {
+						return strings.Contains(y.(string), x.(tk.M).GetString("woid"))
+					}).Exec().Result.Data().([]string)
+
+					if len(tempMain) > 0 {
+						if val.Unit != "" {
+							return strings.Replace(strings.Replace(strings.Replace(strings.Replace(x.(tk.M).GetString("unit"), "GT0", "", -1), "GT", "", -1), "ST0", "S", -1), "ST", "S", -1) == strings.Replace(strings.Replace(strings.Replace(strings.Replace(val.Unit, "GT0", "", -1), "GT", "", -1), "ST0", "S", -1), "ST", "S", -1)
+						} else {
+							return false
+						}
+					} else {
+						return false
+					}
+				} else {
+					return false
+				}
+			}).Exec().Result.Data().([]tk.M)
+
+			if len(tempsyn) > 0 {
+				for _, pm := range tempsyn {
+					det := ValueEquationDetails{}
+					det.DataSource = "SAP PM"
+					det.WorkOrderType = pm.GetString("wotype")
+					det.LaborCost = pm.GetFloat64("plannedlaborcost")
+					det.MaterialCost = pm.GetFloat64("actualmaterialcost")
+					det.ServiceCost = 0
+
+					details = append(details, det)
+
+					val.TotalLabourCost += pm.GetFloat64("plannedlaborcost")
+					val.TotalMaterialCost += pm.GetFloat64("actualmaterialcost")
+				}
+			}
+
+			if len(tempbrowser) > 0 {
+				query = append(query[0:0], dbox.And(dbox.In("MaintenanceOrder", MaintenanceOrderList), dbox.Ne("MaintenanceOrder", ""), dbox.Eq("Period", YearFirst)))
+				csr, e = c.NewQuery().From("MaintenanceCost").Where(query...).Cursor(nil)
+				maintCost := []tk.M{}
+				e = csr.Fetch(&maintCost, 0, false)
+				csr.Close()
+
+				query = append(query[0:0], dbox.And(dbox.In("MaintenanceOrder", MaintenanceOrderList), dbox.Ne("MaintenanceOrder", ""), dbox.Eq("Period", YearFirst)))
+				csr, e = c.NewQuery().From("MaintenanceCostByHour").Where(query...).Cursor(nil)
+				maintHour := []tk.M{}
+				e = csr.Fetch(&maintHour, 0, false)
+				csr.Close()
+				log.Println(maintHour)
+				//IList<MaintenanceCost> maintCost = DataHelper.Populate<MaintenanceCost>("MaintenanceCost", Query.And(Query.In("MaintenanceOrder", new BsonArray(MaintenanceOrderList)), Query.NE("MaintenanceOrder",string.Empty))).Where(x => x.Period.Value.Year == Year).ToList();
+			}
+		}
+	}
 	return e
 }

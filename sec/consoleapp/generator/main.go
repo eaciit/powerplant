@@ -35,9 +35,9 @@ func main() {
 
 		// new(GenPlantMaster).Generate(base)
 
-		// new(GenValueEquation).Generate(base)
+		new(GenValueEquation).Generate(base)
 		// new(REFunctionalLocation).Generate(base)
-		new(REWOList).Generate(base)
+		//new(REWOList).Generate(base)
 
 	}
 
