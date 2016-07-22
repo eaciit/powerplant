@@ -8,8 +8,10 @@ import (
 	tk "github.com/eaciit/toolkit"
 	// "strconv"
 	"github.com/tealeg/xlsx"
+	"math"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -39,35 +41,80 @@ func (d *REMaintenanceWO) Generate(base *BaseController) {
 				os.Exit(0)
 			}
 			sheet := file.Sheets[0]
+			wg := sync.WaitGroup{}
+			totalData := float64(len(sheet.Rows))
+			dataEach := totalData
+			if totalData > 10000 {
+				dataEach = math.Ceil(float64(totalData / 10))
+			}
+			if dataEach != totalData {
+				wg.Add(10)
+				for i := 0; i < 10; i++ {
+					go func(wg *sync.WaitGroup, i int, dataEach int) {
+						startWith := i * dataEach
+						for x := startWith; x <= startWith+dataEach; x++ {
+							row := sheet.Rows[x]
+							firstCell := ""
+							if len(row.Cells) > 0 {
+								firstCell, _ = row.Cells[0].String()
+							}
+							if len(row.Cells) > 0 && strings.Trim(strings.ToLower(firstCell), " ") != "notification" && strings.Trim(strings.ToLower(firstCell), " ") != "" {
+								data := new(MaintenanceWorkOrder)
+								data.Notification, _ = row.Cells[0].String()
+								data.OrderCode, _ = row.Cells[1].String()
+								data.UserStatus, _ = row.Cells[2].String()
+								data.FunctionalLocation, _ = row.Cells[3].String()
+								data.MainWorkCtr, _ = row.Cells[4].String()
+								data.Description, _ = row.Cells[5].String()
+								data.OrderType, _ = row.Cells[6].String()
+								temp, _ = row.Cells[7].String()
+								data.ActualRelease, _ = time.Parse(temp, "02.01.2013")
+								data.SystemStatus, _ = row.Cells[8].String()
+								temp, _ = row.Cells[9].String()
+								data.CreatedOn, _ = time.Parse(temp, "02.01.2013")
 
-			for _, row := range sheet.Rows {
-				firstCell := ""
-				if len(row.Cells) > 0 {
-					firstCell, _ = row.Cells[0].String()
-				}
-				if len(row.Cells) > 0 && strings.Trim(strings.ToLower(firstCell), " ") != "notification" && strings.Trim(strings.ToLower(firstCell), " ") != "" {
-					data := new(MaintenanceWorkOrder)
-					data.Notification, _ = row.Cells[0].String()
-					data.OrderCode, _ = row.Cells[1].String()
-					data.UserStatus, _ = row.Cells[2].String()
-					data.FunctionalLocation, _ = row.Cells[3].String()
-					data.MainWorkCtr, _ = row.Cells[4].String()
-					data.Description, _ = row.Cells[5].String()
-					data.OrderType, _ = row.Cells[6].String()
-					temp, _ = row.Cells[7].String()
-					data.ActualRelease, _ = time.Parse(temp, "02.01.2013")
-					data.SystemStatus, _ = row.Cells[8].String()
-					temp, _ = row.Cells[9].String()
-					data.CreatedOn, _ = time.Parse(temp, "02.01.2013")
+								_, e := ctx.InsertOut(data)
+								if e != nil {
+									tk.Println("ERR on file :", source.Name(), " | ROW :", idx)
+									tk.Println(e)
+								}
 
-					_, e := ctx.InsertOut(data)
-					if e != nil {
-						tk.Println("ERR on file :", source.Name(), " | ROW :", idx)
-						tk.Println(e)
-					}
-
+							}
+						}
+						wg.Done()
+					}(&wg, i, int(dataEach))
 				}
 			}
+			wg.Wait()
+			os.Exit(0)
+			// for _, row := range sheet.Rows {
+			// 	firstCell := ""
+			// 	if len(row.Cells) > 0 {
+			// 		firstCell, _ = row.Cells[0].String()
+			// 	}
+			// 	if len(row.Cells) > 0 && strings.Trim(strings.ToLower(firstCell), " ") != "notification" && strings.Trim(strings.ToLower(firstCell), " ") != "" {
+			// 		data := new(MaintenanceWorkOrder)
+			// 		data.Notification, _ = row.Cells[0].String()
+			// 		data.OrderCode, _ = row.Cells[1].String()
+			// 		data.UserStatus, _ = row.Cells[2].String()
+			// 		data.FunctionalLocation, _ = row.Cells[3].String()
+			// 		data.MainWorkCtr, _ = row.Cells[4].String()
+			// 		data.Description, _ = row.Cells[5].String()
+			// 		data.OrderType, _ = row.Cells[6].String()
+			// 		temp, _ = row.Cells[7].String()
+			// 		data.ActualRelease, _ = time.Parse(temp, "02.01.2013")
+			// 		data.SystemStatus, _ = row.Cells[8].String()
+			// 		temp, _ = row.Cells[9].String()
+			// 		data.CreatedOn, _ = time.Parse(temp, "02.01.2013")
+
+			// 		_, e := ctx.InsertOut(data)
+			// 		if e != nil {
+			// 			tk.Println("ERR on file :", source.Name(), " | ROW :", idx)
+			// 			tk.Println(e)
+			// 		}
+
+			// 	}
+			// }
 		}
 
 		if strings.Contains(source.Name(), "maintenance work order PP9") {
