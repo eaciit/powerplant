@@ -43,7 +43,7 @@ func (d *REFunctionalLocation) Generate(base *BaseController) {
 			totalInsertedData := 0
 			for _, row := range sheet.Rows {
 				firstCell := ""
-				if len(row.Cells) > 1 {
+				if len(row.Cells) > 0 {
 					firstCell, _ = row.Cells[1].String()
 				}
 				if len(row.Cells) > 0 && strings.Trim(strings.ToLower(firstCell), " ") != "functional location" && strings.Trim(strings.ToLower(firstCell), " ") != "" {
@@ -191,7 +191,7 @@ func (d *REFunctionalLocation) Generate(base *BaseController) {
 					}
 				}
 			}
-			tk.Println(source.Name(), " : ", totalInsertedData, " / ", totalDataEachFile)
+			tk.Println(source.Name(), " : ", totalInsertedData, " / ", totalDataEachFile, " | Max Row : ", sheet.MaxRow)
 		}
 	}
 	tk.Println("TOTAL DATA : ", totalData)
