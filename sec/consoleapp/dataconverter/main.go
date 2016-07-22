@@ -91,9 +91,7 @@ func main() {
 
 	migrate := new(MigrateData)
 	migrate.BaseController = base
-	/*migrate.GenerateMasterUnit()
-	// migrate := new(MigrateData)
-	// migrate.BaseController = base
+
 	// migrate.GenerateMasterUnit()
 
 	// migrate.DoCostSheet() // 							done
@@ -101,20 +99,18 @@ func main() {
 	// migrate.DoPowerPlantOutages()	//					done
 	// migrate.DoValueEquationDataQuality()	//				done
 	// migrate.DoValueEquationDashboard()
-	// migrate.DoPowerPlantOutages()
 	// migrate.DoGenerateVibration()						done
 	// migrate.DoValueEquation() //							done
-	// migrate.DoPowerPlantOutages() //						done
 	// migrate.DoDataBrowser()								done
 	// migrate.DoGenerateDataBrowserSelectedFields() //		done
-	// migrate.DoGenerateDataBrowserFields() // 			done*/
+	// migrate.DoGenerateDataBrowserFields() // 			done
 
 	// migrate.DoMasterUnit()
 	// migrate.DoGenerateAssetClass()
 	// migrate.DoGenerateAssetType()
 	// migrate.DoGenerateAssetLevel()
 	// migrate.DoGenerateTempMstPlant()
-	migrate.DoGenerateUnitPower()
+	//migrate.DoGenerateUnitPower()
 	// check := DataChecker{base}
 	// check.CheckDetailData()
 }
