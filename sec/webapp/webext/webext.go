@@ -61,7 +61,6 @@ func PrepareConnection() (dbox.IConnection, error) {
 	config := ReadConfig()
 	ci := &dbox.ConnectionInfo{config["host"], config["database"], config["username"], config["password"], nil}
 	c, e := dbox.NewConnection("mssql", ci)
-
 	if e != nil {
 		return nil, e
 	}
