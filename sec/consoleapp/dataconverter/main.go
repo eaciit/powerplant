@@ -110,7 +110,7 @@ func main() {
 	// migrate.DoGenerateAssetType()
 	// migrate.DoGenerateAssetLevel()
 	// migrate.DoGenerateTempMstPlant()
-
+	//migrate.DoGenerateUnitPower()
 	// check := DataChecker{base}
 	// check.CheckDetailData()
 }

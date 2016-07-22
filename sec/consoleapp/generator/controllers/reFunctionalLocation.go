@@ -1,6 +1,6 @@
 package controllers
 
-import (
+/*import (
 	// "github.com/eaciit/crowd"
 	// "github.com/eaciit/dbox"
 	// . "github.com/eaciit/powerplant/sec/consoleapp/generator/helpers"
@@ -17,9 +17,9 @@ import (
 type REFunctionalLocation struct {
 	*BaseController
 }
-
+*/
 // Generate
-func (d *REFunctionalLocation) Generate(base *BaseController) {
+/*func (d *REFunctionalLocation) Generate(base *BaseController) {
 	var (
 		folderName string   = "Functional Location"
 		StrInds    []string = []string{"FMS", "DISTD", "DISTM", "TRNS", "GN-01", "GN-02", "GN-03", "GN-04"}
@@ -196,4 +196,4 @@ func (d *REFunctionalLocation) Generate(base *BaseController) {
 	}
 	tk.Println("TOTAL DATA : ", totalData)
 	tk.Println("Functional Location from Excel File : COMPLETE")
-}
+}*/

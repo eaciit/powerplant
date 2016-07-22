@@ -1012,6 +1012,41 @@ func (m *MigrateData) DoGenerateTempMstPlant() error {
 	return nil
 }
 
+func (m *MigrateData) DoGenerateUnitPower() error {
+	tStart := time.Now()
+	tk.Println("Starting DoGenerateUnitPower..")
+	mod := new(UnitPower)
+
+	c, e := m.BaseController.MongoCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+
+	if e != nil {
+		return e
+	}
+
+	defer c.Close()
+
+	result := []tk.M{}
+	e = c.Fetch(&result, 0, false)
+
+	for _, val := range result {
+		for {
+			_, e := m.InsertOut(val, new(UnitPower))
+			if e == nil {
+				break
+			} else {
+				m.SqlCtx.Connection.Connect()
+			}
+		}
+	}
+
+	cr, e := m.BaseController.SqlCtx.Connection.NewQuery().From(mod.TableName()).Cursor(nil)
+	ctn := cr.Count()
+	cr.Close()
+
+	tk.Printf("Completed Success in %v | %v data(s)\n", time.Since(tStart), ctn)
+	return nil
+}
+
 func (m *MigrateData) InsertOut(in tk.M, mod orm.IModel) (out int64, e error) {
 	muinsert := &sync.Mutex{}
 
