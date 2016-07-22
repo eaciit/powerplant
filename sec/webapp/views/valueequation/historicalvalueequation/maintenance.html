@@ -55,8 +55,8 @@
 	  </thead>
 	  <tbody data-bind="foreach:Data">
 	    <tr>
-	      <td data-bind="text:_id.DataSource"></td>
-	      <td data-bind="text:_id.WorkOrderType"></td>
+	      <td data-bind="text:DataSource"></td>
+	      <td data-bind="text:WorkOrderType"></td>
 	      <td width="200" data-bind="text:kendo.toString(LaborCost,'N0')" class="align-right sar-currency"></td>
 	      <td width="200" data-bind="text:kendo.toString(MaterialCost,'N0')" class="align-right sar-currency"></td>
 	      <td width="200" data-bind="text:kendo.toString(ServiceCost,'N0')" class="align-right sar-currency"></td>
@@ -89,7 +89,7 @@
 			  </thead>
 			  <tbody data-bind="foreach:DataMainEx">
 			    <tr>
-			    	<th data-bind="text:_id"></td>
+			    	<th data-bind="text:ID"></td>
 					<td data-bind="text:kendo.toString(LaborCost,'N0'),attr:{style:HVEMaintenance.isMaxOrMinLaborCost(LaborCost)}" class="align-right sar-currency"></td>
 					<td data-bind="text:kendo.toString(MaterialCost,'N0'),attr:{style:HVEMaintenance.isMaxOrMinMaterialCost(MaterialCost)}" class="align-right sar-currency"></td>
 					<td data-bind="text:kendo.toString(ServiceCost,'N0'),attr:{style:HVEMaintenance.isMaxOrMinServiceCost(ServiceCost)}" class="align-right sar-currency"></td>
@@ -275,7 +275,7 @@ HVEMaintenance.GenerateChart = function(dataSource){
             {
             	field:field,
             	name:field,
-            	categoryField: "_id",
+            	categoryField: "ID",
             },
         ],
         valueAxis: {
@@ -328,7 +328,7 @@ HVEMaintenance.GenerateChart = function(dataSource){
         filterable: true,
         columns: [
             {
-            	field:"_id",
+            	field:"ID",
             	title:"Maintenance Order",
             },
             {
@@ -388,7 +388,7 @@ HVEMaintenance.GetData = function(){
 			HVEMaintenance.MaterialCostTotal(0);
 			HVEMaintenance.ServiceCostTotal(0);
 
-		var OrderTypeList =  Enumerable.From(res.Data.DataOrder).Where(function(x){return x._id!==null}).Select(function(x){return x._id}).OrderBy(function(x){return x}).ToArray();
+		var OrderTypeList =  Enumerable.From(res.Data.DataOrder).Where(function(x){return x.ID!==null}).Select(function(x){return x.ID}).OrderBy(function(x){return x}).ToArray();
 
 		if(!HVEMaintenance.refreshChartStat()){
 			HVEMaintenance.OrderTypeList(OrderTypeList);
@@ -409,11 +409,11 @@ HVEMaintenance.GetData = function(){
 		var DataMainEx = res.Data.DataMainEx;
 		if(HVESummary.scope()=="Plant"){
 			for(var i in DataMainEx){
-				DataMainEx[i].Index = parseFloat(DataMainEx[i]._id.substr(2));
+				DataMainEx[i].Index = parseFloat(DataMainEx[i].ID.substr(2));
 			}
-			var GTArr = Enumerable.From(DataMainEx).Where(function(x){return x._id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
-			var STArr = Enumerable.From(DataMainEx).Where(function(x){return x._id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
-			var UnmappedArr = Enumerable.From(DataMainEx).Where(function(x){return x._id =="Unmapped Data"}).OrderBy(function(x){return x.Index}).ToArray();
+			var GTArr = Enumerable.From(DataMainEx).Where(function(x){return x.ID.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+			var STArr = Enumerable.From(DataMainEx).Where(function(x){return x.ID.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+			var UnmappedArr = Enumerable.From(DataMainEx).Where(function(x){return x.ID =="Unmapped Data"}).OrderBy(function(x){return x.Index}).ToArray();
 			var arr = [];
 			for(var i in GTArr){
 			arr.push(GTArr[i]);

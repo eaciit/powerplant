@@ -6,6 +6,11 @@
 # Folders
 _obj
 _test
+sec/consoleapp/debug
+sec/consoleapp/conf
+sec/webapp/conf
+sec/webapp/conf/app.conf
+sec/webapp/debug
 
 # Architecture specific extensions/prefixes
 *.[568vq]
@@ -19,6 +24,8 @@ _cgo_export.*
 
 _testmain.go
 
+*.conf
+*.bak
 *.exe
 *.test
 *.prof
@@ -27,3 +34,4 @@ sec/HelperScript
 sec/consoleapp/conf/app.conf
 sec/consoleapp/conf/app.conf
 sec/consoleapp/conf/app.conf
+sec/webapp/conf/app.conf

@@ -42,10 +42,10 @@
 		var DataDetail = [];
 		if(HVEOperating.scope()=="Plant"){
 			for(var i in dataSource){
-				dataSource[i].Index = parseFloat(dataSource[i]._id.substr(2));
+				dataSource[i].Index = parseFloat(dataSource[i].ID.substr(2));
 			}
-			var GTArr = Enumerable.From(dataSource).Where(function(x){return x._id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
-			var STArr = Enumerable.From(dataSource).Where(function(x){return x._id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+			var GTArr = Enumerable.From(dataSource).Where(function(x){return x.ID.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+			var STArr = Enumerable.From(dataSource).Where(function(x){return x.ID.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
 			var arr = [];
 			for(var i in GTArr){
 			arr.push(GTArr[i]);
@@ -53,7 +53,7 @@
 			for(var i in STArr){
 			arr.push(STArr[i]);
 			}
-		var UnmappedArr = Enumerable.From(dataSource).Where(function(x){return x._id =="Unmapped Data"}).OrderBy(function(x){return x.Index}).ToArray();
+		var UnmappedArr = Enumerable.From(dataSource).Where(function(x){return x.ID =="Unmapped Data"}).OrderBy(function(x){return x.Index}).ToArray();
 				for(var i in UnmappedArr){
 				arr.push(UnmappedArr[i]);
 				}
@@ -103,9 +103,9 @@
 	</thead>
 	<tbody data-bind="foreach:DataTable">
 		<tr>
-			<td data-bind="text:_id.isPrimaryFuel?'Primary':'Backup'"></td>
-			<td data-bind="text: _id.FuelType"></td>
-			<td class="align-right" data-bind="text: kendo.toString(ConvertedFuelConsumed, 'N2'), css: {'mmbtu-currency' : _id.FuelType == 'GAS', 'litre-currency' : _id.FuelType != 'GAS'}"></td>
+			<td data-bind="text:IsPrimaryFuel?'Primary':'Backup'"></td>
+			<td data-bind="text: FuelType"></td>
+			<td class="align-right" data-bind="text: kendo.toString(ConvertedFuelConsumed, 'N2'), css: {'mmbtu-currency' : FuelType == 'GAS', 'litre-currency' : FuelType != 'GAS'}"></td>
 			<td class="align-right sar-currency" data-bind="text: kendo.toString(FuelCostPerUnit, 'N3')"></td>
 			<td class="align-right sar-currency" data-bind="text: kendo.toString(FuelCost, 'N0')"></td>
 		</tr>
@@ -140,7 +140,7 @@
 		  </thead>
 		  <tbody data-bind="foreach:DetailDataSource">
 		    <tr>
-		    	<th data-bind="text:_id"></td>
+		    	<th data-bind="text:ID"></td>
 		    	<td data-bind="text:kendo.toString(OperatingCost,'N0'),attr:{style:HVEOperating.isMaxOrMinOperatingCost(OperatingCost)}" class="align-right sar-currency"></td>
 		    	<td data-bind="text:kendo.toString(NetGeneration,'N0')" class="align-right netgeneration-mwhr"></td>
 		    	<td data-bind="text:kendo.toString(FCperNetGeneration,'N0'),attr:{style:HVEOperating.isMaxOrMinFCperNetGeneration(FCperNetGeneration)}" class="align-right sar-mwhr"></td>

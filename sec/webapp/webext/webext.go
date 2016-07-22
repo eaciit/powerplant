@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/eaciit/dbox"
-	_ "github.com/eaciit/dbox/dbc/mongo"
+	_ "github.com/eaciit/dbox/dbc/mssql"
 	"github.com/eaciit/knot/knot.v1"
 	"github.com/eaciit/orm"
 	. "github.com/eaciit/powerplant/sec/webapp/controllers"
@@ -43,12 +43,15 @@ func init() {
 	app.Register(&HypothesisController{baseCont})
 	app.Register(&ScenarioSimulation{baseCont})
 	app.Register(&UploadDataController{baseCont})
+	app.Register(&AccountController{baseCont})
+	app.Register(&AdministrationController{baseCont})
 	/*app.Register(&InitController{baseCont})
 	app.Register(&OrganizationController{baseCont})
 	app.Register(&InventoryController{baseCont})
 	app.Register(&UomController{baseCont})*/
 
 	app.Static("static", wd+"assets")
+	app.Static("files", wd+"files")
 	app.LayoutTemplate = "shared/layout.html"
 	app.DefaultOutputType = knot.OutputJson
 	knot.RegisterApp(app)
@@ -58,8 +61,6 @@ func PrepareConnection() (dbox.IConnection, error) {
 	config := ReadConfig()
 	ci := &dbox.ConnectionInfo{config["host"], config["database"], config["username"], config["password"], nil}
 	c, e := dbox.NewConnection("mssql", ci)
-	// c, e := dbox.NewConnection("mongo", ci)
-
 	if e != nil {
 		return nil, e
 	}
@@ -74,7 +75,7 @@ func PrepareConnection() (dbox.IConnection, error) {
 
 func ReadConfig() map[string]string {
 	ret := make(map[string]string)
-	fmt.Println(wd, "conf/app.conf")
+	// fmt.Println(wd, "conf/app.conf")
 	file, err := os.Open(wd + "conf/app.conf")
 	if err == nil {
 		defer file.Close()

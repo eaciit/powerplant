@@ -67,7 +67,7 @@
 	  </thead>
 	  <tbody data-bind="foreach:DataQuality,kendoTooltip: { filter: tip},visible:(selectedScope()=='Kingdom'||(selectedScope()=='Plant'&&ValueEquation.selected().length!==1))">
 	    <tr>
-	    	<th data-bind="text:_id"></td>
+	    	<th data-bind="text:ID"></td>
 			<td width="100" data-bind="attr:{style:HVEDataQuality.setColor(CapacityPayment_Data,Count)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
 			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(EnergyPayment_Data,Count)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
 			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(StartupPayment_Data,Count)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
@@ -85,7 +85,7 @@
 	  </tbody>
 	<tbody data-bind="foreach:DataQuality,kendoTooltip: { filter: tip},visible:(selectedScope()=='Unit'||(selectedScope()=='Plant'&&ValueEquation.selected().length==1))">
 	    <tr>
-	    	<th data-bind="text:_id"></td>
+	    	<th data-bind="text:ID"></td>
 			<td width="100" data-bind="attr:{style:HVEDataQuality.setColor(CapacityPayment_Data,Count),title:$parent.GetTitle(CapacityPaymentDocuments)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
 			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(EnergyPayment_Data,Count),title:$parent.GetTitle(EnergyPaymentDocuments)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
 			<td width="100"  data-bind="attr:{style:HVEDataQuality.setColor(StartupPayment_Data,Count),title:$parent.GetTitle(StartupPaymentDocuments)}" class="align-center"><span class="fa fa-dot-circle-o"></span></td>
@@ -142,14 +142,15 @@ HVEDataQuality.GetData = function(){
 				var DataQuality = res.Data;
 				if(HVESummary.scope()=="Plant"){
 					if(ValueEquation.selected().length==1){
+						console.log(DataQuality)
 						for(var i in DataQuality){
-							DataQuality[i]._id = DataQuality[i].Unit;
+							DataQuality[i].ID = DataQuality[i].Unit;
 							DataQuality[i].Count = 1;
-							DataQuality[i].Index = parseFloat(DataQuality[i]._id.substr(2));
+							DataQuality[i].Index = parseFloat(DataQuality[i].ID.substr(2));
 						}
 					}else{
 						for(var i in DataQuality){
-							DataQuality[i].Index = parseFloat(DataQuality[i]._id.substr(2));
+							DataQuality[i].Index = parseFloat(DataQuality[i].ID.substr(2));
 							DataQuality[i].CapacityPaymentDocuments = [];
 							DataQuality[i].EnergyPaymentDocuments = [];
 							DataQuality[i].StartupPaymentDocuments = [];
@@ -162,8 +163,8 @@ HVEDataQuality.GetData = function(){
 							DataQuality[i].BackupFuelDocuments = [];
 						}
 					}
-					var GTArr = Enumerable.From(DataQuality).Where(function(x){return x._id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
-					var STArr = Enumerable.From(DataQuality).Where(function(x){return x._id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+					var GTArr = Enumerable.From(DataQuality).Where(function(x){return x.ID.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+					var STArr = Enumerable.From(DataQuality).Where(function(x){return x.ID.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
 					var arr = [];
 					for(var i in GTArr){
 					arr.push(GTArr[i]);
@@ -175,7 +176,7 @@ HVEDataQuality.GetData = function(){
 				}
 				if (ValueEquation.scope()!=='Unit'){
 					HVESummary.BreakdownBy('Plant');
-					// if(ValueEquation.selected().length!==1){
+					if(ValueEquation.scope() !== 'Plant'){
 						for(var i in DataQuality){
 							DataQuality[i].CapacityPaymentDocuments = [];
 							DataQuality[i].EnergyPaymentDocuments = [];
@@ -188,12 +189,13 @@ HVEDataQuality.GetData = function(){
 							DataQuality[i].PrimaryFuel2ndDocuments = [];
 							DataQuality[i].BackupFuelDocuments = [];
 						}
-					// }
+					}
 				}else{
 					HVESummary.BreakdownBy('Unit');
 					for(var i in DataQuality){
-						DataQuality[i]._id = DataQuality[i].Unit;
+						DataQuality[i].ID = DataQuality[i].Unit;
 						DataQuality[i].Count = 1;
+
 					}
 				}
 				HVEDataQuality.DataQuality(DataQuality);

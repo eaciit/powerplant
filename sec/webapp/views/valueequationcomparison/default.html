@@ -69,6 +69,8 @@ function getRandomInt(min, max) {
 }
 var ValueEquationComparison = {
   Processing:ko.observable(false),
+  ProcessingData:ko.observable(false),
+  DataCompletion:ko.observable(0),
   FilterList:ko.observableArray([]),
   PlantList:ko.observableArray([]),
   UnitList:ko.observableArray([]),
@@ -113,7 +115,7 @@ var ValueEquationComparison = {
               </button>
             </div>
             <div id="Aggregator">Aggregator</div>
-            <div class="agg-content">
+            <div class="agg-content" data-bind="visible:!ValueEquationComparison.ProcessingData()">
               <div>Revenue</div>
               <div>Maintenance Cost</div>
               <div>Production Cost</div>
@@ -148,7 +150,7 @@ var ValueEquationComparison = {
                           <div class="row">
                             <label class="col-md-5 filter-label">Plant</label>
                             <div class="col-md-7">
-                                <input type="text" data-bind="kendoMultiSelect:{value:selectedPlant,data:ValueEquationComparison.PlantList,dataValueField:'Plant',dataTextField:'Plant',placeholder:'All'},attr:{onchange:'ValueEquationComparison.GetUnitList('+$index()+')'}" />
+                                <input type="text" class="Plant" data-bind="kendoMultiSelect:{value:selectedPlant,data:ValueEquationComparison.PlantList,dataValueField:'Plant',dataTextField:'Plant',placeholder:'All'},attr:{onchange:'ValueEquationComparison.GetUnitList('+$index()+')'}" />
                                 <label class="LPlant hidden" data-bind="text:selectedPlant"></label>
                             </div>
                           </div>
@@ -188,7 +190,7 @@ var ValueEquationComparison = {
                     <tr>
                       <td data-bind="attr:{colspan:FilterList().length+1}"><div id="Result">Result</div></td>
                     </tr>
-                    <tr data-bind="foreach:FilterList">
+                    <tr data-bind="foreach:FilterList,visible:!ValueEquationComparison.ProcessingData()" >
                        <td>
                         <div class="agg-content align-right" data-bind="attr:{style:$index()==(ValueEquationComparison.FilterList().length-1)?'border-right:1px solid #DDD':''}">
                           <div data-bind="text:kendo.toString(Revenue(),'N0')" class="sar-currency"></div>
@@ -208,6 +210,13 @@ var ValueEquationComparison = {
 
           </div>
         </div>
+
+    <div class="row" data-bind="visible:ProcessingData()">
+      <div class="col-md-12 align-center">
+        {{template "processing.html"}}
+      </div>
+    </div>
+
     </div> 
 </div>
 <script type="text/javascript">
@@ -261,10 +270,10 @@ ValueEquationComparison.GetUnitList = function(index){
     if(!res.IsError){
         var ds = res.Data.UnitData;
         for(var i in ds){
-          ds[i].Index = parseFloat(ds[i].Id.substr(2));
+          ds[i].Index = parseFloat(ds[i].Unit.substr(2));
         }
-        var GTArr = Enumerable.From(ds).Where(function(x){return x.Id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
-        var STArr = Enumerable.From(ds).Where(function(x){return x.Id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+        var GTArr = Enumerable.From(ds).Where(function(x){return x.Unit.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+        var STArr = Enumerable.From(ds).Where(function(x){return x.Unit.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
         var arr = [];
         for(var i in GTArr){
           arr.push(GTArr[i]);
@@ -279,8 +288,10 @@ ValueEquationComparison.GetUnitList = function(index){
   });
 }
 ValueEquationComparison.GetData = function(){
+  ValueEquationComparison.ProcessingData(true);
   var url = "/valueequationcomparison/getdata"
   var FilterList = ValueEquationComparison.FilterList();
+  ValueEquationComparison.DataCompletion(FilterList.length);
   for(var i in FilterList){
     var parm = ValueEquationComparison.GetFilter(FilterList[i]);
     parm.Index = i;
@@ -300,7 +311,10 @@ ValueEquationComparison.GetData = function(){
             ValueEquationComparison.FilterList()[Index].OperatingCost(DataValue.OperatingCost);
             ValueEquationComparison.FilterList()[Index].ValueEquation(DataValue.Revenue-DataValue.MaintenanceCost-DataValue.OperatingCost);
             ValueEquationComparison.FilterList()[Index].ValueEquationperCapacity(DataValue.NetGeneration != 0 ? (DataValue.Revenue-DataValue.MaintenanceCost-DataValue.OperatingCost)/DataValue.NetGeneration:0);
-
+            ValueEquationComparison.DataCompletion(ValueEquationComparison.DataCompletion()-1);
+            if(ValueEquationComparison.DataCompletion()==0){
+              ValueEquationComparison.ProcessingData(false);
+            }
           }
         }else{
             alert(res.message);
@@ -334,10 +348,10 @@ ValueEquationComparison.Initiate = function(){
         ValueEquationComparison.PlantList(res.Data.PlantList);
         var ds = res.Data.UnitList;
         for(var i in ds){
-          ds[i].Index = parseFloat(ds[i].Id.substr(2));
+          ds[i].Index = parseFloat(ds[i].Unit.substr(2));
         }
-        var GTArr = Enumerable.From(ds).Where(function(x){return x.Id.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
-        var STArr = Enumerable.From(ds).Where(function(x){return x.Id.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+        var GTArr = Enumerable.From(ds).Where(function(x){return x.Unit.indexOf("GT")>=0}).OrderBy(function(x){return x.Index}).ToArray();
+        var STArr = Enumerable.From(ds).Where(function(x){return x.Unit.indexOf("ST")>=0}).OrderBy(function(x){return x.Index}).ToArray();
         var arr = [];
         for(var i in GTArr){
           arr.push(GTArr[i]);
