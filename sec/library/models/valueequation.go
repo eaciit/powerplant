@@ -9,8 +9,8 @@ import (
 
 type ValueEquation struct {
 	sync.RWMutex
-	orm.ModelBase        `bson:"-" json:"-"`
-	Id                   int       `bson:"Id" json:"Id"`
+	orm.ModelBase `bson:"-" json:"-"`
+	//Id                   int       `bson:"Id" json:"Id"`
 	Dates                time.Time `bson:"PeriodDates" json:"Dates"`
 	Year                 int       `bson:"PeriodYear" json:"Year"`
 	Month                int       `bson:"PeriodMonth" json:"Month"`
@@ -58,6 +58,7 @@ type ValueEquation struct {
 
 func (v *ValueEquation) TableName() string {
 	return "ValueEquation"
+	//return "ValueEquationTest"
 }
 
 /*type ValueEquationPeriod struct {
