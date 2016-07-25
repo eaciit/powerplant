@@ -39,14 +39,14 @@ func main() {
 
 		// new(GenDataBrowser).Generate(base)
 		// new(REFunctionalLocation).Generate(base)
-		// new(GenValueEquation).Generate(base)
+		new(GenValueEquation).Generate(base)
 		// new(REFunctionalLocation).Generate(base)
 		// new(REWOList).Generate(base)
 		// new(RERPPCloseWO).Generate(base)
 		// new(REFuelCargo).Generate(base)
 		// new(REMaintenanceWO).Generate(base)
 		// new(RESyntheticPM).Generate(base, 2014)
-		new(REPerfromanceFactors).Generate(base, "Qurayyah")
+		//new(REPerfromanceFactors).Generate(base, "Qurayyah")
 
 	}
 

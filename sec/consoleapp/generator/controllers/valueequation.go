@@ -1915,10 +1915,246 @@ func (d *GenValueEquation) generateValueEquationAllMaintenance(Year int, Plants 
 				maintHour := []tk.M{}
 				e = csr.Fetch(&maintHour, 0, false)
 				csr.Close()
-				log.Println(maintHour)
-				//IList<MaintenanceCost> maintCost = DataHelper.Populate<MaintenanceCost>("MaintenanceCost", Query.And(Query.In("MaintenanceOrder", new BsonArray(MaintenanceOrderList)), Query.NE("MaintenanceOrder",string.Empty))).Where(x => x.Period.Value.Year == Year).ToList();
+
+				if len(maintCost) > 0 {
+					tempMaintCost := crowd.From(&maintCost).Group(func(x interface{}) interface{} {
+						return x.(tk.M).GetString("ordertype")
+					}, nil).Exec().Result.Data().([]crowd.KV)
+
+					MROTypes := []string{}
+					if len(tempMaintCost) > 0 {
+						for _, maint := range tempMaintCost {
+							MROTypes = append(MROTypes, maint.Key.(string))
+						}
+					}
+
+					if len(MROTypes) > 0 {
+						for _, types := range MROTypes {
+							det := ValueEquationDetails{}
+							det.DataSource = "SAP PM"
+							det.WorkOrderType = types
+							tempMaintHour := crowd.From(&maintHour).Where(func(x interface{}) interface{} {
+								return x.(tk.M).GetString("ordertype") == types
+							}).Exec().Result.Data().([]tk.M)
+							det.Duration = crowd.From(&tempMaintHour).Sum(func(x interface{}) interface{} {
+								return x.(tk.M).GetString("actual")
+							}).Exec().Result.Sum
+							tempMaintCost := crowd.From(&maintCost).Where(func(x interface{}) interface{} {
+								return x.(tk.M).GetString("ordertype") == types
+							}).Exec().Result.Data().([]tk.M)
+							det.LaborCost = crowd.From(&tempMaintCost).Sum(func(x interface{}) interface{} {
+								return x.(tk.M).GetFloat64("internallaboractual")
+							}).Exec().Result.Sum
+
+							temp1 := crowd.From(&tempMaintCost).Sum(func(x interface{}) interface{} {
+								return x.(tk.M).GetFloat64("directmaterialactual")
+							}).Exec().Result.Sum
+							temp2 := crowd.From(&tempMaintCost).Sum(func(x interface{}) interface{} {
+								return x.(tk.M).GetFloat64("internalmaterialactual")
+							}).Exec().Result.Sum
+
+							det.MaterialCost = temp1 + temp2
+
+							det.ServiceCost = crowd.From(&tempMaintCost).Sum(func(x interface{}) interface{} {
+								return x.(tk.M).GetFloat64("externalserviceactual")
+							}).Exec().Result.Sum
+
+							details = append(details, det)
+
+							val.TotalLabourCost += det.LaborCost
+							val.TotalMaterialCost += det.MaterialCost
+							val.TotalServicesCost += det.ServiceCost
+							val.TotalDuration += det.Duration
+						}
+
+						//#region Top10
+						for _, fl := range MaintenanceOrderList {
+							db := crowd.From(&maintCost).Where(func(x interface{}) interface{} {
+								return x.(tk.M).GetString("maintenanceorder") == fl
+							}).Exec().Result.Data().([]tk.M)
+
+							if len(db) > 0 {
+								top10 := ValueEquationTop10{}
+								top10.WorkOrderID = db[0].GetString("MaintenanceOrder")
+								top10.WorkOrderDescription = db[0].GetString("MaintenanceOrderDesc")
+								top10.WorkOrderType = db[0].GetString("ordertype")
+								top10.WorkOrderTypeDescription = db[0].GetString("equipmenttypedesc")
+								top10.EquipmentType = db[0].GetString("equipmenttype")
+								top10.EquipmentTypeDescription = db[0].GetString("equipmenttypedesc")
+								top10.MaintenanceActivity = db[0].GetString("mainactivitytype")
+								tempMaintHour := crowd.From(&maintHour).Where(func(x interface{}) interface{} {
+									return x.(tk.M).GetString("maintenanceorder") == fl
+								}).Exec().Result.Data().([]tk.M)
+
+								top10.Duration = crowd.From(&tempMaintHour).Sum(func(x interface{}) interface{} {
+									return x.(tk.M).GetFloat64("actual")
+								}).Exec().Result.Sum
+
+								temp1 := crowd.From(&db).Sum(func(x interface{}) interface{} {
+									return x.(tk.M).GetFloat64("internallaboractual") + x.(tk.M).GetFloat64("directlaboractual")
+								}).Exec().Result.Sum
+
+								tempSyn := crowd.From(&tempsyn).Where(func(x interface{}) interface{} {
+									return x.(tk.M).GetString("woid") == fl
+								}).Exec().Result.Data().([]tk.M)
+								temp2 := crowd.From(&tempSyn).Sum(func(x interface{}) interface{} {
+									return x.(tk.M).GetFloat64("plannedlaborcost")
+								}).Exec().Result.Sum
+
+								top10.LaborCost = temp1 + temp2
+
+								temp1 = crowd.From(&db).Sum(func(x interface{}) interface{} {
+									return x.(tk.M).GetFloat64("internalmaterialactual") + x.(tk.M).GetFloat64("directmaterialactual")
+								}).Exec().Result.Sum
+								temp2 = crowd.From(&tempSyn).Sum(func(x interface{}) interface{} {
+									return x.(tk.M).GetFloat64("actualmaterialcost")
+								}).Exec().Result.Sum
+
+								top10.MaterialCost = temp1 + temp2
+								top10.ServiceCost = crowd.From(&db).Sum(func(x interface{}) interface{} {
+									return x.(tk.M).GetFloat64("externalserviceactual")
+								}).Exec().Result.Sum
+								top10.MaintenanceCost = top10.LaborCost + top10.MaterialCost + top10.ServiceCost
+
+								top10s = append(top10s, top10)
+							}
+						}
+						//#endregion
+					}
+				}
+
+				val.MaintenanceCost = val.TotalLabourCost + val.TotalMaterialCost + val.TotalServicesCost
+				//#endregion
+
+				//#region New Report
+
+				if Plant == "PP9" || Plant == "Qurayyah" || Plant == "Qurayyah CC" {
+					tempUnitPower := crowd.From(&unitpower).Where(func(x interface{}) interface{} {
+						return x.(tk.M).GetString("plant") == Plant && x.(tk.M).GetString("unit") == strings.Replace(strings.Replace(val.Unit, "GT0", "GT", -1), "ST0", "ST", -1)
+					}).Exec().Result.Data().([]tk.M)
+
+					if len(tempUnitPower) > 0 {
+						val.MaxCapacity = tempUnitPower[0].GetFloat64("maxpower")
+					}
+				} else if Plant == "Rabigh" {
+					if strings.Contains(val.Unit, "GT") {
+						tempUnitPower := crowd.From(&unitpower).Where(func(x interface{}) interface{} {
+							return strings.Contains(x.(tk.M).GetString("plant"), Plant) && x.(tk.M).GetString("unit") == strings.Replace(strings.Replace(val.Unit, "GT0", "GT", -1), "ST0", "ST", -1)
+						}).Exec().Result.Data().([]tk.M)
+						if len(tempUnitPower) > 0 {
+							val.MaxCapacity = tempUnitPower[0].GetFloat64("maxpower")
+						}
+					} else if strings.Contains(val.Unit, "ST") {
+						tempUnitPower := crowd.From(&unitpower).Where(func(x interface{}) interface{} {
+							return x.(tk.M).GetString("plant") == "Rabigh Steam" && x.(tk.M).GetString("unit") == strings.Replace(strings.Replace(val.Unit, "GT0", "GT", -1), "ST0", "ST", -1)
+						}).Exec().Result.Data().([]tk.M)
+						if len(tempUnitPower) > 0 {
+							val.MaxCapacity = tempUnitPower[0].GetFloat64("maxpower")
+						}
+					}
+				} else if Plant == "Shoaiba" || Plant == "Ghazlan" {
+					tempUnitPower := crowd.From(&unitpower).Where(func(x interface{}) interface{} {
+						return strings.Contains(x.(tk.M).GetString("plant"), Plant) && x.(tk.M).GetString("unit") == strings.Replace(strings.Replace(val.Unit, "GT0", "GT", -1), "ST0", "ST", -1)
+					}).Exec().Result.Data().([]tk.M)
+
+					if len(tempUnitPower) > 0 {
+						val.MaxCapacity = tempUnitPower[0].GetFloat64("maxpower")
+					}
+				}
+
+				val.MaxPowerGeneration = val.MaxCapacity * 24 * 365
+				val.PotentialRevenue = val.CapacityPayment + (val.MaxPowerGeneration * val.VOMR * 10) + val.Incentive + val.StartupPayment - val.PenaltyAmount
+
+				if Plant == "Rabigh" {
+					sintax := "select * from PowerPlantOutagesDetails inner join PowerPlantOutages on PowerPlantOutagesDetails.POId = PowerPlantOutages.Id where PowerPlantOutagesDetails.UnitNo = '" + val.Unit + "' and PowerPlantOutages.Plant = 'Rabigh Steam'"
+					csr, e = c.NewQuery().Command("freequery", tk.M{}.Set("syntax", sintax)).Cursor(nil)
+					outagesDetails := []tk.M{}
+					e = csr.Fetch(&outagesDetails, 0, false)
+					csr.Close()
+
+					tempOutagesDetails := crowd.From(&outagesDetails).Where(func(x interface{}) interface{} {
+						return strings.Contains(x.(tk.M).GetString("outagetype"), "FO")
+					}).Exec().Result.Data().([]tk.M)
+
+					val.ForcedOutages = crowd.From(&tempOutagesDetails).Sum(func(x interface{}) interface{} {
+						return x.(tk.M).GetFloat64("totalhours")
+					}).Exec().Result.Sum
+
+					tempOutagesDetails = crowd.From(&outagesDetails).Where(func(x interface{}) interface{} {
+						return !strings.Contains(x.(tk.M).GetString("outagetype"), "FO")
+					}).Exec().Result.Data().([]tk.M)
+					val.UnforcedOutages = crowd.From(&tempOutagesDetails).Sum(func(x interface{}) interface{} {
+						return x.(tk.M).GetFloat64("totalhours")
+					}).Exec().Result.Sum
+				} else if Plant == "Qurayyah" || Plant == "Qurayyah CC" {
+					sintax := "select * from PowerPlantOutagesDetails inner join PowerPlantOutages on PowerPlantOutagesDetails.POId = PowerPlantOutages.Id where PowerPlantOutagesDetails.UnitNo = '" + val.Unit + "' and PowerPlantOutages.Plant = '" + Plant + "'"
+					csr, e = c.NewQuery().Command("freequery", tk.M{}.Set("syntax", sintax)).Cursor(nil)
+					outagesDetails := []tk.M{}
+					e = csr.Fetch(&outagesDetails, 0, false)
+					csr.Close()
+
+					tempOutagesDetails := crowd.From(&outagesDetails).Where(func(x interface{}) interface{} {
+						return strings.Contains(x.(tk.M).GetString("outagetype"), "FO")
+					}).Exec().Result.Data().([]tk.M)
+
+					val.ForcedOutages = crowd.From(&tempOutagesDetails).Sum(func(x interface{}) interface{} {
+						return x.(tk.M).GetFloat64("totalhours")
+					}).Exec().Result.Sum
+
+					tempOutagesDetails = crowd.From(&outagesDetails).Where(func(x interface{}) interface{} {
+						return !strings.Contains(x.(tk.M).GetString("outagetype"), "FO")
+					}).Exec().Result.Data().([]tk.M)
+					val.UnforcedOutages = crowd.From(&tempOutagesDetails).Sum(func(x interface{}) interface{} {
+						return x.(tk.M).GetFloat64("totalhours")
+					}).Exec().Result.Sum
+				} else {
+					sintax := "select * from PowerPlantOutagesDetails inner join PowerPlantOutages on PowerPlantOutagesDetails.POId = PowerPlantOutages.Id where PowerPlantOutagesDetails.UnitNo = '" + val.Unit + "'"
+					csr, e = c.NewQuery().Command("freequery", tk.M{}.Set("syntax", sintax)).Cursor(nil)
+					outagesDetails := []tk.M{}
+					e = csr.Fetch(&outagesDetails, 0, false)
+					csr.Close()
+
+					tempOutagesDetails := crowd.From(&outagesDetails).Where(func(x interface{}) interface{} {
+						return strings.Contains(x.(tk.M).GetString("outagetype"), "FO")
+					}).Exec().Result.Data().([]tk.M)
+
+					val.ForcedOutages = crowd.From(&tempOutagesDetails).Sum(func(x interface{}) interface{} {
+						return x.(tk.M).GetFloat64("totalhours")
+					}).Exec().Result.Sum
+
+					tempOutagesDetails = crowd.From(&outagesDetails).Where(func(x interface{}) interface{} {
+						return !strings.Contains(x.(tk.M).GetString("outagetype"), "FO")
+					}).Exec().Result.Data().([]tk.M)
+					val.UnforcedOutages = crowd.From(&tempOutagesDetails).Sum(func(x interface{}) interface{} {
+						return x.(tk.M).GetFloat64("totalhours")
+					}).Exec().Result.Sum
+				}
+
+				val.ForcedOutagesLoss = (val.PotentialRevenue / (24 * 365)) * val.ForcedOutages
+				val.UnforcedOutagesLoss = (val.PotentialRevenue / (24 * 365)) * val.UnforcedOutages
+				val.ValueEquationCost = val.Revenue - val.OperatingCost - val.MaintenanceCost
+
+				id, _ := ctx.InsertOut(val)
+
+				if len(details) > 0 {
+					for _, data := range details {
+						data.VEId = id
+
+						_, e = ctx.InsertOut(&data)
+					}
+				}
+
+				if len(top10s) > 0 {
+					for _, data := range top10s {
+						data.VEId = id
+
+						_, e = ctx.InsertOut(&data)
+					}
+				}
+				//                 DataHelper.Save("ValueEquation", val.ToBsonDocument());
 			}
 		}
 	}
+	log.Println("sarif")
 	return e
 }
