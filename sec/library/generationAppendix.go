@@ -11,7 +11,7 @@ type GenerationAppendix struct {
 	orm.ModelBase      `bson:"-" json:"-"`
 	Plant              string  `bson:"PowerPlant" json:"Plant"`
 	UnitType           string  `bson:"UnitType" json:"UnitType"`
-	Units              int     `bson:"Units" json:"Units"`
+	Unit               string  `bson:"Unit" json:"Unit"`
 	ContractedCapacity float64 `bson:"ContractedCapacity" json:"ContractedCapacity"`
 	CCR                float64 `bson:"CCR" json:"CCR"`
 	FOMR               float64 `bson:"FOMR" json:"FOMR"`
