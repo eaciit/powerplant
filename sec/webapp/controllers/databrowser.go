@@ -22,13 +22,14 @@ var (
 	SQLScript    = "sqlscript"
 	FiltersMain  = []string{"MaintenanceInterval"}
 	FiltersPlant = []string{"PlantPlantName"}
-	FiltersWO    = []string{"ActualDuration", "PlanDuration", "WorkOrderType", "ActualFinish", "ActualStart", "MaintenanceCost", "MaintenanceDescription", "MaintenanceOrder", "PlanFinish", "PlanStart"}
-	FiltersDB    = []string{"EquipmentType", "EquipmentTypeDescription", "FLDescription", "FunctionalLocation"}
-	FilWO        = []string{}
-	FilDB        = []string{}
-	FilMain      = []string{}
-	FilPlant     = []string{}
-	FieldStr     = []string{"PlantPlantName", "WorkOrderType"}
+	// FiltersWO    = []string{"ActualDuration", "PlanDuration", "WorkOrderType", "ActualFinish", "ActualStart", "MaintenanceCost", "MaintenanceDescription", "MaintenanceOrder", "PlanFinish", "PlanStart"}
+	FiltersWO = []string{"ActualDuration", "WorkOrderType", "ActualFinish", "ActualStart", "MaintenanceCost", "MaintenanceDescription", "MaintenanceOrder"}
+	FiltersDB = []string{"EquipmentType", "EquipmentTypeDescription", "FLDescription", "FunctionalLocation"}
+	FilWO     = []string{}
+	FilDB     = []string{}
+	FilMain   = []string{}
+	FilPlant  = []string{}
+	FieldStr  = []string{"PlantPlantName", "WorkOrderType"}
 )
 
 type DataBrowserController struct {
@@ -176,12 +177,12 @@ func getDataBrowser(d DataBrowserInput) (params tk.M, e error) {
 	params = tk.M{}
 
 	if d.Period == "" {
-		params.Set("@PeriodYear", " PeriodYear = 2014")
+		// params.Set("@PeriodYear", " PeriodYear = 2014")
 		params.Set("@PeriodFrom", "'1/1/2014  00:00:00.000'")
 		params.Set("@PeriodTo", "'1/1/2015  00:00:00.000'")
 	} else if d.Period != "" {
 		selectedPeriod, _ := strconv.Atoi(d.Period)
-		params.Set("@PeriodYear", " PeriodYear = "+d.Period)
+		// params.Set("@PeriodYear", " PeriodYear = "+d.Period)
 		params.Set("@PeriodFrom", "'1/1/"+d.Period+"  00:00:00.000'")
 		params.Set("@PeriodTo", "'1/1/"+strconv.Itoa(selectedPeriod+1)+"  00:00:00.000'")
 	}
@@ -189,9 +190,9 @@ func getDataBrowser(d DataBrowserInput) (params tk.M, e error) {
 	if len(d.EQType) > 0 {
 		str := strings.Join(d.EQType, "','")
 		str = "'" + str + "'"
-		params.Set("@EquipmentType", " AND EquipmentType IN ("+str+")")
+		params.Set("@EquipmentType", " EquipmentType IN ("+str+")")
 	} else {
-		params.Set("@EquipmentType", " AND EquipmentType <> 'xxx'")
+		params.Set("@EquipmentType", " EquipmentType <> 'xxx'")
 	}
 
 	if d.Page != 0 {
