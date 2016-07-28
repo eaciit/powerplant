@@ -57,8 +57,8 @@ type ValueEquation struct {
 }
 
 func (v *ValueEquation) TableName() string {
-	return "ValueEquation"
-	//return "ValueEquationTest"
+	//return "ValueEquation"
+	return "ValueEquationTest"
 }
 
 /*type ValueEquationPeriod struct {
@@ -108,7 +108,7 @@ type ValueEquationDetails struct {
 }
 
 func (vd *ValueEquationDetails) TableName() string {
-	return "ValueEquationDetails"
+	return "ValueEquationDetailsTest"
 }
 
 type ValueEquationTop10 struct {
@@ -131,5 +131,5 @@ type ValueEquationTop10 struct {
 }
 
 func (vt *ValueEquationTop10) TableName() string {
-	return "ValueEquationTop10"
+	return "ValueEquationTop10Test"
 }
