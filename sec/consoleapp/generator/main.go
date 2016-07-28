@@ -46,8 +46,15 @@ func main() {
 		// new(REFuelCargo).Generate(base)
 		// new(REMaintenanceWO).Generate(base)
 		// new(RESyntheticPM).Generate(base, 2014)
-		new(REPerfromanceFactors).Generate(base, "Qurayyah")
-
+		// new(REPerfromanceFactors).Generate(base, "Qurayyah")
+		// new(REConsolidated).Generate(base)
+		// new(REConsolidated).Generate(base)
+		// new(REVBMOperationalData).Generate(base) //Revenue
+		// new(REFuelCost).Generate(base)
+		// new(REPreventiveMaintenance).Generate(base)
+		// new(REPlannedMaintenance).Generate(base)
+		// new(REMaintenancePlan).Generate(base)
+		new(RENewObjectType).Generate(base)
 	}
 
 	tk.Println("Application Close..")
