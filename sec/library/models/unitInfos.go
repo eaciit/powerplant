@@ -11,8 +11,8 @@ type UnitInfos struct {
 	orm.ModelBase            `bson:"-" json:"-"`
 	Plant                    string  `bson:"Plant" json:"Plant"`
 	Unit                     string  `bson:"Unit" json:"Unit"`
-	Month                    string  `bson:"Month" json:"Month"`
-	Year                     string  `bson:"Year" json:"Year"`
+	Month                    int     `bson:"Month" json:"Month"`
+	Year                     int     `bson:"Year" json:"Year"`
 	SRFPercentage            float64 `bson:"SRFPercentage" json:"SRFPercentage"`
 	UnitMaxPower             float64 `bson:"UnitMaxPower" json:"UnitMaxPower"`
 	WAFPercentage            float64 `bson:"WAFPercentage" json:"WAFPercentage"`
