@@ -66,7 +66,18 @@ func PlantNormalization(PlantName string) string {
 	}
 	return retVal
 }
+func CheckNumberValue(Number float64, Err ...error) float64 {
+	if len(Err) > 0 && Err[0] == nil {
+		if !math.IsNaN(Number) {
+			return Number
+		} else {
+			return 0
+		}
+	} else {
+		return 0
+	}
 
+}
 func Round(val float64, roundOn float64, places int) (newVal float64) {
 	var round float64
 	pow := math.Pow(10, float64(places))
