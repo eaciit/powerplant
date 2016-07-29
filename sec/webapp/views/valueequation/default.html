@@ -301,7 +301,7 @@ ValueEquation.Initiate = function(){
           if(!res.IsError){
               ValueEquation.Processing(false);
               for(var i in res.Data.PlantList){
-                res.Data.PlantList[i].Id = res.Data.PlantList[i].Plant;
+                res.Data.PlantList[i].Id = res.Data.PlantList[i].PlantName;
               }
               ValueEquation.plantList(res.Data.PlantList);
               ValueEquation.phaseList(res.Data.PhaseList);

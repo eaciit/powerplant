@@ -3,21 +3,19 @@ package models
 import "time"
 
 type SPDataBrowser struct {
-	/*sync.RWMutex
-	orm.ModelBase                          `bson:"-" json:"-"`*/
-	Id                                     int64     `bson:"Id" json:"Id"`
-	PeriodYear                             int       `bson:"Period.Year" json:"PeriodYear"`
-	FunctionalLocation                     string    `bson:"FunctionalLocation" json:"FunctionalLocation"`
-	FLDescription                          string    `bson:"FLDescription" json:"FLDescription"`
-	IsTurbine                              bool      `bson:"IsTurbine" json:"IsTurbine"`
+	Id                 int64  `bson:"Id" json:"Id"`
+	PeriodYear         int    `bson:"Period.Year" json:"PeriodYear"`
+	FunctionalLocation string `bson:"FunctionalLocation" json:"FunctionalLocation"`
+	FLDescription      string `bson:"FLDescription" json:"FLDescription"`
+	/*IsTurbine                              bool      `bson:"IsTurbine" json:"IsTurbine"`
 	IsSystem                               bool      `bson:"IsSystem" json:"IsSystem"`
 	TurbineParent                          string    `bson:"TurbineParent" json:"TurbineParent"`
 	SystemParent                           string    `bson:"SystemParent" json:"SystemParent"`
-	AssetType                              string    `bson:"AssetType" json:"AssetType"`
-	EquipmentType                          string    `bson:"EquipmentType" json:"EquipmentType"`
-	EquipmentTypeDescription               string    `bson:"EquipmentTypeDescription" json:"EquipmentTypeDescription"`
-	PlantCode                              string    `bson:"Plant.PlantCode" json:"PlantCode"`
-	TInfShortName                          string    `bson:"TurbineInfos.ShortName" json:"TInfShortName"`
+	AssetType                              string    `bson:"AssetType" json:"AssetType"`*/
+	EquipmentType            string `bson:"EquipmentType" json:"EquipmentType"`
+	EquipmentTypeDescription string `bson:"EquipmentTypeDescription" json:"EquipmentTypeDescription"`
+	PlantCode                string `bson:"Plant.PlantCode" json:"PlantCode"`
+	/*TInfShortName                          string    `bson:"TurbineInfos.ShortName" json:"TInfShortName"`
 	TInfManufacturer                       string    `bson:"TurbineInfos.Manufacturer" json:"TInfManufacturer"`
 	TInfModel                              string    `bson:"TurbineInfos.Model" json:"TInfModel"`
 	TInfUnitType                           string    `bson:"TurbineInfos.UnitType" json:"TInfUnitType"`
@@ -38,11 +36,11 @@ type SPDataBrowser struct {
 	TInfActualFuelConsumption_DieselBarrel float64   `bson:"TurbineInfos.ActualFuelConsumption_DieselBarrel" json:"TInfActualFuelConsumption_DieselBarrel"`
 	TInfCapacityFactor                     float64   `bson:"TurbineInfos.CapacityFactor" json:"TInfCapacityFactor"`
 	TInfUpdateEnergyGeneration             float64   `bson:"TurbineInfos.UpdateEnergyGeneration" json:"TInfUpdateEnergyGeneration"`
-	TInfUpdateFuelConsumption              float64   `bson:"TurbineInfos.UpdateFuelConsumption" json:"TInfUpdateFuelConsumption"`
+	TInfUpdateFuelConsumption              float64   `bson:"TurbineInfos.UpdateFuelConsumption" json:"TInfUpdateFuelConsumption"`*/
 
-	PlantPlantCode             string  `bson:"PlantPlantCode" json:"PlantPlantCode"`
-	PlantPlantName             string  `bson:"PlantPlantName" json:"PlantPlantName"`
-	PlantPlantType             string  `bson:"PlantPlantType" json:"PlantPlantType"`
+	PlantPlantCode string `bson:"PlantPlantCode" json:"PlantPlantCode"`
+	PlantPlantName string `bson:"PlantPlantName" json:"PlantPlantName"`
+	/*PlantPlantType             string  `bson:"PlantPlantType" json:"PlantPlantType"`
 	PlantProvince              string  `bson:"PlantProvince" json:"PlantProvince"`
 	PlantRegion                string  `bson:"PlantRegion" json:"PlantRegion"`
 	PlantCity                  string  `bson:"PlantCity" json:"PlantCity"`
@@ -59,7 +57,7 @@ type SPDataBrowser struct {
 	PlantCombinedCycleUnit     int     `bson:"PlantCombinedCycleUnit" json:"PlantCombinedCycleUnit"`
 	PlantCombinedCycleCapacity float64 `bson:"PlantCombinedCycleCapacity" json:"PlantCombinedCycleCapacity"`
 	PlantLongitude             float64 `bson:"PlantLongitude" json:"PlantLongitude"`
-	PlantLatitude              float64 `bson:"PlantLatitude" json:"PlantLatitude"`
+	PlantLatitude              float64 `bson:"PlantLatitude" json:"PlantLatitude"`*/
 
 	// MaintenanceUserStatus         string    `bson:"MaintenanceUserStatus" json:"MaintenanceUserStatus"`
 	// MaintenanceSystemStatus       string    `bson:"MaintenanceSystemStatus" json:"MaintenanceSystemStatus"`

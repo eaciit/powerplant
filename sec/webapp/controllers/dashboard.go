@@ -41,7 +41,7 @@ func (c *DashboardController) Default(k *knot.WebContext) interface{} {
 func (c *DashboardController) Initiate(k *knot.WebContext) interface{} {
 	k.Config.OutputType = knot.OutputJson
 
-	type ReturnValue struct {
+	/*type ReturnValue struct {
 		AssetClass []SampleAssetClass
 		AssetLevel []SampleAssetLevel
 		AssetType  []SampleAssetType
@@ -82,11 +82,11 @@ func (c *DashboardController) Initiate(k *knot.WebContext) interface{} {
 		return e.Error()
 	}
 
-	defer curr.Close()
+	defer curr.Close()*/
 
 	selectedPeriod := time.Now().Year() - 1
 
-	return (tk.M{}).Set("success", true).Set("data", Result).Set("message", "").Set("selected Period", selectedPeriod)
+	return (tk.M{}).Set("success", true).Set("data", nil).Set("message", "").Set("selected Period", selectedPeriod)
 }
 
 func (c *DashboardController) GetData(k *knot.WebContext) interface{} {
@@ -101,7 +101,7 @@ func (c *DashboardController) GetData(k *knot.WebContext) interface{} {
 	e := k.GetPayload(&d)
 
 	type ReturnValue struct {
-		PlantList         []PowerPlantCoordinates
+		PlantList         []MasterPowerPlant
 		PlantCapacityList []tk.M
 	}
 
@@ -110,7 +110,7 @@ func (c *DashboardController) GetData(k *knot.WebContext) interface{} {
 	)
 
 	filter := tk.M{}
-	curr, e := c.DB().Find(&PowerPlantCoordinates{}, filter)
+	curr, e := c.DB().Find(&MasterPowerPlant{}, filter)
 
 	if e != nil {
 	}
@@ -128,7 +128,7 @@ func (c *DashboardController) GetData(k *knot.WebContext) interface{} {
 
 	cursor, _ := c.DB().Connection.NewQuery().
 		Select("PlantCode as _id").
-		From("ValueEquation_Dashboard").
+		From("ValueEquation").
 		Where(dbox.Eq("Year", selectedPeriod)).
 		Aggr(dbox.AggrSum, "InstalledCapacity", "TotalCapacity").
 		Group("PlantCode").
@@ -173,7 +173,7 @@ func (c *DashboardController) GetNumberOfTurbines(k *knot.WebContext) interface{
 
 		cursor, _ := c.DB().Connection.NewQuery().
 			Select("UnitType as _id").
-			From("ValueEquation_Dashboard").
+			From("ValueEquation").
 			Where(filter...).
 			Group("UnitType").
 			Aggr(dbox.AggrSum, 1, "count").
@@ -221,7 +221,7 @@ func (c *DashboardController) GetPowerVsFuelConsumtion(k *knot.WebContext) inter
 
 		cursor, e := c.DB().Connection.NewQuery().
 			Select("Plant as _id").
-			From("ValueEquation_Dashboard").
+			From("ValueEquation").
 			Where(filter...).
 			Group("Plant").
 			Aggr(dbox.AggrSum, "UpdatedFuelConsumption", "FuelConsumtion").
@@ -267,9 +267,9 @@ func (c *DashboardController) GetNumberOfWorkOrder(k *knot.WebContext) interface
 		result := make([]tk.M, 0)
 
 		if filter == "" {
-			sintax = "select dbo.ValueEquation_Dashboard.Year as period, dbo.VEDTop10.WorkOrderType, count(*) as count, sum(dbo.VEDTop10.MaintenanceCost) as cost from dbo.ValueEquation_Dashboard inner join dbo.VEDTop10 on dbo.ValueEquation_Dashboard.Id = dbo.VEDTop10.VEId group by dbo.ValueEquation_Dashboard.Year, dbo.VEDTop10.WorkOrderType order by period asc, cost asc"
+			sintax = "select dbo.ValueEquation.Year as period, dbo.ValueEquationWOData.WorkOrderType, count(*) as count, sum(dbo.ValueEquationWOData.MaintenanceCost) as cost from dbo.ValueEquation inner join dbo.ValueEquationWOData on dbo.ValueEquation.Id = dbo.ValueEquationWOData.VEId group by dbo.ValueEquation.Year, dbo.ValueEquationWOData.WorkOrderType order by period asc, cost asc"
 		} else {
-			sintax = "select dbo.ValueEquation_Dashboard.Year as period, dbo.VEDTop10.WorkOrderType, count(*) as count, sum(dbo.VEDTop10.MaintenanceCost) as cost from dbo.ValueEquation_Dashboard inner join dbo.VEDTop10 on dbo.ValueEquation_Dashboard.Id = dbo.VEDTop10.VEId where dbo.ValueEquation_Dashboard.Plant = '" + filter + "' group by dbo.ValueEquation_Dashboard.Year, dbo.VEDTop10.WorkOrderType order by period asc, cost asc"
+			sintax = "select dbo.ValueEquation.Year as period, dbo.ValueEquationWOData.WorkOrderType, count(*) as count, sum(dbo.ValueEquationWOData.MaintenanceCost) as cost from dbo.ValueEquation inner join dbo.ValueEquationWOData on dbo.ValueEquation.Id = dbo.ValueEquationWOData.VEId where dbo.ValueEquation.Plant = '" + filter + "' group by dbo.ValueEquation.Year, dbo.ValueEquationWOData.WorkOrderType order by period asc, cost asc"
 		}
 
 		cursor, e := c.DB().Connection.NewQuery().

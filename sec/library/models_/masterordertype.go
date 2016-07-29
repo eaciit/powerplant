@@ -9,8 +9,12 @@ import (
 type MasterOrderType struct {
 	sync.RWMutex
 	orm.ModelBase `bson:"-" json:"-"`
-	Type          string `bson:"Type" json:"Type"`
-	Description   string `bson:"FLDescription" json:"Description"`
+	Id            string `bson:"_id" json:"id"`
+	OrderTypeDesc string `bson:"OrderTypeDesc" json:"OrderTypeDesc"`
+}
+
+func (m *MasterOrderType) RecordID() interface{} {
+	return m.Id
 }
 
 func (m *MasterOrderType) TableName() string {

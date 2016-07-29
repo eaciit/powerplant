@@ -150,7 +150,7 @@ var ValueEquationComparison = {
                           <div class="row">
                             <label class="col-md-5 filter-label">Plant</label>
                             <div class="col-md-7">
-                                <input type="text" class="Plant" data-bind="kendoMultiSelect:{value:selectedPlant,data:ValueEquationComparison.PlantList,dataValueField:'Plant',dataTextField:'Plant',placeholder:'All'},attr:{onchange:'ValueEquationComparison.GetUnitList('+$index()+')'}" />
+                                <input type="text" class="Plant" data-bind="kendoMultiSelect:{value:selectedPlant,data:ValueEquationComparison.PlantList,dataValueField:'PlantName',dataTextField:'PlantName',placeholder:'All'},attr:{onchange:'ValueEquationComparison.GetUnitList('+$index()+')'}" />
                                 <label class="LPlant hidden" data-bind="text:selectedPlant"></label>
                             </div>
                           </div>

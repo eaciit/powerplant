@@ -63,7 +63,7 @@ func (s *ScenarioSimulation) Default(k *knot.WebContext) interface{} {
 func (s *ScenarioSimulation) Initiate(k *knot.WebContext) interface{} {
 	k.Config.OutputType = knot.OutputJson
 	//csr, e := s.DB().Find(new(PlantModel), tk.M{}.Set("skip", 0).Set("limit", 0))
-	csr, e := s.DB().Connection.NewQuery().Select("Plant").From("MasterPlant").Cursor(nil)
+	csr, e := s.DB().Connection.NewQuery().Select("PlantName").From("MasterPowerPlant").Cursor(nil)
 	PlantList := make([]PlantModel, 0)
 	e = csr.Fetch(&PlantList, 0, true)
 	if e != nil {
@@ -110,8 +110,8 @@ func (s *ScenarioSimulation) GetData(k *knot.WebContext) interface{} {
 	end, _ := time.Parse(time.RFC3339, payloads.EndPeriod)
 
 	query := []*dbox.Filter{}
-	query = append(query, dbox.Gte("Dates", start))
-	query = append(query, dbox.Lte("Dates", end))
+	query = append(query, dbox.Gte("Date", start))
+	query = append(query, dbox.Lte("Date", end))
 
 	if payloads.SelectedPlant != nil && len(payloads.SelectedPlant) > 0 {
 		query = append(query, dbox.In("Plant", payloads.SelectedPlant))

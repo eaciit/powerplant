@@ -10,6 +10,7 @@ type FuelTransport struct {
 	sync.RWMutex
 	orm.ModelBase `bson:"-" json:"-"`
 	Plant         string  `bson:"Plant" json:"Plant"`
+	Month         int     `bson:"Month" json:"Month"`
 	Year          int     `bson:"Year" json:"Year"`
 	TransportCost float64 `bson:"TransportCost" json:"TransportCost"`
 }

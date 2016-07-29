@@ -1,19 +1,19 @@
 package models
 
 import (
-	"github.com/eaciit/orm"
-	//"gopkg.in/mgo.v2/bson"
 	"sync"
 	"time"
+
+	"github.com/eaciit/orm"
 )
 
 type ValueEquation struct {
 	sync.RWMutex
 	orm.ModelBase        `bson:"-" json:"-"`
 	Id                   int       `bson:"Id" json:"Id"`
-	Dates                time.Time `bson:"PeriodDates" json:"Dates"`
-	Year                 int       `bson:"PeriodYear" json:"Year"`
-	Month                int       `bson:"PeriodMonth" json:"Month"`
+	Date                 time.Time `bson:"Date" json:"Date"`
+	Year                 int       `bson:"Year" json:"Year"`
+	Month                int       `bson:"Month" json:"Month"`
 	Plant                string    `bson:"Plant" json:"Plant"`
 	Unit                 string    `bson:"Unit" json:"Unit"`
 	UnitGroup            string    `bson:"UnitGroup" json:"UnitGroup"`
@@ -21,8 +21,8 @@ type ValueEquation struct {
 	Capacity             float64   `bson:"Capacity" json:"Capacity"`
 	NetGeneration        float64   `bson:"NetGeneration" json:"NetGeneration"`
 	AvgNetGeneration     float64   `bson:"AvgNetGeneration" json:"AvgNetGeneration"`
-	PrctWAF              float64   `bson:"PrctWAF" json:"PrctWAF"`
-	PrctWUF              float64   `bson:"PrctWUF" json:"PrctWUF"`
+	WAFPercentage        float64   `bson:"WAFPercentage" json:"WAFPercentage"`
+	WUFPercentage        float64   `bson:"WUFPercentage" json:"WUFPercentage"`
 	MaxCapacity          float64   `bson:"MaxCapacity" json:"MaxCapacity"`
 	MaxPowerGeneration   float64   `bson:"MaxPowerGeneration" json:"MaxPowerGeneration"`
 	PotentialRevenue     float64   `bson:"PotentialRevenue" json:"PotentialRevenue"`
@@ -40,47 +40,30 @@ type ValueEquation struct {
 	StartupPayment       float64   `bson:"StartupPayment" json:"StartupPayment"`
 	Incentive            float64   `bson:"Incentive" json:"Incentive"`
 	Revenue              float64   `bson:"Revenue" json:"Revenue"`
-	Fuel                 []ValueEquationFuel
-	PrimaryFuelTotalCost float64 `bson:"PrimaryFuelTotalCost" json:"PrimaryFuelTotalCost"`
-	BackupFuelTotalCost  float64 `bson:"BackupFuelTotalCost" json:"BackupFuelTotalCost"`
-	TotalFuelCost        float64 `bson:"TotalFuelCost" json:"TotalFuelCost"`
-	FuelTransportCost    float64 `bson:"FuelTransportCost" json:"FuelTransportCost"`
-	OperatingCost        float64 `bson:"OperatingCost" json:"OperatingCost"`
-	Detail               []ValueEquationDetails
-	Top10                []ValueEquationTop10
-	TotalLabourCost      float64 `bson:"TotalLabourCost" json:"TotalLabourCost"`
-	TotalMaterialCost    float64 `bson:"TotalMaterialCost" json:"TotalMaterialCost"`
-	TotalServicesCost    float64 `bson:"TotalServicesCost" json:"TotalServicesCost"`
-	TotalDuration        float64 `bson:"TotalDuration" json:"TotalDuration"`
-	MaintenanceCost      float64 `bson:"MaintenanceCost" json:"MaintenanceCost"`
-	ValueEquationCost    float64 `bson:"ValueEquationCost" json:"ValueEquationCost"`
+	PrimaryFuelTotalCost float64   `bson:"PrimaryFuelTotalCost" json:"PrimaryFuelTotalCost"`
+	BackupFuelTotalCost  float64   `bson:"BackupFuelTotalCost" json:"BackupFuelTotalCost"`
+	TotalFuelCost        float64   `bson:"TotalFuelCost" json:"TotalFuelCost"`
+	FuelTransportCost    float64   `bson:"FuelTransportCost" json:"FuelTransportCost"`
+	OperatingCost        float64   `bson:"OperatingCost" json:"OperatingCost"`
+	TotalLabourCost      float64   `bson:"TotalLabourCost" json:"TotalLabourCost"`
+	TotalMaterialCost    float64   `bson:"TotalMaterialCost" json:"TotalMaterialCost"`
+	TotalServicesCost    float64   `bson:"TotalServicesCost" json:"TotalServicesCost"`
+	TotalDuration        float64   `bson:"TotalDuration" json:"TotalDuration"`
+	MaintenanceCost      float64   `bson:"MaintenanceCost" json:"MaintenanceCost"`
+	ValueEquationCost    float64   `bson:"ValueEquationCost" json:"ValueEquationCost"`
+	Details              []ValueEquationDetails
+	WOList               []ValueEquationWOData
+	Fuels                []ValueEquationFuelData
 }
 
-func (v *ValueEquation) TableName() string {
+func (m *ValueEquation) TableName() string {
 	return "ValueEquation"
-	//return "ValueEquationTest"
 }
 
-/*type ValueEquationPeriod struct {
+type ValueEquationFuelData struct {
 	sync.RWMutex
-	orm.ModelBase `bson:"-" json:"-"`
-	Id            string    `bson:"Id" json:"Id"`
-	Year          int       `bson:"Year" json:"Year"`
-	Month         int       `bson:"Month" json:"Month"`
-	MonthYear     int       `bson:"MonthYear" json:"MonthYear"`
-	Quarter       int       `bson:"Quarter" json:"Quarter"`
-	QuarterYear   int       `bson:"QuarterYear" json:"QuarterYear"`
-	Dates         time.Time `bson:"DatesDates" json:"Dates"`
-}
-
-func (vp *ValueEquationPeriod) TableName() string {
-	return "ValueEquationPeriod"
-}*/
-
-type ValueEquationFuel struct {
-	sync.RWMutex
-	orm.ModelBase `bson:"-" json:"-"`
-	// Id            int64  `bson:"Id" json:"Id"`
+	orm.ModelBase         `bson:"-" json:"-"`
+	Id                    int64   `bson:"Id" json:"Id"`
 	VEId                  int64   `bson:"VEId" json:"VEId"`
 	IsPrimaryFuel         bool    `bson:"isPrimaryFuel" json:"IsPrimaryFuel"`
 	FuelType              string  `bson:"FuelType" json:"FuelType"`
@@ -90,14 +73,14 @@ type ValueEquationFuel struct {
 	FuelCost              float64 `bson:"FuelCost" json:"FuelCost"`
 }
 
-func (vf *ValueEquationFuel) TableName() string {
+func (m *ValueEquationFuelData) TableName() string {
 	return "ValueEquationFuelData"
 }
 
 type ValueEquationDetails struct {
 	sync.RWMutex
 	orm.ModelBase `bson:"-" json:"-"`
-	// Id            int64  `bson:"Id" json:"Id"`
+	Id            int64   `bson:"Id" json:"Id"`
 	VEId          int64   `bson:"VEId" json:"VEId"`
 	DataSource    string  `bson:"DataSource" json:"DataSource"`
 	WorkOrderType string  `bson:"WorkOrderType" json:"WorkOrderType"`
@@ -107,14 +90,14 @@ type ValueEquationDetails struct {
 	ServiceCost   float64 `bson:"ServiceCost" json:"ServiceCost"`
 }
 
-func (vd *ValueEquationDetails) TableName() string {
+func (m *ValueEquationDetails) TableName() string {
 	return "ValueEquationDetails"
 }
 
-type ValueEquationTop10 struct {
+type ValueEquationWOData struct {
 	sync.RWMutex
-	orm.ModelBase `bson:"-" json:"-"`
-	// Id            			int64  `bson:"Id" json:"Id"`
+	orm.ModelBase            `bson:"-" json:"-"`
+	Id                       int64   `bson:"Id" json:"Id"`
 	VEId                     int64   `bson:"VEId" json:"VEId"`
 	WorkOrderID              string  `bson:"WorkOrderID" json:"WorkOrderID"`
 	WorkOrderDescription     string  `bson:"WorkOrderDescription" json:"WorkOrderDescription"`
@@ -130,6 +113,6 @@ type ValueEquationTop10 struct {
 	MaintenanceCost          float64 `bson:"MaintenanceCost" json:"MaintenanceCost"`
 }
 
-func (vt *ValueEquationTop10) TableName() string {
-	return "ValueEquationTop10"
+func (m *ValueEquationWOData) TableName() string {
+	return "ValueEquationWOData"
 }

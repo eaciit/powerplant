@@ -1,4 +1,4 @@
-USE [ecsec]
+USE [ecsecnew]
 GO
 /****** Object:  StoredProcedure [dbo].[DeleteScenarioSimulation]    Script Date: 7/14/2016 11:49:54 AM ******/
 SET ANSI_NULLS ON
@@ -6,7 +6,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-ALTER PROCEDURE [dbo].[DeleteScenarioSimulation] 
+CREATE PROCEDURE [dbo].[DeleteScenarioSimulation] 
 	@NAME NVARCHAR(50) = NULL,
 	@DESC NVARCHAR(50) = NULL
 AS

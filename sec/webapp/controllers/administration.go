@@ -5,8 +5,8 @@ import (
 
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/knot/knot.v1"
+	. "github.com/eaciit/powerplant/sec/library/models"
 	. "github.com/eaciit/powerplant/sec/webapp/helpers"
-	. "github.com/eaciit/powerplant/sec/webapp/models"
 	"github.com/eaciit/toolkit"
 )
 

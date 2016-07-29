@@ -419,7 +419,7 @@ ScenarioSimulation.Initiate = function(updatingFilter){
                 /*ScenarioSimulation.PlantList(Enumerable.From(res.Data.PlantList).Select(function(x){return x.Id}).ToArray());*/
                 var Plantname = [];
                 for (var i = 0 ; i < res.Data.PlantList.length ; i++){
-                    Plantname.push(res.Data.PlantList[i].Plant);
+                    Plantname.push(res.Data.PlantList[i].PlantName);
                 }
                 ScenarioSimulation.PlantList(Plantname);
               }

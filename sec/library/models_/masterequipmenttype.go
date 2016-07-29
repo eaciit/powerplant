@@ -8,9 +8,9 @@ import (
 
 type MasterEquipmentType struct {
 	sync.RWMutex
-	orm.ModelBase `bson:"-" json:"-"`
-	Type          string `bson:"Type" json:"Type"`
-	Description   string `bson:"FLDescription" json:"Description"`
+	orm.ModelBase     `bson:"-" json:"-"`
+	EquipmentType     string `bson:"EquipmentType" json:"EquipmentType"`
+	EquipmentTypeDesc string `bson:"EquipmentTypeDesc" json:"EquipmentTypeDesc"`
 }
 
 func (m *MasterEquipmentType) TableName() string {

@@ -15,9 +15,6 @@ type ScenarioSimulations struct {
 	EndPeriod                     time.Time `bson:"End_Period" json:"EndPeriod"`
 	Name                          string    `bson:"Name" json:"Name"`
 	Description                   string    `bson:"Description" json:"Description"`
-	SelectedPlant                 []ScenarioSimulationSelectedPlant
-	SelectedUnit                  []ScenarioSimulationSelectedUnit
-	SelectedScenario              []ScenarioSimulationSelectedScenario
 	HistoricResultRevenue         float64   `bson:"HistoricResultRevenue" json:"HistoricResultRevenue"`
 	HistoricResultLaborCost       float64   `bson:"HistoricResultLaborCost" json:"HistoricResultLaborCost"`
 	HistoricResultMaterialCost    float64   `bson:"HistoricResultMaterialCost" json:"HistoricResultMaterialCost"`
@@ -40,6 +37,9 @@ type ScenarioSimulations struct {
 	DifferentialMaintenanceCost   float64   `bson:"DifferentialMaintenanceCost" json:"DifferentialMaintenanceCost"`
 	DifferentialValueEquation     float64   `bson:"DifferentialValueEquation" json:"DifferentialValueEquation"`
 	LastUpdate                    time.Time `bson:"Last_Update" json:"LastUpdate"`
+	SelectedPlant                 []ScenarioSimulationSelectedPlant
+	SelectedUnit                  []ScenarioSimulationSelectedUnit
+	SelectedScenario              []ScenarioSimulationSelectedScenario
 }
 
 func (s *ScenarioSimulations) TableName() string {

@@ -199,7 +199,7 @@
             {Id:"LastFYToDate",Title:"Last FY To Date"},
             {Id:"LastFY",Title:"Last FY"}
         ]),
-        assetClass:ko.observableArray([]),
+        /*assetClass:ko.observableArray([]),
         assetClassList:ko.observableArray([
             {Id:"All",Title:"All"},
         ]),
@@ -210,7 +210,7 @@
         assetType:ko.observableArray([]),
         assetTypeList:ko.observableArray([
             {Id:"All",Title:"All"},
-        ]),
+        ]),*/
         functionalLocation:ko.observableArray([]),
         functionalLocationList:ko.observableArray([
             {Id:"All",Title:"All"},
@@ -365,73 +365,6 @@
         }
     });
 </script>
-<div class="panel panel-default" data-bind="with:Dashboard,visible:false">
-    <div class="panel-heading">
-        FILTER
-        <a class="align-right" id="showHideFilter" data-toggle="collapse" href="#contentFilter" aria-controls="contentFilter">show / hide</a>
-    </div>
-   <div class="panel-body collapse out" id="contentFilter">
-      <div class="row form-group">
-         <!-- <div class="col-md-3">
-                <label class="col-md-4 filter-label">Period</label>
-                <div class="col-md-8">
-                    <input type="text" data-bind="kendoDropDownList:{value:period,data:periodList,dataValueField:'Id',dataTextField:'Title'}"/>
-                </div>
-            </div> -->
-            <div class="col-md-3">
-                <div class="row">
-                    <label class="col-md-4 filter-label">From </label>
-                    <div class="col-md-8">
-                        <input type="text" data-bind="kendoDatePicker: {value: startMonthly, start: 'year', depth: 'year', format: 'MMMM yyyy'}" />
-                    </div>
-                </div>
-                <div class="row">
-                    <label class="col-md-4 filter-label">To </label>
-                    <div class="col-md-8">
-                        <input type="text" data-bind="kendoDatePicker: {value: endMonthly, start: 'year', depth: 'year', format: 'MMMM yyyy'}" />
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="row">
-                    <label class="col-md-6 filter-label">Asset Class</label>
-                    <div class="col-md-6">
-                        <input type="text" data-bind="kendoMultiSelect:{value:assetClass,data:assetClassList,dataValueField:'Id',dataTextField:'Title'}"/>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="row">
-                    <label class="col-md-4 filter-label">Asset Level</label>
-                    <div class="col-md-8">
-                      <input type="text" data-bind="kendoMultiSelect:{value:assetLevel,data:assetLevelList,dataValueField:'Id',dataTextField:'Title'}"/>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="row">
-                    <label class="col-md-4 filter-label">Asset Type</label>
-                    <div class="col-md-8">
-                      <input type="text" data-bind="kendoMultiSelect:{value:assetType,data:assetTypeList,dataValueField:'Id',dataTextField:'Title'}"/>
-                    </div>
-                </div>
-                <div class="row form-group">
-                    <div class="col-md-4">&nbsp;</div>
-                    <div class="col-md-8 align-right">
-                        <button type="button" class="btn btn-primary btn-sm" data-bind="click:Refresh">
-                          <span class="fa fa-refresh"></span>
-                          Refresh
-                        </button>
-                        <button type="button" class="btn btn-warning btn-sm"  data-bind="click:Reset">
-                          <span class="fa fa-share-square"></span>
-                          Reset
-                        </button>
-                    </div>
-                </div>
-            </div>
-      </div>
-   </div>
-</div>
 
 <div class="panel panel-default" data-bind="with:Dashboard">
     <div class="panel-body">
@@ -687,9 +620,9 @@
             data : null,
             success : function(res) {
                 if(res.success){
-                    Dashboard.assetClassList(res.data.AssetClass);
+                    /*Dashboard.assetClassList(res.data.AssetClass);
                     Dashboard.assetLevelList(res.data.AssetLevel);
-                    Dashboard.assetTypeList(res.data.AssetType);
+                    Dashboard.assetTypeList(res.data.AssetType);*/
                 }else{
                     alert(res.message);
                 }

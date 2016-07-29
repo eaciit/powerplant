@@ -106,8 +106,8 @@ func (m *HistoricalValueEquation) GetSummaryData(ctx *orm.DataContext, k *knot.W
 	c := ctx.Connection
 	ve := new(ValueEquation)
 	query := []*dbox.Filter{}
-	query = append(query, dbox.Gte("Dates", m.StartPeriod))
-	query = append(query, dbox.Lte("Dates", m.EndPeriod))
+	query = append(query, dbox.Gte("Date", m.StartPeriod))
+	query = append(query, dbox.Lte("Date", m.EndPeriod))
 
 	csr, e := c.NewQuery().
 		Where(query...).
@@ -180,8 +180,8 @@ func (m *HistoricalValueEquation) GetMaintenanceData(ctx *orm.DataContext, k *kn
 	result, DataMainEx, DataOrder, DataChart, DataTable, Temp, IDList := tk.M{}, []*DataValue{}, []*DataValue{}, []tk.M{}, []DataValue{}, []tk.M{}, []interface{}{}
 	c := ctx.Connection
 	query := []*dbox.Filter{}
-	query = append(query, dbox.Gte("Dates", m.StartPeriod))
-	query = append(query, dbox.Lte("Dates", m.EndPeriod))
+	query = append(query, dbox.Gte("Date", m.StartPeriod))
+	query = append(query, dbox.Lte("Date", m.EndPeriod))
 	groupBy := "Plant"
 	switch m.Scope {
 	case "Kingdom":
@@ -279,7 +279,7 @@ func (m *HistoricalValueEquation) GetMaintenanceData(ctx *orm.DataContext, k *kn
 	csr, e = c.NewQuery().
 		Where(query...).
 		Select("WorkOrderType").
-		From(new(ValueEquationTop10).TableName()).Group("WorkOrderType").Cursor(nil)
+		From(new(ValueEquationWOData).TableName()).Group("WorkOrderType").Cursor(nil)
 	if e != nil {
 		return nil, e
 	}
@@ -327,8 +327,8 @@ func (m *HistoricalValueEquation) GetOperatingData(ctx *orm.DataContext, k *knot
 	c := ctx.Connection
 	ve := ValueEquation{}
 	query := []*dbox.Filter{}
-	query = append(query, dbox.Gte("Dates", m.StartPeriod))
-	query = append(query, dbox.Lte("Dates", m.EndPeriod))
+	query = append(query, dbox.Gte("Date", m.StartPeriod))
+	query = append(query, dbox.Lte("Date", m.EndPeriod))
 	groupBy := "Plant"
 	switch m.Scope {
 	case "Kingdom":
@@ -412,7 +412,7 @@ func (m *HistoricalValueEquation) GetOperatingData(ctx *orm.DataContext, k *knot
 		Aggr(dbox.AggrSum, "ConvertedFuelConsumed", "ConvertedFuelConsumed").
 		Aggr(dbox.AggrSum, "FuelCostPerUnit", "FuelCostPerUnit").
 		Aggr(dbox.AggrSum, "FuelCost", "FuelCost").
-		From(new(ValueEquationFuel).TableName()).Group("IsPrimaryFuel", "FuelType").Order("IsPrimaryFuel", "FuelType").Cursor(nil)
+		From(new(ValueEquationFuelData).TableName()).Group("IsPrimaryFuel", "FuelType").Order("IsPrimaryFuel", "FuelType").Cursor(nil)
 	if csr != nil {
 		e = csr.Fetch(&DataTable, 0, false)
 	}
@@ -443,8 +443,8 @@ func (m *HistoricalValueEquation) GetRevenueData(ctx *orm.DataContext, k *knot.W
 	c := ctx.Connection
 	ve := ValueEquation{}
 	query := []*dbox.Filter{}
-	query = append(query, dbox.Gte("Dates", m.StartPeriod))
-	query = append(query, dbox.Lte("Dates", m.EndPeriod))
+	query = append(query, dbox.Gte("Date", m.StartPeriod))
+	query = append(query, dbox.Lte("Date", m.EndPeriod))
 	groupBy := "Plant"
 	switch m.Scope {
 	case "Kingdom":
@@ -538,8 +538,8 @@ func (m *HistoricalValueEquation) GetDataQuality(ctx *orm.DataContext, k *knot.W
 	c := ctx.Connection
 	vedq := ValueEquationDataQuality{}
 	query := []*dbox.Filter{}
-	query = append(query, dbox.Gte("Dates", m.StartPeriod))
-	query = append(query, dbox.Lte("Dates", m.EndPeriod))
+	query = append(query, dbox.Gte("Date", m.StartPeriod))
+	query = append(query, dbox.Lte("Date", m.EndPeriod))
 	groupBy := "Plant"
 	switch m.Scope {
 	case "Kingdom":
@@ -568,8 +568,8 @@ func (m *HistoricalValueEquation) GetDataQuality(ctx *orm.DataContext, k *knot.W
 
 	if m.Scope == "Unit" || (m.Scope == "Plant" && m.Selected != nil && len(m.Selected) == 1) {
 		query := []*dbox.Filter{}
-		query = append(query, dbox.Gte("Dates", m.StartPeriod))
-		query = append(query, dbox.Lte("Dates", m.EndPeriod))
+		query = append(query, dbox.Gte("Date", m.StartPeriod))
+		query = append(query, dbox.Lte("Date", m.EndPeriod))
 		if m.Scope == "Unit" {
 			query = append(query, dbox.Eq("Plant", m.SelectedPlant))
 			if m.Selected != nil && len(m.Selected) > 0 {
@@ -717,7 +717,7 @@ func (m *HistoricalValueEquation) GetPerformanceData(ctx *orm.DataContext, k *kn
 		Plant         string  `json:'Plant'`
 		Unit          string  `json:'Unit'`
 		NetGeneration float64 `json:'NetGeneration'`
-		PrctWAF       float64 `json:'PrctWAF'`
+		WAFPercentage float64 `json:'WAFPercentage'`
 	}
 	m.SetPayLoad(k)
 	var e error = nil
@@ -725,8 +725,8 @@ func (m *HistoricalValueEquation) GetPerformanceData(ctx *orm.DataContext, k *kn
 	c := ctx.Connection
 	ve := ValueEquation{}
 	query := []*dbox.Filter{}
-	query = append(query, dbox.Gte("Dates", m.StartPeriod))
-	query = append(query, dbox.Lte("Dates", m.EndPeriod))
+	query = append(query, dbox.Gte("Date", m.StartPeriod))
+	query = append(query, dbox.Lte("Date", m.EndPeriod))
 	groupBy := "Plant"
 	switch m.Scope {
 	case "Kingdom":
@@ -756,7 +756,7 @@ func (m *HistoricalValueEquation) GetPerformanceData(ctx *orm.DataContext, k *kn
 	csr, e := c.NewQuery().
 		Where(query...).Select(groupBy).
 		Aggr(dbox.AggrSum, "NetGeneration", "NetGeneration").
-		Aggr(dbox.AggrAvr, "PrctWAF", "PrctWAF").
+		Aggr(dbox.AggrAvr, "WAFPercentage", "WAFPercentage").
 		From(ve.TableName()).Group(groupBy).Order(groupBy).Cursor(nil)
 	if csr != nil {
 		e = csr.Fetch(&result, 0, false)
@@ -803,8 +803,8 @@ func (m *HistoricalValueEquation) GetAssetWorkData(ctx *orm.DataContext, k *knot
 	c := ctx.Connection
 	ve := ValueEquation{}
 	query := []*dbox.Filter{}
-	query = append(query, dbox.Gte("Dates", m.StartPeriod))
-	query = append(query, dbox.Lte("Dates", m.EndPeriod))
+	query = append(query, dbox.Gte("Date", m.StartPeriod))
+	query = append(query, dbox.Lte("Date", m.EndPeriod))
 	groupBy := "Plant"
 	switch m.Scope {
 	case "Kingdom":

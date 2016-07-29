@@ -2,11 +2,12 @@ package controllers
 
 import (
 	// "time"
+	"math/rand"
+
 	"github.com/eaciit/dbox"
 	"github.com/eaciit/knot/knot.v1"
-	. "github.com/eaciit/powerplant/sec/webapp/models"
+	. "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
-	"math/rand"
 	// "strings"
 	. "github.com/eaciit/powerplant/sec/webapp/helpers"
 	"gopkg.in/gomail.v2"

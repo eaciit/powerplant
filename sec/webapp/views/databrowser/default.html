@@ -59,8 +59,7 @@
             $('#txtPeriod').val(Hypothesis.Period());
 
             for(var x in res.Data.EQTypeList){
-              res.Data.EQTypeList[x].EquipmentTypeDesc = res.Data.EQTypeList[x].EquipmentType+" - "+res.Data.EQTypeList[x].EquipmentTypeDesc;
-            
+              res.Data.EQTypeList[x].Desc = res.Data.EQTypeList[x].Type+" - "+res.Data.EQTypeList[x].Description;
             }
             Hypothesis.EQTypeList(res.Data.EQTypeList);
             Hypothesis.OrderTypeList(res.Data.OrderTypeList);
@@ -113,13 +112,13 @@
       <div class="row">
           <label class="col-md-5 filter-label">Equipment Type</label>
           <div class="col-md-7">
-               <input type="text" data-bind="kendoMultiSelect:{value:EQType,data:EQTypeList,dataValueField:'EquipmentType',dataTextField:'EquipmentTypeDesc',placeholder:'All',filter: 'contains'}"/>
+               <input type="text" data-bind="kendoMultiSelect:{value:EQType,data:EQTypeList,dataValueField:'Type',dataTextField:'Desc',placeholder:'All',filter: 'contains'}"/>
           </div>
       </div>
       <div class="row">
           <label class="col-md-5 filter-label">Plants</label>
           <div class="col-md-7">
-              <input type="text" data-bind="kendoMultiSelect:{value:Plant,data:PlantList,dataValueField:'Plant',dataTextField:'Plant',placeholder:'All'}"/>
+              <input type="text" data-bind="kendoMultiSelect:{value:Plant,data:PlantList,dataValueField:'PlantName',dataTextField:'PlantName',placeholder:'All'}"/>
           </div>
       </div>
 <!--

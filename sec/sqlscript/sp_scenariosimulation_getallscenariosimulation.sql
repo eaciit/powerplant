@@ -1,4 +1,4 @@
-USE [ecsec]
+USE [ecsecnew]
 GO
 /****** Object:  StoredProcedure [dbo].[GetAllScenarioSimulation]    Script Date: 7/14/2016 11:48:56 AM ******/
 SET ANSI_NULLS ON
@@ -6,7 +6,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-ALTER PROCEDURE [dbo].[GetAllScenarioSimulation]
+CREATE PROCEDURE [dbo].[GetAllScenarioSimulation]
 AS
 BEGIN
 	SET NOCOUNT ON;

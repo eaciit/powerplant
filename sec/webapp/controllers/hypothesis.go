@@ -15,14 +15,14 @@ func (c *HypothesisController) Initiate(k *knot.WebContext) interface{} {
 	k.Config.OutputType = knot.OutputJson
 
 	type ReturnValue struct {
-		PlantList        []MasterPlant
-		PlantListH2      []MasterPlant
-		EQTypeList       []MasterEquipmentType
-		MROElementList   []MasterMROElement
-		OrderTypeList    []MasterOrderType
+		PlantList     []PlantModel
+		PlantListH2   []PlantModel
+		EQTypeList    []MasterEquipmentType
+		OrderTypeList []MasterOrderType
+		/*MROElementList   []MasterMROElement
 		ActivityTypeList []MasterActivityType
-		FailureCode      []MasterFailureCode
-		UnitList         []tk.M
+		FailureCode      []MasterFailureCode*/
+		UnitList []tk.M
 	}
 
 	var (
@@ -35,7 +35,7 @@ func (c *HypothesisController) Initiate(k *knot.WebContext) interface{} {
 	}{}
 	e = k.GetPayload(&d)
 	// tk.Printf("d: %#v \n\n", d)
-	curr, _ := c.DB().Find(&MasterPlant{}, nil)
+	curr, _ := c.DB().Find(&MasterPowerPlant{}, nil)
 
 	defer curr.Close()
 
@@ -43,13 +43,13 @@ func (c *HypothesisController) Initiate(k *knot.WebContext) interface{} {
 
 	// tk.Printf("Result.PlantList: %#v \n\n", Result.PlantList)
 
-	filter := tk.M{}
+	/*filter := tk.M{}
 
 	filter.Set("where", dbox.Nin("Plant", "Qurayyah CC", "PP9"))
 
 	curr = nil
-	curr, e = c.DB().Find(&MasterPlant{}, filter)
-	e = curr.Fetch(&Result.PlantListH2, 0, false)
+	curr, e = c.DB().Find(&MasterPowerPlant{}, filter)
+	e = curr.Fetch(&Result.PlantListH2, 0, false)*/
 
 	// tk.Printf("Result.PlantListH2: %#v \n\n", Result.PlantListH2)
 
@@ -60,16 +60,16 @@ func (c *HypothesisController) Initiate(k *knot.WebContext) interface{} {
 	// tk.Printf("Result.EQTypeList: %#v \n\n", Result.EQTypeList)
 
 	curr = nil
-	curr, e = c.DB().Find(&MasterMROElement{}, nil)
-	e = curr.Fetch(&Result.MROElementList, 0, false)
-
-	// tk.Printf("Result.MROElementList: %#v \n\n", Result.MROElementList)
-
-	curr = nil
 	curr, e = c.DB().Find(&MasterOrderType{}, nil)
 	e = curr.Fetch(&Result.OrderTypeList, 0, false)
 
 	// tk.Printf("Result.OrderTypeList: %#v \n\n", Result.OrderTypeList)
+
+	/*curr = nil
+	curr, e = c.DB().Find(&MasterMROElement{}, nil)
+	e = curr.Fetch(&Result.MROElementList, 0, false)
+
+	// tk.Printf("Result.MROElementList: %#v \n\n", Result.MROElementList)
 
 	curr = nil
 	curr, e = c.DB().Find(&MasterActivityType{}, nil)
@@ -81,7 +81,7 @@ func (c *HypothesisController) Initiate(k *knot.WebContext) interface{} {
 	curr, e = c.DB().Find(&MasterFailureCode{}, nil)
 	e = curr.Fetch(&Result.FailureCode, 0, false)
 
-	// tk.Printf("Result.FailureCode: %#v \n\n", Result.FailureCode)
+	// tk.Printf("Result.FailureCode: %#v \n\n", Result.FailureCode)*/
 
 	var filter1 []*dbox.Filter
 
@@ -107,6 +107,8 @@ func (c *HypothesisController) Initiate(k *knot.WebContext) interface{} {
 	e = curr.Fetch(&Result.UnitList, 0, true)
 
 	// tk.Printf("Result.UnitList: %#v \n\n", Result.UnitList)
+
+	// tk.Printf("Result: %#v \n\n", Result)
 
 	return ResultInfo(Result, e)
 }

@@ -47,12 +47,12 @@ func (c *ValueEquationController) Initiate(k *knot.WebContext) interface{} {
 	if e != nil {
 		return e.Error()
 	}
-	csr, e = c.Ctx.Find(new(PhaseModel), tk.M{}.Set("skip", 0).Set("limit", 0))
+	/*csr, e = c.Ctx.Find(new(PhaseModel), tk.M{}.Set("skip", 0).Set("limit", 0))
 	PhaseList := make([]PhaseModel, 0)
 	e = csr.Fetch(&PhaseList, 0, false)
 	if e != nil {
 		return e.Error()
-	}
+	}*/
 	csr, e = c.Ctx.Find(new(UnitModel), tk.M{}.Set("skip", 0).Set("limit", 0))
 	UnitList := make([]UnitModel, 0)
 	e = csr.Fetch(&UnitList, 0, false)
@@ -61,7 +61,7 @@ func (c *ValueEquationController) Initiate(k *knot.WebContext) interface{} {
 	}
 	result := tk.M{}
 	result.Set("PlantList", PlantList)
-	result.Set("PhaseList", PhaseList)
+	// result.Set("PhaseList", PhaseList)
 	result.Set("UnitList", UnitList)
 	return ResultInfo(result, e)
 }

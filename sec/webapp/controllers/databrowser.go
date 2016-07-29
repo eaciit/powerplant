@@ -555,7 +555,7 @@ func (this *DataBrowserController) SaveExcel(k *knot.WebContext) interface{} {
 		return "../" + excelFile, e
 	}, nil)
 
-	tk.Printf("%#v \n", r)
+	// tk.Printf("%#v \n", r)
 
 	return r
 }

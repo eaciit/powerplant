@@ -1,8 +1,9 @@
 package models
 
 import (
-	"github.com/eaciit/orm"
 	"sync"
+
+	"github.com/eaciit/orm"
 )
 
 // MasterUnitPlant
@@ -66,4 +67,22 @@ type MasterUnit struct {
 
 func (m *MasterUnit) TableName() string {
 	return "MasterUnit"
+}
+
+type UnitModel struct {
+	orm.ModelBase `bson:"-",json:"-"`
+	Unit          string
+}
+
+func (m *UnitModel) TableName() string {
+	return "MasterUnit"
+}
+
+type PlantModel struct {
+	orm.ModelBase `bson:"-",json:"-"`
+	PlantName     string ` bson:"PlantName" , json:"PlantName" `
+}
+
+func (m *PlantModel) TableName() string {
+	return "MasterPowerPlant"
 }

@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"github.com/eaciit/knot/knot.v1"
-	. "github.com/eaciit/powerplant/sec/webapp/models"
+	. "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
 )
 
