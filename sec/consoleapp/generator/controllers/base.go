@@ -272,7 +272,7 @@ func (b *BaseController) WriteLog(msg interface{}) {
 func PrepareConnection() (dbox.IConnection, error) {
 	config := ReadConfig()
 	cf := tk.M{}
-	cf.Set("autocasting", true)
+	// cf.Set("autocasting", true)
 	ci := &dbox.ConnectionInfo{config["host"], config["database"], config["username"], config["password"], cf}
 	c, e := dbox.NewConnection("mssql", ci)
 
