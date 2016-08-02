@@ -97,7 +97,7 @@ type ValueEquationDashboard struct {
 }
 
 func (v *ValueEquationDashboard) TableName() string {
-	return "ValueEquation_Dashboard"
+	return "ValueEquation_DashboardTest"
 }
 
 // Fuel
@@ -115,7 +115,7 @@ type VEDFuel struct {
 }
 
 func (m *VEDFuel) TableName() string {
-	return "VEDFuel"
+	return "VEDFuelTest"
 }
 
 // Detail
@@ -133,7 +133,7 @@ type VEDDetail struct {
 }
 
 func (m *VEDDetail) TableName() string {
-	return "VEDDetail"
+	return "VEDDetailTest"
 }
 
 // VEDTop10
@@ -157,5 +157,5 @@ type VEDTop10 struct {
 }
 
 func (m *VEDTop10) TableName() string {
-	return "VEDTop10"
+	return "VEDTop10Test"
 }

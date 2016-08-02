@@ -6,7 +6,7 @@ import (
 	// . "github.com/eaciit/powerplant/sec/consoleapp/generator/helpers"
 	. "github.com/eaciit/powerplant/sec/library/models"
 	tk "github.com/eaciit/toolkit"
-	"log"
+	// "log"
 	"strconv"
 	"strings"
 	"time"
@@ -3317,7 +3317,7 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 					tempunit = "GT0" + strings.Replace(tempunit, "GT", "", -1)
 				}
 
-				val := new(ValueEquation)
+				val := new(ValueEquationDashboard)
 				val.Plant = Plant
 				val.Dates = time.Date(Year, 1, 1, 0, 0, 0, 0, time.UTC)
 				val.Month = 1
@@ -3593,7 +3593,7 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 
 					// #region OperatingCost
 					// #region Primary Fuel
-					Fuels := []ValueEquationFuel{}
+					Fuels := []VEDFuel{}
 					tempFuelCosts := crowd.From(&fuelcosts).Where(func(x interface{}) interface{} {
 						return strings.Replace(strings.Replace(strings.Replace(strings.Replace(strings.Replace(x.(tk.M).GetString("unitid"), " ", "", -1), ".", "", -1), "ST0", "ST", -1), "GT0", "", -1), "GT", "", -1) == strings.Replace(strings.Replace(strings.Replace(strings.Replace(strings.Replace(val.Unit, " ", "", -1), ".", "", -1), "ST0", "ST", -1), "GT0", "", -1), "GT", "", -1)
 					}).Exec().Result.Data().([]tk.M)
@@ -3610,7 +3610,7 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 						}).Exec().Result.Sum
 
 						if strings.TrimSpace(strings.ToLower(val.Plant)) == "shoaiba" {
-							fuelconsumption := ValueEquationFuel{}
+							fuelconsumption := VEDFuel{}
 							fuelconsumption.IsPrimaryFuel = true
 							fuelconsumption.FuelType = "CRUDE"
 							fuelconsumption.FuelCostPerUnit = 0.1
@@ -3620,7 +3620,7 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 							Fuels = append(Fuels, fuelconsumption)
 							val.PrimaryFuelTotalCost += fuelconsumption.FuelCost
 
-							fuelconsumption = ValueEquationFuel{}
+							fuelconsumption = VEDFuel{}
 							fuelconsumption.IsPrimaryFuel = true
 							fuelconsumption.FuelType = "CRUDE HEAVY"
 							fuelconsumption.FuelCostPerUnit = 0.049
@@ -3630,7 +3630,7 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 							Fuels = append(Fuels, fuelconsumption)
 							val.PrimaryFuelTotalCost += fuelconsumption.FuelCost
 
-							fuelconsumption = ValueEquationFuel{}
+							fuelconsumption = VEDFuel{}
 							fuelconsumption.IsPrimaryFuel = true
 							fuelconsumption.FuelType = "DIESEL"
 							fuelconsumption.FuelCostPerUnit = 0.085
@@ -3641,7 +3641,7 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 							val.PrimaryFuelTotalCost += fuelconsumption.FuelCost
 						} else if strings.TrimSpace(strings.ToLower(Plant)) == "rabigh" {
 
-							fuelconsumption := ValueEquationFuel{}
+							fuelconsumption := VEDFuel{}
 							fuelconsumption.IsPrimaryFuel = true
 							fuelconsumption.FuelType = "CRUDE"
 							fuelconsumption.FuelCostPerUnit = 0.1
@@ -3651,7 +3651,7 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 							Fuels = append(Fuels, fuelconsumption)
 							val.PrimaryFuelTotalCost += fuelconsumption.FuelCost
 
-							fuelconsumption = ValueEquationFuel{}
+							fuelconsumption = VEDFuel{}
 							fuelconsumption.IsPrimaryFuel = true
 							fuelconsumption.FuelType = "DIESEL"
 							fuelconsumption.FuelCostPerUnit = 0.085
@@ -3664,7 +3664,7 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 						//#endregion
 					} else {
 						//#region not hfo
-						fuelconsumption := ValueEquationFuel{}
+						fuelconsumption := VEDFuel{}
 						fuelconsumption.IsPrimaryFuel = true
 						fuelconsumption.FuelType = PrimaryFuelType
 						if strings.Contains(strings.ToLower(fuelconsumption.FuelType), "gas") {
@@ -3690,7 +3690,7 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 						val.PrimaryFuelTotalCost += fuelconsumption.FuelCost
 
 						if Plant == "Qurayyah" {
-							fuelconsumption = ValueEquationFuel{}
+							fuelconsumption = VEDFuel{}
 							fuelconsumption.IsPrimaryFuel = true
 							if len(tempFuelCosts) > 0 {
 								fuelconsumption.FuelType = tempFuelCosts[0].GetString("primary2fueltype")
@@ -3733,7 +3733,7 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 						}).Exec().Result.Sum
 
 						if strings.TrimSpace(strings.ToLower(val.Plant)) == "shoaiba" {
-							fuelconsumption := ValueEquationFuel{}
+							fuelconsumption := VEDFuel{}
 							fuelconsumption.IsPrimaryFuel = false
 							fuelconsumption.FuelType = "CRUDE"
 							fuelconsumption.FuelCostPerUnit = 0.1
@@ -3743,7 +3743,7 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 							Fuels = append(Fuels, fuelconsumption)
 							val.BackupFuelTotalCost += fuelconsumption.FuelCost
 
-							fuelconsumption = ValueEquationFuel{}
+							fuelconsumption = VEDFuel{}
 							fuelconsumption.IsPrimaryFuel = false
 							fuelconsumption.FuelType = "CRUDE HEAVY"
 							fuelconsumption.FuelCostPerUnit = 0.049
@@ -3753,7 +3753,7 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 							Fuels = append(Fuels, fuelconsumption)
 							val.BackupFuelTotalCost += fuelconsumption.FuelCost
 
-							fuelconsumption = ValueEquationFuel{}
+							fuelconsumption = VEDFuel{}
 							fuelconsumption.IsPrimaryFuel = false
 							fuelconsumption.FuelType = "DIESEL"
 							fuelconsumption.FuelCostPerUnit = 0.085
@@ -3764,7 +3764,7 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 							val.BackupFuelTotalCost += fuelconsumption.FuelCost
 						} else if strings.TrimSpace(strings.ToLower(val.Plant)) == "rabigh" {
 
-							fuelconsumption := ValueEquationFuel{}
+							fuelconsumption := VEDFuel{}
 							fuelconsumption.IsPrimaryFuel = false
 							fuelconsumption.FuelType = "CRUDE"
 							fuelconsumption.FuelCost = 0.1
@@ -3773,7 +3773,7 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 							Fuels = append(Fuels, fuelconsumption)
 							val.BackupFuelTotalCost += fuelconsumption.FuelCost
 
-							fuelconsumption = ValueEquationFuel{}
+							fuelconsumption = VEDFuel{}
 							fuelconsumption.IsPrimaryFuel = true
 							fuelconsumption.FuelType = "DIESEL"
 							fuelconsumption.FuelCost = 0.085
@@ -3785,7 +3785,7 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 						//#endregion
 					} else {
 						//#region not hfo
-						fuelconsumption := ValueEquationFuel{}
+						fuelconsumption := VEDFuel{}
 						fuelconsumption.IsPrimaryFuel = false
 						fuelconsumption.FuelType = BackupFuelType
 						if strings.Contains(strings.ToLower(fuelconsumption.FuelType), "gas") {
@@ -3814,11 +3814,11 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 					//#endregion
 					totaldieselconsumed := 0.0
 					fuelconsumptionFilter := crowd.From(&Fuels).Where(func(x interface{}) interface{} {
-						return strings.ToLower(strings.Trim(x.(ValueEquationFuel).FuelType, " ")) == "diesel"
-					}).Exec().Result.Data().([]ValueEquationFuel)
+						return strings.ToLower(strings.Trim(x.(VEDFuel).FuelType, " ")) == "diesel"
+					}).Exec().Result.Data().([]VEDFuel)
 
 					totaldieselconsumed = crowd.From(&fuelconsumptionFilter).Sum(func(x interface{}) interface{} {
-						return x.(ValueEquationFuel).ConvertedFuelConsumed
+						return x.(VEDFuel).ConvertedFuelConsumed
 					}).Exec().Result.Sum
 
 					val.FuelTransportCost = TransportCosts * totaldieselconsumed
@@ -3839,14 +3839,14 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 						return x.(tk.M).GetFloat64("contractmaintenance")
 					}).Exec().Result.Sum
 
-					Details := []ValueEquationDetails{}
-					Top10s := []ValueEquationTop10{}
+					Details := []VEDDetail{}
+					Top10s := []VEDTop10{}
 
 					tempGT := tempLists
 
 					if len(tempGT) > 0 {
 						for _, gt := range tempGT {
-							det := ValueEquationDetails{}
+							det := VEDDetail{}
 							det.DataSource = "Paper Records"
 							det.WorkOrderType = gt.GetString("wotype")
 							det.LaborCost = gt.GetFloat64("skilledlabour") + gt.GetFloat64("unskilledlabour")
@@ -3863,7 +3863,7 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 
 					if len(tempsyn) > 0 {
 						for _, pm := range tempsyn {
-							det := ValueEquationDetails{}
+							det := VEDDetail{}
 							det.DataSource = "SAP PM"
 							det.WorkOrderType = pm.GetString("wotype")
 							det.LaborCost = pm.GetFloat64("plannedlaborcost")
@@ -3939,7 +3939,7 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 								}
 
 								for _, types := range MROTypes {
-									det := ValueEquationDetails{}
+									det := VEDDetail{}
 									det.DataSource = "SAP PM"
 									det.WorkOrderType = types
 									tempMaintHour := crowd.From(&maintHour).Where(func(x interface{}) interface{} {
@@ -3975,7 +3975,7 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 									}).Exec().Result.Data().([]tk.M)
 
 									if len(db) > 0 {
-										top10 := ValueEquationTop10{}
+										top10 := VEDTop10{}
 										top10.WorkOrderID = db[0].GetString("maintenanceorder")
 										top10.WorkOrderDescription = db[0].GetString("maintenanceorderdesc")
 										top10.WorkOrderType = db[0].GetString("ordertype")
@@ -4128,7 +4128,7 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 						//
 						val.ValueEquationCost = val.Revenue - val.OperatingCost - val.MaintenanceCost
 
-						id, e := ctx.InsertOut(val)
+						id, _ := ctx.InsertOut(val)
 						if len(Fuels) > 0 {
 							for _, data := range Fuels {
 								data.VEId = id
