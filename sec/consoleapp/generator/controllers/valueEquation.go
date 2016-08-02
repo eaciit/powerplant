@@ -183,24 +183,8 @@ func (d *GenValueEquation) generateValueEquation(year int, plantCode string) err
 				valueEquation.WAFPercentage = unitInfo.WAFPercentage
 				valueEquation.WUFPercentage = unitInfo.WUFPercentage
 
-				// GenerationAppendix
-				csr, e = c.NewQuery().
-					From(new(GenerationAppendix).TableName()).
-					Where(
-						dbox.Eq("Plant", plantCode),
-						dbox.Eq("Unit", unit)).
-					Cursor(nil)
-				generationAppendixs := []GenerationAppendix{}
-				e = csr.Fetch(&generationAppendixs, 0, false)
-				csr.Close()
-
-				generationAppendix := GenerationAppendix{}
-				if len(generationAppendixs) > 0 {
-					generationAppendix = generationAppendixs[0]
-				}
-
-				valueEquation.VOMR = generationAppendix.VOMR
-				valueEquation.CapacityPayment = (generationAppendix.ContractedCapacity * (generationAppendix.FOMR + generationAppendix.CCR)) //* daysInYear * 10
+				valueEquation.VOMR = appendix.VOMR
+				valueEquation.CapacityPayment = (appendix.ContractedCapacity * (appendix.FOMR + appendix.CCR)) //* daysInYear * 10
 				valueEquation.EnergyPayment = valueEquation.NetGeneration * valueEquation.VOMR * 10
 				valueEquation.SRF = unitInfo.SRFPercentage
 
@@ -223,14 +207,14 @@ func (d *GenValueEquation) generateValueEquation(year int, plantCode string) err
 				}).Exec().Result.Sum
 
 				if valueEquation.SRF == 100 {
-					valueEquation.StartupPayment = generationAppendix.Startup
+					valueEquation.StartupPayment = appendix.Startup
 					valueEquation.PenaltyAmount = 0
 				} else {
 					valueEquation.StartupPayment = 0
-					valueEquation.PenaltyAmount = generationAppendix.Deduct
+					valueEquation.PenaltyAmount = appendix.Deduct
 				}
 
-				valueEquation.PenaltyAmount += (generationAppendix.Deduct) * tk.ToFloat64(valueEquation.UnplannedOutages, 1, tk.RoundingAuto)
+				valueEquation.PenaltyAmount += (appendix.Deduct) * tk.ToFloat64(valueEquation.UnplannedOutages, 1, tk.RoundingAuto)
 				valueEquation.Incentive = 0
 				valueEquation.Revenue = valueEquation.CapacityPayment + valueEquation.EnergyPayment + valueEquation.Incentive + valueEquation.StartupPayment - valueEquation.PenaltyAmount
 
@@ -373,15 +357,15 @@ func (d *GenValueEquation) generateValueEquation(year int, plantCode string) err
 				e = csr.Fetch(&preventiveMaintenances, 0, false)
 				csr.Close()
 
-				details := []ValueEquationDetails
+				details := []ValueEquationDetails{}
 
-				for _, prev := preventiveMaintenances {
+				for _, prev := range preventiveMaintenances {
 					detail := ValueEquationDetails{}
 					detail.DataSource = "Paper Records"
-					detail.WorkOrderType = prev.WorkOrderType
+					detail.WorkOrderType = prev.WOType
 					detail.LaborCost = prev.SkilledLabourSAR + prev.UnSkilledLabourSAR
-					det.MaterialCost = prev.MaterialsSAR
-					det.ServiceCost = prev.ContractMaintenanceSAR
+					detail.MaterialCost = prev.MaterialsSAR
+					detail.ServiceCost = prev.ContractMaintenanceSAR
 
 					details = append(details, detail)
 
@@ -392,11 +376,25 @@ func (d *GenValueEquation) generateValueEquation(year int, plantCode string) err
 
 				// MasterFunctionalLocation / Databrowser
 				csr, e = c.NewQuery().
+					Select("FunctionalLocation").
 					From(new(MasterFunctionalLocation).TableName()).
-					Where(dbox.Eq("IsTurbine", true)).
+					Where(
+						dbox.Eq("IsTurbine", true),
+						dbox.Eq("Unit", unit)).
 					Cursor(nil)
-				masterFunctionalLocations := []MasterFunctionalLocation{}
-				e = csr.Fetch(&masterFunctionalLocations, 0, false)
+				selectedFunctionalLocations := []MasterFunctionalLocation{}
+				e = csr.Fetch(&selectedFunctionalLocations, 0, false)
+				csr.Close()
+
+				csr, e = c.NewQuery().
+					From(new(MasterFunctionalLocation).TableName()).
+					Where(
+						dbox.Or(
+							dbox.In("SuperiorFunctionalLocation", selectedFunctionalLocations),
+							dbox.In("FunctionalLocation", selectedFunctionalLocations))).
+					Cursor(nil)
+				dBrowser := []MasterFunctionalLocation{}
+				e = csr.Fetch(&dBrowser, 0, false)
 				csr.Close()
 
 				valueEquation.Details = details
@@ -410,7 +408,7 @@ func (d *GenValueEquation) generateValueEquation(year int, plantCode string) err
 					// tk.Printf("--> %#v \n", unitInfos)
 					tk.Printf("--> %#v \n", valueEquation)
 					/*tk.Println("-----------------------------")
-					tk.Println(generationAppendixs)
+					tk.Println(appendix)
 					tk.Println(powerPlantOutages)
 					tk.Println("-----------------------------")*/
 				}
