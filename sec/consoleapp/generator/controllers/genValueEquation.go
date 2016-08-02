@@ -376,10 +376,10 @@ func (d *GenValueEquation) generateValueEquation(year int, plantCode string) err
 
 				// MasterFunctionalLocation / Databrowser
 				csr, e = c.NewQuery().
-					Select("FunctionalLocation").
+					Select("FunctionalLocationCode").
 					From(new(MasterFunctionalLocation).TableName()).
 					Where(
-						dbox.Eq("IsTurbine", true),
+						dbox.Eq("IsTurbine", 1),
 						dbox.Eq("Unit", unit)).
 					Cursor(nil)
 				selectedFunctionalLocations := []MasterFunctionalLocation{}
