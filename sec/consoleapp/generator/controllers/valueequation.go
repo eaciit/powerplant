@@ -4129,7 +4129,6 @@ func (d *GenValueEquation) generateValueEquationAllMaintenanceRedoDashboard(Year
 						val.ValueEquationCost = val.Revenue - val.OperatingCost - val.MaintenanceCost
 
 						id, e := ctx.InsertOut(val)
-						log.Println(e)
 						if len(Fuels) > 0 {
 							for _, data := range Fuels {
 								data.VEId = id
