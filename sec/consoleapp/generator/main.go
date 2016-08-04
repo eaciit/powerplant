@@ -39,7 +39,9 @@ func main() {
 
 		// new(GenDataBrowser).Generate(base)
 		// new(REFunctionalLocation).Generate(base)
-		new(GenValueEquation).Generate(base)
+		//new(GenValueEquation).Generate(base)
+		//new(GenValueEquation).Generate(base)
+		new(GenValueEquationDashboard).Generate(base)
 		// new(REFunctionalLocation).Generate(base)
 		// new(REWOList).Generate(base)
 		// new(RERPPCloseWO).Generate(base)
