@@ -9,10 +9,10 @@ import (
 type MaintenanceCost struct {
 	sync.RWMutex
 	orm.ModelBase           `bson:"-" json:"-"`
-	Id                      string  `bson:"_id" json:"id"`
+	Id                      int64   `bson:"_id" json:"id"`
 	FunctionalLocation      string  `bson:"FunctionalLocation" json:"FunctionalLocation"`
-	Month                   string  `bson:"Month" json:"Month"`
-	Year                    string  `bson:"Year" json:"Year"`
+	Month                   int     `bson:"Month" json:"Month"`
+	Year                    int     `bson:"Year" json:"Year"`
 	MaintenanceOrder        string  `bson:"MaintenanceOrder" json:"MaintenanceOrder"`
 	MaintenanceOrderDesc    string  `bson:"MaintenanceOrderDesc" json:"MaintenanceOrderDesc"`
 	MaintenanceActivityType string  `bson:"MaintActivityType" json:"MaintenanceActivityType"`

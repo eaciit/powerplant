@@ -6,10 +6,10 @@ import (
 	"github.com/eaciit/orm"
 )
 
-type ValueEquation struct {
+type ValueEquationSave struct {
 	sync.RWMutex
-	orm.ModelBase        `bson:"-" json:"-"`
-	Id                   int64   `bson:"Id" json:"Id"`
+	orm.ModelBase `bson:"-" json:"-"`
+	// Id                   int64   `bson:"Id" json:"Id"`
 	Year                 int     `bson:"Year" json:"Year"`
 	Month                int     `bson:"Month" json:"Month"`
 	Plant                string  `bson:"Plant" json:"Plant"`
@@ -49,19 +49,19 @@ type ValueEquation struct {
 	TotalDuration        float64 `bson:"TotalDuration" json:"TotalDuration"`
 	MaintenanceCost      float64 `bson:"MaintenanceCost" json:"MaintenanceCost"`
 	ValueEquationCost    float64 `bson:"ValueEquationCost" json:"ValueEquationCost"`
-	Details              []ValueEquationDetails
-	WOList               []ValueEquationWOData
-	Fuels                []ValueEquationFuelData
+	Details              []ValueEquationDetailsSave
+	WOList               []ValueEquationWODataSave
+	Fuels                []ValueEquationFuelDataSave
 }
 
-func (m *ValueEquation) TableName() string {
+func (m *ValueEquationSave) TableName() string {
 	return "ValueEquation"
 }
 
-type ValueEquationFuelData struct {
+type ValueEquationFuelDataSave struct {
 	sync.RWMutex
-	orm.ModelBase         `bson:"-" json:"-"`
-	Id                    int64   `bson:"Id" json:"Id"`
+	orm.ModelBase `bson:"-" json:"-"`
+	// Id                    int64   `bson:"Id" json:"Id"`
 	VEId                  int64   `bson:"VEId" json:"VEId"`
 	IsPrimaryFuel         bool    `bson:"isPrimaryFuel" json:"IsPrimaryFuel"`
 	FuelType              string  `bson:"FuelType" json:"FuelType"`
@@ -71,14 +71,14 @@ type ValueEquationFuelData struct {
 	FuelCost              float64 `bson:"FuelCost" json:"FuelCost"`
 }
 
-func (m *ValueEquationFuelData) TableName() string {
+func (m *ValueEquationFuelDataSave) TableName() string {
 	return "ValueEquationFuelData"
 }
 
-type ValueEquationDetails struct {
+type ValueEquationDetailsSave struct {
 	sync.RWMutex
 	orm.ModelBase `bson:"-" json:"-"`
-	Id            int64   `bson:"Id" json:"Id"`
+	// Id            int64   `bson:"Id" json:"Id"`
 	VEId          int64   `bson:"VEId" json:"VEId"`
 	DataSource    string  `bson:"DataSource" json:"DataSource"`
 	WorkOrderType string  `bson:"WorkOrderType" json:"WorkOrderType"`
@@ -88,14 +88,14 @@ type ValueEquationDetails struct {
 	ServiceCost   float64 `bson:"ServiceCost" json:"ServiceCost"`
 }
 
-func (m *ValueEquationDetails) TableName() string {
+func (m *ValueEquationDetailsSave) TableName() string {
 	return "ValueEquationDetails"
 }
 
-type ValueEquationWOData struct {
+type ValueEquationWODataSave struct {
 	sync.RWMutex
-	orm.ModelBase            `bson:"-" json:"-"`
-	Id                       int64   `bson:"Id" json:"Id"`
+	orm.ModelBase `bson:"-" json:"-"`
+	// Id                       int64   `bson:"Id" json:"Id"`
 	VEId                     int64   `bson:"VEId" json:"VEId"`
 	WorkOrderID              string  `bson:"WorkOrderID" json:"WorkOrderID"`
 	WorkOrderDescription     string  `bson:"WorkOrderDescription" json:"WorkOrderDescription"`
@@ -111,6 +111,6 @@ type ValueEquationWOData struct {
 	MaintenanceCost          float64 `bson:"MaintenanceCost" json:"MaintenanceCost"`
 }
 
-func (m *ValueEquationWOData) TableName() string {
+func (m *ValueEquationWODataSave) TableName() string {
 	return "ValueEquationWOData"
 }
