@@ -66,6 +66,33 @@ func PlantNormalization(PlantName string) string {
 	}
 	return retVal
 }
+
+func PlantNormalizationNumber(PlantName string) string {
+	retVal := PlantName
+	switch PlantName {
+	case "2110":
+		retVal = "PP9"
+		break
+	case "2210":
+		retVal = "Rabigh"
+		break
+	case "2220":
+		retVal = "Shoaiba"
+		break
+	case "2310":
+		retVal = "Ghazlan"
+		break
+	case "2320":
+		retVal = "Qurayyah"
+		break
+	case "2325":
+		retVal = "Qurayyah CC"
+		break
+	default:
+		break
+	}
+	return retVal
+}
 func CheckNumberValue(Number float64, Err ...error) float64 {
 	if len(Err) > 0 && Err[0] == nil {
 		if !math.IsNaN(Number) {

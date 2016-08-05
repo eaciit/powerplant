@@ -8,7 +8,7 @@ import (
 	. "github.com/eaciit/powerplant/sec/library/models"
 	. "github.com/eaciit/powerplant/sec/webapp/helpers"
 	tk "github.com/eaciit/toolkit"
-	"log"
+	// "log"
 	"strconv"
 	"strings"
 	"time"
@@ -35,10 +35,14 @@ func (d *GenValueEquationDashboard) Generate(base *BaseController) {
 	Years := []int{2011, 2012, 2013, 2014, 2015}
 	e = d.generateOtherMaintenanceData(Years, Plants)
 
+	// Plants := []string{"Qurayyah"}
+	// Years := []int{2011, 2012, 2013, 2014, 2015}
+	// e = d.generateOtherMaintenanceData_HistoricalWO(Years, Plants)
+
 	if e != nil {
 		tk.Println(e)
 	}
-	tk.Println("##Value Equation DashboardData : DONE\n")
+	tk.Println("##Value Equation Dashboard Data : DONE\n")
 }
 
 func (d *GenValueEquationDashboard) generateValueEquationAllMaintenanceRedoDashboard(Years []int, Plants []string) error {
@@ -1023,13 +1027,11 @@ func (d *GenValueEquationDashboard) generateOtherMaintenanceData(Years []int, Pl
 	c := ctx.Connection
 
 	var (
-		query []*dbox.Filter
-		e     error
+		e error
 	)
 
 	for _, Year := range Years {
 		YearFirst := strconv.Itoa(Year) + "-01-01"
-		YearLast := strconv.Itoa(Year+1) + "-01-01"
 
 		sintax := "select VEDTop10.WorkOrderID from ValueEquation_Dashboard inner join VEDTop10 on ValueEquation_Dashboard.Id = VEDTop10.VEId where ValueEquation_Dashboard.Year = " + strconv.Itoa(Year) + " Group By VEDTop10.WorkOrderID"
 		csr, _ := c.NewQuery().Command("freequery", tk.M{}.Set("syntax", sintax)).Cursor(nil)
@@ -1066,14 +1068,14 @@ func (d *GenValueEquationDashboard) generateOtherMaintenanceData(Years []int, Pl
 			ErrorHandler(e, "generateOtherMaintenanceData")
 		}
 
-		queryStr := "select * from MaintenanceCost where Period = '" + YearFirst + "' MaintenanceOrder != '' and MaintenanceOrder not in(select WorkOrderID from GenVEDNotInTmp) "
+		queryStr := "select * from MaintenanceCost where Period = '" + YearFirst + "' and MaintenanceOrder != '' and MaintenanceOrder not in(select WorkOrderID from GenVEDNotInTmp) "
 		csr, e := c.NewQuery().Command("freequery", tk.M{}.Set("syntax", queryStr)).Cursor(nil)
 		ErrorHandler(e, "generateOtherMaintenanceData")
 		maintCost := []tk.M{}
 		e = csr.Fetch(&maintCost, 0, false)
 		csr.Close()
 
-		queryStr = "select * from MaintenanceCostByHour where Period = '" + YearFirst + "' And MaintenanceOrder != '' And MaintenanceOrder not in(select WorkOrderID from GenVEDNotInTmp) "
+		queryStr = "select * from MaintenanceCostByHour where Period = '" + YearFirst + "' and MaintenanceOrder != '' And MaintenanceOrder not in(select WorkOrderID from GenVEDNotInTmp) "
 		csr, e = c.NewQuery().Command("freequery", tk.M{}.Set("syntax", queryStr)).Cursor(nil)
 		ErrorHandler(e, "generateOtherMaintenanceData")
 		maintHour := []tk.M{}
@@ -1104,143 +1106,158 @@ func (d *GenValueEquationDashboard) generateOtherMaintenanceData(Years []int, Pl
 						return PlantNormalization(x.(tk.M).GetString("plant")) == Plant
 					}).Exec().Result.Data().([]tk.M)
 
-					MROTypes := []string{}
-					Mcodes := []string{}
 					if len(tempMaintCost) > 0 {
-						for _, temp := range tempMaintCost {
-							MROTypes = append(MROTypes, temp.GetString("ordertype"))
-							Mcodes = append(Mcodes, temp.GetString("maintenanceorder"))
+						tempMaintCost := crowd.From(&maintCost).Where(func(x interface{}) interface{} {
+							return PlantNormalizationNumber(x.(tk.M).GetString("plant")) == Plant
+						}).Exec().Result.Data().([]tk.M)
 
-							for _, types := range MROTypes {
-								tempsyn := crowd.From(&syn).Where(func(x interface{}) interface{} {
-									tempMcodes := crowd.From(&Mcodes).Where(func(y interface{}) interface{} {
-										return strings.Contains(y.(string), x.(tk.M).GetString("woid"))
-									}).Exec().Result.Data().([]string)
+						groupTypes := crowd.From(&tempMaintCost).Group(func(x interface{}) interface{} {
+							return x.(tk.M).GetString("type")
+						}, nil).Exec().Result.Data().([]crowd.KV)
 
-									if len(tempMcodes) > 0 {
-										return x.(tk.M).GetString("plant") == Plant && x.(tk.M).GetString("wotype") == types
-									} else {
-										return false
-									}
-								}).Exec().Result.Data().([]tk.M)
+						orderCodes := crowd.From(&tempMaintCost).Group(func(x interface{}) interface{} {
+							return x.(tk.M).GetString("ordercode")
+						}, nil).Exec().Result.Data().([]crowd.KV)
 
-								if len(tempsyn) > 0 {
-									det := VEDDetail{}
-									det.DataSource = "SAP PM"
-									det.WorkOrderType = types
-									tempSyn := crowd.From(&tempsyn).Where(func(x interface{}) interface{} {
-										return x.(tk.M).GetString("wotype") == types
-									}).Exec().Result.Data().([]tk.M)
+						MROTypes := []string{}
+						Mcodes := []string{}
 
-									det.LaborCost = crowd.From(tempSyn).Where(func(x interface{}) interface{} {
-										return x.(tk.M).GetFloat64("plannedlaborcost")
-									}).Exec().Result.Sum
+						for _, temp := range groupTypes {
+							MROTypes = append(MROTypes, temp.Key.(string))
+						}
 
-									det.MaterialCost = crowd.From(tempSyn).Where(func(x interface{}) interface{} {
-										return x.(tk.M).GetFloat64("actualmaterialcost")
-									}).Exec().Result.Sum
+						for _, temp := range orderCodes {
+							Mcodes = append(Mcodes, temp.Key.(string))
+						}
 
-									det.ServiceCost = 0
+						for _, types := range MROTypes {
+							tempsyn := crowd.From(&syn).Where(func(x interface{}) interface{} {
+								tempMcodes := crowd.From(&Mcodes).Where(func(y interface{}) interface{} {
+									return strings.Contains(y.(string), x.(tk.M).GetString("woid"))
+								}).Exec().Result.Data().([]string)
 
-									Details = append(Details, det)
-
-									val.TotalLabourCost += det.LaborCost
-									val.TotalMaterialCost += det.MaterialCost
+								if len(tempMcodes) > 0 {
+									return x.(tk.M).GetString("plant") == Plant && x.(tk.M).GetString("wotype") == types
+								} else {
+									return false
 								}
+							}).Exec().Result.Data().([]tk.M)
 
+							if len(tempsyn) > 0 {
 								det := VEDDetail{}
 								det.DataSource = "SAP PM"
 								det.WorkOrderType = types
-								tempMaintHour := crowd.From(&maintHour).Where(func(x interface{}) interface{} {
-									return PlantNormalization(x.(tk.M).GetString("plant")) == Plant && x.(tk.M).GetString("ordertype") == types
+								tempSyn := crowd.From(&tempsyn).Where(func(x interface{}) interface{} {
+									return x.(tk.M).GetString("wotype") == types
 								}).Exec().Result.Data().([]tk.M)
 
-								tempMaintCost := crowd.From(&maintCost).Where(func(x interface{}) interface{} {
-									return PlantNormalization(x.(tk.M).GetString("plant")) == Plant && x.(tk.M).GetString("ordertype") == types
-								}).Exec().Result.Data().([]tk.M)
-
-								det.Duration = crowd.From(&tempMaintHour).Where(func(x interface{}) interface{} {
-									return x.(tk.M).GetFloat64("actual")
+								det.LaborCost = crowd.From(tempSyn).Sum(func(x interface{}) interface{} {
+									return x.(tk.M).GetFloat64("plannedlaborcost")
 								}).Exec().Result.Sum
 
-								det.LaborCost = crowd.From(&tempMaintCost).Where(func(x interface{}) interface{} {
-									return x.(tk.M).GetFloat64("internallaboractual")
+								det.MaterialCost = crowd.From(tempSyn).Sum(func(x interface{}) interface{} {
+									return x.(tk.M).GetFloat64("actualmaterialcost")
 								}).Exec().Result.Sum
 
-								det.MaterialCost = crowd.From(&tempMaintCost).Where(func(x interface{}) interface{} {
-									return x.(tk.M).GetFloat64("directmaterialactual") + x.(tk.M).GetFloat64("internalmaterialactual")
-								}).Exec().Result.Sum
-
-								det.ServiceCost = crowd.From(&tempMaintCost).Where(func(x interface{}) interface{} {
-									return x.(tk.M).GetFloat64("externalserviceactual")
-								}).Exec().Result.Sum
+								det.ServiceCost = 0
 
 								Details = append(Details, det)
 
 								val.TotalLabourCost += det.LaborCost
 								val.TotalMaterialCost += det.MaterialCost
-								val.TotalServicesCost += det.ServiceCost
-								val.TotalDuration += det.Duration
 							}
 
-							for _, maintorder := range Mcodes {
-								db := crowd.From(&maintCost).Where(func(x interface{}) interface{} {
+							det := VEDDetail{}
+							det.DataSource = "SAP PM"
+							det.WorkOrderType = types
+							tempMaintHour := crowd.From(&maintHour).Where(func(x interface{}) interface{} {
+								return PlantNormalization(x.(tk.M).GetString("plant")) == Plant && x.(tk.M).GetString("ordertype") == types
+							}).Exec().Result.Data().([]tk.M)
+
+							tempMaintCost := crowd.From(&maintCost).Where(func(x interface{}) interface{} {
+								return PlantNormalization(x.(tk.M).GetString("plant")) == Plant && x.(tk.M).GetString("ordertype") == types
+							}).Exec().Result.Data().([]tk.M)
+
+							det.Duration = crowd.From(&tempMaintHour).Sum(func(x interface{}) interface{} {
+								return x.(tk.M).GetFloat64("actual")
+							}).Exec().Result.Sum
+
+							det.LaborCost = crowd.From(&tempMaintCost).Sum(func(x interface{}) interface{} {
+								return x.(tk.M).GetFloat64("internallaboractual")
+							}).Exec().Result.Sum
+
+							det.MaterialCost = crowd.From(&tempMaintCost).Sum(func(x interface{}) interface{} {
+								return x.(tk.M).GetFloat64("directmaterialactual") + x.(tk.M).GetFloat64("internalmaterialactual")
+							}).Exec().Result.Sum
+
+							det.ServiceCost = crowd.From(&tempMaintCost).Sum(func(x interface{}) interface{} {
+								return x.(tk.M).GetFloat64("externalserviceactual")
+							}).Exec().Result.Sum
+
+							Details = append(Details, det)
+
+							val.TotalLabourCost += det.LaborCost
+							val.TotalMaterialCost += det.MaterialCost
+							val.TotalServicesCost += det.ServiceCost
+							val.TotalDuration += det.Duration
+						}
+
+						for _, maintorder := range Mcodes {
+							db := crowd.From(&maintCost).Where(func(x interface{}) interface{} {
+								return x.(tk.M).GetString("maintenanceorder") == maintorder
+							}).Exec().Result.Data().([]tk.M)
+
+							if len(db) > 0 {
+								top10 := VEDTop10{}
+								top10.WorkOrderID = db[0].GetString("maintenanceorder")
+								top10.WorkOrderDescription = db[0].GetString("maintenanceorderdesc")
+								top10.WorkOrderType = db[0].GetString("ordertype")
+								top10.WorkOrderTypeDescription = db[0].GetString("ordertypedesc")
+								top10.EquipmentType = db[0].GetString("equipmenttype")
+								top10.EquipmentTypeDescription = db[0].GetString("equipmenttypedesc")
+								top10.MaintenanceActivity = db[0].GetString("maintactivitytype")
+
+								tempMaintHour := crowd.From(&maintHour).Where(func(x interface{}) interface{} {
 									return x.(tk.M).GetString("maintenanceorder") == maintorder
 								}).Exec().Result.Data().([]tk.M)
 
-								if len(db) > 0 {
-									top10 := VEDTop10{}
-									top10.WorkOrderID = db[0].GetString("maintenanceorder")
-									top10.WorkOrderDescription = db[0].GetString("maintenanceorderdesc")
-									top10.WorkOrderType = db[0].GetString("ordertype")
-									top10.WorkOrderTypeDescription = db[0].GetString("ordertypedesc")
-									top10.EquipmentType = db[0].GetString("equipmenttype")
-									top10.EquipmentTypeDescription = db[0].GetString("equipmenttypedesc")
-									top10.MaintenanceActivity = db[0].GetString("maintactivitytype")
+								top10.Duration = crowd.From(&tempMaintHour).Sum(func(x interface{}) interface{} {
+									return x.(tk.M).GetFloat64("actual")
+								}).Exec().Result.Sum
 
-									tempMaintHour := crowd.From(&maintHour).Where(func(x interface{}) interface{} {
-										return x.(tk.M).GetString("maintenanceorder") == maintorder
-									}).Exec().Result.Data().([]tk.M)
+								tempSyn := crowd.From(&syn).Where(func(x interface{}) interface{} {
+									return x.(tk.M).GetString("woid") == maintorder
+								}).Exec().Result.Data().([]tk.M)
 
-									top10.Duration = crowd.From(&tempMaintHour).Where(func(x interface{}) interface{} {
-										return x.(tk.M).GetFloat64("actual")
-									}).Exec().Result.Sum
+								top10.LaborCost = crowd.From(&db).Sum(func(x interface{}) interface{} {
+									return x.(tk.M).GetFloat64("internallaboractual")
+								}).Exec().Result.Sum + crowd.From(&tempSyn).Sum(func(x interface{}) interface{} {
+									return x.(tk.M).GetFloat64("plannedlaborcost")
+								}).Exec().Result.Sum
 
-									tempSyn := crowd.From(&syn).Where(func(x interface{}) interface{} {
-										return x.(tk.M).GetString("woid") == maintorder
-									}).Exec().Result.Data().([]tk.M)
+								top10.MaterialCost = crowd.From(&db).Sum(func(x interface{}) interface{} {
+									return x.(tk.M).GetFloat64("internalmaterialactual") + x.(tk.M).GetFloat64("directmaterialactual")
+								}).Exec().Result.Sum + crowd.From(&tempSyn).Sum(func(x interface{}) interface{} {
+									return x.(tk.M).GetFloat64("actualmaterialcost")
+								}).Exec().Result.Sum
 
-									top10.LaborCost = crowd.From(&db).Sum(func(x interface{}) interface{} {
-										return x.(tk.M).GetFloat64("internallaboractual")
-									}).Exec().Result.Sum + crowd.From(&tempSyn).Where(func(x interface{}) interface{} {
-										return x.(tk.M).GetFloat64("plannedlaborcost")
-									}).Exec().Result.Sum
+								top10.ServiceCost = crowd.From(&db).Sum(func(x interface{}) interface{} {
+									return x.(tk.M).GetFloat64("externalserviceactual")
+								}).Exec().Result.Sum
 
-									top10.MaterialCost = crowd.From(&db).Sum(func(x interface{}) interface{} {
-										return x.(tk.M).GetFloat64("internalmaterialactual") + x.(tk.M).GetFloat64("directmaterialactual")
-									}).Exec().Result.Sum + crowd.From(&tempSyn).Where(func(x interface{}) interface{} {
-										return x.(tk.M).GetFloat64("actualmaterialcost")
-									}).Exec().Result.Sum
+								top10.MaintenanceCost = top10.LaborCost + top10.MaterialCost + top10.ServiceCost
 
-									top10.ServiceCost = crowd.From(&db).Sum(func(x interface{}) interface{} {
-										return x.(tk.M).GetFloat64("externalserviceactual")
-									}).Exec().Result.Sum
-
-									top10.MaintenanceCost = top10.LaborCost + top10.MaterialCost + top10.ServiceCost
-
-									Top10s = append(Top10s, top10)
-								}
+								Top10s = append(Top10s, top10)
 							}
-
-							val.MaintenanceCost = val.TotalLabourCost + val.TotalMaterialCost + val.TotalServicesCost
 						}
+
+						val.MaintenanceCost = val.TotalLabourCost + val.TotalMaterialCost + val.TotalServicesCost
 					}
 				}
 
 				val.ValueEquationCost = val.Revenue - val.MaintenanceCost - val.OperatingCost
 
-				id, e := ctx.InsertOut(val)
-				log.Println(e)
+				id, _ := ctx.InsertOut(val)
 				if len(Details) > 0 {
 					for _, data := range Details {
 						data.VEId = id
@@ -1261,10 +1278,273 @@ func (d *GenValueEquationDashboard) generateOtherMaintenanceData(Years []int, Pl
 
 		e = c.NewQuery().Delete().From(new(GenVEDNotInTmp).TableName()).SetConfig("multiexec", true).Exec(nil)
 		ErrorHandler(e, "generateOtherMaintenanceData")
+	}
 
-		log.Println("sarif")
-		_ = query
-		_ = YearLast
+	return e
+}
+
+func (d *GenValueEquationDashboard) generateOtherMaintenanceData_HistoricalWO(Years []int, Plants []string) error {
+	ctx := d.BaseController.Ctx
+	c := ctx.Connection
+
+	var (
+		query []*dbox.Filter
+		e     error
+	)
+
+	for _, Year := range Years {
+		YearFirst := strconv.Itoa(Year) + "-01-01"
+
+		sintax := "select VEDTop10.WorkOrderID from ValueEquation_Dashboard inner join VEDTop10 on ValueEquation_Dashboard.Id = VEDTop10.VEId where ValueEquation_Dashboard.Year = " + strconv.Itoa(Year) + " Group By VEDTop10.WorkOrderID"
+		csr, _ := c.NewQuery().Command("freequery", tk.M{}.Set("syntax", sintax)).Cursor(nil)
+		result := []tk.M{}
+		e = csr.Fetch(&result, 0, false)
+		csr.Close()
+
+		codes := []string{}
+		for _, x := range result {
+			codes = append(codes, x.GetString("workorderid"))
+		}
+
+		maxLength := 1000
+		maxLoop := tk.ToInt(tk.ToFloat64(len(codes)/maxLength, 0, tk.RoundingUp), tk.RoundingUp)
+
+		for i := 0; i <= maxLoop; i++ {
+			codeTemp := []string{}
+
+			if i != maxLoop {
+				codeTemp = codes[i*maxLength : (i*maxLength)+maxLength]
+
+			} else {
+				codeTemp = codes[i*maxLength:]
+			}
+
+			tmpNotIn := []orm.IModel{}
+			for _, val := range codeTemp {
+				tmpData := new(GenVEDNotInTmp)
+				tmpData.WorkOrderID = val
+				tmpNotIn = append(tmpNotIn, tmpData)
+			}
+
+			e = ctx.InsertBulk(tmpNotIn)
+			ErrorHandler(e, "generateOtherMaintenanceData")
+		}
+
+		queryStr := "select * from WOList where ActualStart != '' and ActualFinish != '' and ActualStart = '" + YearFirst + "' and OrderCode not in(select WorkOrderID from GenVEDNotInTmp) "
+		csr, e := c.NewQuery().Command("freequery", tk.M{}.Set("syntax", queryStr)).Cursor(nil)
+		ErrorHandler(e, "generateOtherMaintenanceData")
+		maintCost := []tk.M{}
+		e = csr.Fetch(&maintCost, 0, false)
+		csr.Close()
+
+		queryStr = "select * from SyntheticPM where ScheduledStart = '" + YearFirst + "' And ScheduledStart != '' And WOID not in(select WorkOrderID from GenVEDNotInTmp) "
+		csr, e = c.NewQuery().Command("freequery", tk.M{}.Set("syntax", queryStr)).Cursor(nil)
+		ErrorHandler(e, "generateOtherMaintenanceData")
+		syn := []tk.M{}
+		e = csr.Fetch(&syn, 0, false)
+		csr.Close()
+
+		if len(Plants) > 0 {
+			for _, Plant := range Plants {
+				val := new(ValueEquationDashboard)
+				val.Plant = Plant
+				val.Unit = "Unmapped Data Historical WO"
+				val.Year = Year
+				val.Month = 1
+				val.Dates = time.Date(Year, 1, 1, 0, 0, 0, 0, time.UTC)
+
+				Details := []VEDDetail{}
+				Top10s := []VEDTop10{}
+
+				if len(maintCost) > 0 {
+					tempMaintCost := crowd.From(&maintCost).Where(func(x interface{}) interface{} {
+						return PlantNormalizationNumber(x.(tk.M).GetString("plant")) == val.Plant
+					}).Exec().Result.Data().([]tk.M)
+
+					groupTypes := crowd.From(&tempMaintCost).Group(func(x interface{}) interface{} {
+						return x.(tk.M).GetString("type")
+					}, nil).Exec().Result.Data().([]crowd.KV)
+
+					orderCodes := crowd.From(&tempMaintCost).Group(func(x interface{}) interface{} {
+						return x.(tk.M).GetString("ordercode")
+					}, nil).Exec().Result.Data().([]crowd.KV)
+
+					MROTypes := []string{}
+					Mcodes := []string{}
+
+					for _, temp := range groupTypes {
+						MROTypes = append(MROTypes, temp.Key.(string))
+					}
+
+					for _, temp := range orderCodes {
+						Mcodes = append(Mcodes, temp.Key.(string))
+					}
+
+					for _, types := range MROTypes {
+						tempsyn := crowd.From(&syn).Where(func(x interface{}) interface{} {
+							tempMcodes := crowd.From(&Mcodes).Where(func(y interface{}) interface{} {
+								return strings.Contains(y.(string), x.(tk.M).GetString("woid"))
+							}).Exec().Result.Data().([]string)
+
+							if len(tempMcodes) > 0 {
+								return x.(tk.M).GetString("plant") == val.Plant && x.(tk.M).GetString("wotype") == types
+							} else {
+								return false
+							}
+						}).Exec().Result.Data().([]tk.M)
+
+						if len(tempsyn) > 0 {
+							det := VEDDetail{}
+							det.DataSource = "SAP PM"
+							det.WorkOrderType = types
+							tempSyn := crowd.From(&tempsyn).Where(func(x interface{}) interface{} {
+								return x.(tk.M).GetString("wotype") == types
+							}).Exec().Result.Data().([]tk.M)
+
+							det.LaborCost = crowd.From(tempSyn).Sum(func(x interface{}) interface{} {
+								return x.(tk.M).GetFloat64("plannedlaborcost")
+							}).Exec().Result.Sum
+
+							det.MaterialCost = crowd.From(tempSyn).Sum(func(x interface{}) interface{} {
+								return x.(tk.M).GetFloat64("actualmaterialcost")
+							}).Exec().Result.Sum
+
+							det.ServiceCost = 0
+
+							Details = append(Details, det)
+
+							val.TotalLabourCost += det.LaborCost
+							val.TotalMaterialCost += det.MaterialCost
+						}
+
+						det := VEDDetail{}
+						det.DataSource = "SAP PM"
+						det.WorkOrderType = types
+
+						tempMaintCost := crowd.From(&maintCost).Where(func(x interface{}) interface{} {
+							return PlantNormalization(x.(tk.M).GetString("plant")) == val.Plant && x.(tk.M).GetString("type") == types
+						}).Exec().Result.Data().([]tk.M)
+
+						if len(tempMaintCost) > 0 {
+							det.Duration = (tempMaintCost[0].Get("actualfinish").(time.Time).Sub(tempMaintCost[0].Get("actualstart").(time.Time)).Seconds()) / 86400
+						}
+
+						det.LaborCost = crowd.From(&tempMaintCost).Sum(func(x interface{}) interface{} {
+							return x.(tk.M).GetFloat64("actualcost") / 3
+						}).Exec().Result.Sum
+
+						det.MaterialCost = crowd.From(&tempMaintCost).Sum(func(x interface{}) interface{} {
+							return x.(tk.M).GetFloat64("actualcost") / 3
+						}).Exec().Result.Sum
+
+						det.ServiceCost = crowd.From(&tempMaintCost).Sum(func(x interface{}) interface{} {
+							return x.(tk.M).GetFloat64("actualcost") / 3
+						}).Exec().Result.Sum
+
+						Details = append(Details, det)
+
+						val.TotalLabourCost += det.LaborCost
+						val.TotalMaterialCost += det.MaterialCost
+						val.TotalServicesCost += det.ServiceCost
+						val.TotalDuration += det.Duration
+					}
+
+					for _, maintorder := range Mcodes {
+						db := crowd.From(&maintCost).Where(func(x interface{}) interface{} {
+							return x.(tk.M).GetString("ordercode") == maintorder
+						}).Exec().Result.Data().([]tk.M)
+
+						if len(db) > 0 {
+							top10 := VEDTop10{}
+							top10.WorkOrderID = db[0].GetString("ordercode")
+							top10.WorkOrderDescription = db[0].GetString("description")
+							top10.WorkOrderType = db[0].GetString("type")
+
+							query = append(query[0:0], dbox.Eq("id", top10.WorkOrderType))
+							csr, _ := c.NewQuery().From(new(MasterOrderType).TableName()).Where(query...).Cursor(nil)
+							tempOrderType := []tk.M{}
+							e = csr.Fetch(&tempOrderType, 0, false)
+							csr.Close()
+
+							if len(tempOrderType) > 0 {
+								top10.WorkOrderTypeDescription = tempOrderType[0].GetString("ordertypedesc")
+							}
+
+							query = append(query[0:0], dbox.Eq("FunctionalLocationCode", db[0].GetString("functionallocation")))
+							csr, _ = c.NewQuery().From(new(FunctionalLocation).TableName()).Where(query...).Cursor(nil)
+							tempFunctionalLocation := []tk.M{}
+							e = csr.Fetch(&tempFunctionalLocation, 0, false)
+							csr.Close()
+
+							if len(tempFunctionalLocation) > 0 {
+								top10.EquipmentType = tempFunctionalLocation[0].GetString("objecttype")
+							}
+
+							query = append(query[0:0], dbox.Eq("EquipmentType", top10.EquipmentType))
+							csr, _ = c.NewQuery().From(new(MappedEquipmentType).TableName()).Where(query...).Cursor(nil)
+							tempMapped := []tk.M{}
+							e = csr.Fetch(&tempMapped, 0, false)
+							csr.Close()
+
+							if len(tempMapped) > 0 {
+								top10.EquipmentTypeDescription = tempMapped[0].GetString("equipmenttext")
+							}
+
+							top10.Duration = crowd.From(&db).Sum(func(x interface{}) interface{} {
+								return (x.(tk.M).Get("actualfinish").(time.Time).Sub(x.(tk.M).Get("actualstart").(time.Time)).Seconds()) / 86400
+							}).Exec().Result.Sum
+
+							tempSyn := crowd.From(&syn).Where(func(x interface{}) interface{} {
+								return x.(tk.M).GetString("woid") == maintorder
+							}).Exec().Result.Data().([]tk.M)
+
+							top10.LaborCost = crowd.From(&db).Where(func(x interface{}) interface{} {
+								return x.(tk.M).GetFloat64("actualcost") / 3
+							}).Exec().Result.Sum + crowd.From(&tempSyn).Where(func(x interface{}) interface{} {
+								return x.(tk.M).GetFloat64("plannedlaborcost")
+							}).Exec().Result.Sum
+
+							top10.MaterialCost = crowd.From(&db).Where(func(x interface{}) interface{} {
+								return x.(tk.M).GetFloat64("actualcost") / 3
+							}).Exec().Result.Sum + crowd.From(&tempSyn).Where(func(x interface{}) interface{} {
+								return x.(tk.M).GetFloat64("actualmaterialcost")
+							}).Exec().Result.Sum
+
+							top10.ServiceCost = crowd.From(&db).Where(func(x interface{}) interface{} {
+								return x.(tk.M).GetFloat64("actualcost") / 3
+							}).Exec().Result.Sum
+
+							top10.MaintenanceCost = top10.LaborCost + top10.MaterialCost + top10.ServiceCost
+
+							Top10s = append(Top10s, top10)
+						}
+					}
+					val.MaintenanceCost = val.TotalLabourCost + val.TotalMaterialCost + val.TotalServicesCost
+				}
+
+				val.ValueEquationCost = val.Revenue - val.MaintenanceCost - val.OperatingCost
+
+				id, _ := ctx.InsertOut(val)
+				if len(Details) > 0 {
+					for _, data := range Details {
+						data.VEId = id
+
+						_, e = ctx.InsertOut(&data)
+					}
+				}
+
+				if len(Top10s) > 0 {
+					for _, data := range Top10s {
+						data.VEId = id
+
+						_, e = ctx.InsertOut(&data)
+					}
+				}
+			}
+		}
+
+		e = c.NewQuery().Delete().From(new(GenVEDNotInTmp).TableName()).SetConfig("multiexec", true).Exec(nil)
+		ErrorHandler(e, "generateOtherMaintenanceData_HistoricalWO")
 	}
 
 	return e
